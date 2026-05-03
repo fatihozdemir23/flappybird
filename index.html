@@ -18,6 +18,7 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             touch-action: none;
         }
+
         #game-container {
             position: relative;
             width: 100%;
@@ -28,11 +29,13 @@
             box-shadow: 0 0 20px rgba(0,0,0,0.5);
             overflow: hidden;
         }
+
         canvas {
             display: block;
             width: 100%;
             height: 100%;
         }
+
         .ui-layer {
             position: absolute;
             top: 0;
@@ -45,1724 +48,1746 @@
             align-items: center;
             pointer-events: none;
         }
+
         .hidden {
             display: none !important;
         }
+
         #ground {
             position: absolute;
             bottom: 0;
             left: 0;
             width: 200%;
             height: 100px;
-            background: repeating-linear-gradient(
-                45deg,
-                #ded895,
-                #ded895 20px,
-                #e8e19e 20px,
-                #e8e19e 40px
-            );
+            background: repeating-linear-gradient( 45deg, #ded895, #ded895 20px, #e8e19e 20px, #e8e19e 40px );
             border-top: 5px solid #73bf2e;
         }
     </style>
 </head>
 <body>
 
-<div id="game-container">
-    <!-- Oyun Çizim Alanı -->
-    <canvas id="gameCanvas" width="400" height="600"></canvas>
-    
-    <!-- Zemin -->
-    <div id="ground"></div>
+    <div id="game-container">
+        <!-- Oyun Çizim Alanı -->
+        <canvas id="gameCanvas" width="400" height="600"></canvas>
 
-    <!-- Başlangıç Ekranı -->
-    <div id="startScreen" class="ui-layer bg-black/80 transition-opacity duration-300 pointer-events-auto z-40">
-        <!-- Müzik Aç/Kapat Butonu -->
-        <button id="musicToggleBtn" class="absolute top-4 left-4 text-white/70 hover:text-white bg-white/10 hover:bg-white/20 rounded-full w-10 h-10 flex items-center justify-center text-xl transition-all shadow-lg active:scale-90" title="Müzik Aç/Kapat">
-            🔊
-        </button>
+        <!-- Zemin -->
+        <div id="ground"></div>
 
-        <!-- 1P/2P Mod Değiştirme Butonu -->
-        <button id="modeToggleBtn" class="absolute top-4 left-16 text-white font-bold bg-blue-500 hover:bg-blue-600 rounded-full h-10 px-4 flex items-center justify-center text-sm transition-all shadow-lg active:scale-90" title="1P / 2P Modu">
-            1P MODU
-        </button>
-        
-        <h1 class="text-4xl font-black text-white mb-4 drop-shadow-lg text-center tracking-wider">UÇAN KUŞ</h1>
-        
-        <!-- Takma İsim Girişi -->
-        <input type="text" id="nicknameInput" placeholder="Takma Adın" class="mb-4 px-4 py-2 rounded-full text-center font-bold text-gray-800 outline-none focus:ring-4 focus:ring-yellow-400 w-48 shadow-lg" maxlength="15" autocomplete="off">
-        
-        <div class="flex gap-2 mb-2">
-            <button id="startGameBtn" class="text-white text-lg font-bold bg-yellow-500 hover:bg-yellow-600 px-8 py-3 rounded-full shadow-lg transition-transform active:scale-95">
-                Oyuna Başla
+        <!-- Başlangıç Ekranı -->
+        <div id="startScreen" class="ui-layer bg-black/80 transition-opacity duration-300 pointer-events-auto z-40">
+            <!-- Müzik Aç/Kapat Butonu -->
+            <button id="musicToggleBtn" class="absolute top-4 left-4 text-white/70 hover:text-white bg-white/10 hover:bg-white/20 rounded-full w-10 h-10 flex items-center justify-center text-xl transition-all shadow-lg active:scale-90" title="Müzik Aç/Kapat">
+                🔊
             </button>
-            <button id="shopBtn" class="text-white text-xl font-bold bg-purple-500 hover:bg-purple-600 px-4 py-3 rounded-full shadow-lg transition-transform active:scale-95" title="Market">
-                🛒
+
+            <!-- 1P/2P Mod Değiştirme Butonu -->
+            <button id="modeToggleBtn" class="absolute top-4 left-16 text-white font-bold bg-blue-500 hover:bg-blue-600 rounded-full h-10 px-4 flex items-center justify-center text-sm transition-all shadow-lg active:scale-90" title="1P / 2P Modu">
+                1P MODU
             </button>
-        </div>
 
-        <p class="text-white/80 text-sm mt-4 text-center px-4 pointer-events-none">
-            <b>15 Seviye, 5 Boss!</b><br>
-            Bilgisayarda <b>Boşluk/Fare</b>,<br> Mobilde <b>Dokunarak</b> oynayabilirsiniz.
-        </p>
-        
-        <!-- Geliştirici Bilgisi -->
-        <div class="absolute bottom-6 w-full text-center text-white/50 text-xs pointer-events-auto">
-            Oyunu yapan: <b class="text-white/80">M.Said Özdemir</b><br>
-            İletişim: <a href="mailto:saidcan4721@gmail.com" class="hover:text-yellow-400 transition-colors">saidcan4721@gmail.com</a>
-        </div>
-    </div>
+            <h1 class="text-4xl font-black text-white mb-4 drop-shadow-lg text-center tracking-wider">UÇAN KUŞ</h1>
 
-    <!-- Multiplayer (2P) Modal Ekranı -->
-    <div id="multiplayerModal" class="ui-layer bg-black/95 hidden z-50 pointer-events-auto flex-col items-center justify-center">
-        <h2 class="text-3xl font-black text-white mb-6 tracking-wider">2 OYUNCULU MOD</h2>
-        
-        <div id="mpMenu" class="flex flex-col items-center w-full max-w-sm px-8">
-            <button id="createPartyBtn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-8 rounded-full mb-6 w-full shadow-lg active:scale-95 transition-transform">
-                Parti Oluştur
-            </button>
-            
-            <div class="w-full h-px bg-white/20 mb-6 relative">
-                <span class="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-[#0d0d0d] px-2 text-white/50 text-xs font-bold">VEYA</span>
-            </div>
+            <!-- Takma İsim Girişi -->
+            <input type="text" id="nicknameInput" placeholder="Takma Adın" class="mb-4 px-4 py-2 rounded-full text-center font-bold text-gray-800 outline-none focus:ring-4 focus:ring-yellow-400 w-48 shadow-lg" maxlength="15" autocomplete="off">
 
-            <div class="flex items-center gap-2 w-full mb-2">
-                <input type="number" id="roomCodeInput" placeholder="Oda Kodu (3 Hane)" class="px-4 py-3 rounded-full text-center font-bold text-gray-800 outline-none focus:ring-4 focus:ring-yellow-400 flex-1 shadow-inner" max="999">
-                <button id="joinPartyBtn" class="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-full shadow-lg active:scale-95 transition-transform">
-                    Katıl
+            <div class="flex gap-2 mb-2">
+                <button id="startGameBtn" class="text-white text-lg font-bold bg-yellow-500 hover:bg-yellow-600 px-8 py-3 rounded-full shadow-lg transition-transform active:scale-95">
+                    Oyuna Başla
+                </button>
+                <button id="shopBtn" class="text-white text-xl font-bold bg-purple-500 hover:bg-purple-600 px-4 py-3 rounded-full shadow-lg transition-transform active:scale-95" title="Market">
+                    🛒
                 </button>
             </div>
-            <p id="mpErrorText" class="text-red-500 font-bold h-6 text-sm"></p>
-            <button id="closeMpBtn" class="mt-4 bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-8 rounded-full transition-colors active:scale-95">Geri Dön</button>
-        </div>
-        
-        <div id="mpWaiting" class="hidden flex-col items-center">
-            <p class="text-white text-xl mb-2">Oda Kodunuz:</p>
-            <p id="roomCodeDisplay" class="text-6xl font-black text-yellow-400 mb-6 drop-shadow-[0_0_15px_rgba(250,204,21,0.5)]">---</p>
-            <div class="flex items-center gap-2 mb-8">
-                <div class="w-3 h-3 bg-green-500 rounded-full animate-bounce"></div>
-                <div class="w-3 h-3 bg-green-500 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
-                <div class="w-3 h-3 bg-green-500 rounded-full animate-bounce" style="animation-delay: 0.4s"></div>
-                <p class="text-white/80 text-sm ml-2">Arkadaşınız bekleniyor...</p>
-            </div>
-            <button id="cancelPartyBtn" class="text-red-400 hover:text-red-300 font-bold py-2 px-6 rounded-full border border-red-500/50 transition-colors active:scale-95">İptali Et ve Çık</button>
-        </div>
-    </div>
 
-    <!-- Market Ekranı -->
-    <div id="shopScreen" class="ui-layer bg-black/90 hidden z-50 pointer-events-auto flex-col items-center justify-start pt-12 overflow-y-auto">
-        <button id="closeShopBtn" class="absolute top-4 right-4 text-white/70 hover:text-white bg-white/10 hover:bg-red-500 rounded-full w-10 h-10 flex items-center justify-center text-xl font-bold transition-all shadow-lg active:scale-90" title="Kapat">
-            ✕
-        </button>
-        <h2 class="text-4xl font-black text-white mb-2 drop-shadow-lg text-center tracking-wider">MARKET</h2>
-        <div class="flex items-center gap-2 bg-black/50 px-5 py-2 rounded-full mb-6 border border-yellow-500/50 shadow-[0_0_15px_rgba(234,179,8,0.3)]">
-            <span class="text-yellow-400 text-2xl">🪙</span>
-            <span id="shopCoinCount" class="text-white font-bold text-2xl">0</span>
-        </div>
-        <div id="skinList" class="w-full max-w-sm flex flex-col gap-3 px-4 pb-24">
-            <!-- Kuş kıyafetleri buraya JS ile eklenecek -->
-        </div>
-    </div>
+            <p class="text-white/80 text-sm mt-4 text-center px-4 pointer-events-none">
+                <b>15 Seviye, 5 Boss!</b><br>
+                Bilgisayarda <b>Boşluk/Fare</b>,<br> Mobilde <b>Dokunarak</b> oynayabilirsiniz.
+            </p>
 
-    <!-- Oyun Sonu / Zafer Ekranı -->
-    <div id="gameOverScreen" class="ui-layer bg-black/80 hidden z-30">
-        <div class="bg-white rounded-2xl p-6 flex flex-col items-center shadow-2xl transform scale-100 transition-transform pointer-events-auto">
-            <h2 id="gameOverTitle" class="text-3xl font-black text-red-500 mb-2">OYUN BİTTİ</h2>
-            <p id="finalPlayerName" class="text-xl font-bold text-gray-700 mb-2 uppercase tracking-wide"></p>
-            <div class="w-full bg-gray-100 rounded-xl p-4 my-4 text-center">
-                <p class="text-gray-500 text-sm font-semibold uppercase">Skor</p>
-                <p id="finalScore" class="text-4xl font-black text-gray-800">0</p>
+            <!-- Geliştirici Bilgisi -->
+            <div class="absolute bottom-6 w-full text-center text-white/50 text-xs pointer-events-auto">
+                Oyunu yapan: <b class="text-white/80">M.Said Özdemir</b><br>
+                İletişim: <a href="mailto:saidcan4721@gmail.com" class="hover:text-yellow-400 transition-colors">saidcan4721@gmail.com</a>
             </div>
-            <div class="w-full bg-yellow-50 rounded-xl p-4 mb-6 text-center">
-                <p class="text-yellow-600 text-sm font-semibold uppercase">En Yüksek Skor <span id="bestScoreNameDisplay" class="text-xs text-yellow-700 block"></span></p>
-                <p id="bestScore" class="text-2xl font-black text-yellow-600">0</p>
+        </div>
+
+        <!-- Multiplayer (2P) Modal Ekranı -->
+        <div id="multiplayerModal" class="ui-layer bg-black/95 hidden z-50 pointer-events-auto flex-col items-center justify-center">
+            <h2 class="text-3xl font-black text-white mb-6 tracking-wider">2 OYUNCULU MOD</h2>
+
+            <div id="mpMenu" class="flex flex-col items-center w-full max-w-sm px-8">
+                <button id="createPartyBtn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-8 rounded-full mb-6 w-full shadow-lg active:scale-95 transition-transform">
+                    Parti Oluştur
+                </button>
+
+                <div class="w-full h-px bg-white/20 mb-6 relative">
+                    <span class="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-[#0d0d0d] px-2 text-white/50 text-xs font-bold">VEYA</span>
+                </div>
+
+                <div class="flex items-center gap-2 w-full mb-2">
+                    <input type="number" id="roomCodeInput" placeholder="Oda Kodu (3 Hane)" class="px-4 py-3 rounded-full text-center font-bold text-gray-800 outline-none focus:ring-4 focus:ring-yellow-400 flex-1 shadow-inner" max="999">
+                    <button id="joinPartyBtn" class="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-full shadow-lg active:scale-95 transition-transform">
+                        Katıl
+                    </button>
+                </div>
+                <p id="mpErrorText" class="text-red-500 font-bold h-6 text-sm"></p>
+                <button id="closeMpBtn" class="mt-4 bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-8 rounded-full transition-colors active:scale-95">Geri Dön</button>
             </div>
-            <div class="flex flex-col gap-3 w-full">
-                <button id="restartBtn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-8 rounded-full shadow-lg transition-colors active:scale-95 w-full text-lg">
-                    Yeniden Oyna
+
+            <div id="mpWaiting" class="hidden flex-col items-center">
+                <p class="text-white text-xl mb-2">Oda Kodunuz:</p>
+                <p id="roomCodeDisplay" class="text-6xl font-black text-yellow-400 mb-6 drop-shadow-[0_0_15px_rgba(250,204,21,0.5)]">---</p>
+                <div class="flex items-center gap-2 mb-8">
+                    <div class="w-3 h-3 bg-green-500 rounded-full animate-bounce"></div>
+                    <div class="w-3 h-3 bg-green-500 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+                    <div class="w-3 h-3 bg-green-500 rounded-full animate-bounce" style="animation-delay: 0.4s"></div>
+                    <p class="text-white/80 text-sm ml-2">Arkadaşınız bekleniyor...</p>
+                </div>
+                <button id="cancelPartyBtn" class="text-red-400 hover:text-red-300 font-bold py-2 px-6 rounded-full border border-red-500/50 transition-colors active:scale-95">İptali Et ve Çık</button>
+            </div>
+        </div>
+
+        <!-- Market Ekranı -->
+        <div id="shopScreen" class="ui-layer bg-black/90 hidden z-50 pointer-events-auto flex-col items-center justify-start pt-12 overflow-y-auto">
+            <button id="closeShopBtn" class="absolute top-4 right-4 text-white/70 hover:text-white bg-white/10 hover:bg-red-500 rounded-full w-10 h-10 flex items-center justify-center text-xl font-bold transition-all shadow-lg active:scale-90" title="Kapat">
+                ✕
+            </button>
+            <h2 class="text-4xl font-black text-white mb-2 drop-shadow-lg text-center tracking-wider">MARKET</h2>
+            <div class="flex items-center gap-2 bg-black/50 px-5 py-2 rounded-full mb-6 border border-yellow-500/50 shadow-[0_0_15px_rgba(234,179,8,0.3)]">
+                <span class="text-yellow-400 text-2xl">🪙</span>
+                <span id="shopCoinCount" class="text-white font-bold text-2xl">0</span>
+            </div>
+            <div id="skinList" class="w-full max-w-sm flex flex-col gap-3 px-4 pb-24">
+                <!-- Kuş kıyafetleri buraya JS ile eklenecek -->
+            </div>
+        </div>
+
+        <!-- Oyun Sonu / Zafer Ekranı -->
+        <div id="gameOverScreen" class="ui-layer bg-black/80 hidden z-30">
+            <div class="bg-white rounded-2xl p-6 flex flex-col items-center shadow-2xl transform scale-100 transition-transform pointer-events-auto">
+                <h2 id="gameOverTitle" class="text-3xl font-black text-red-500 mb-2">OYUN BİTTİ</h2>
+                <p id="finalPlayerName" class="text-xl font-bold text-gray-700 mb-2 uppercase tracking-wide"></p>
+                <div class="w-full bg-gray-100 rounded-xl p-4 my-4 text-center">
+                    <p class="text-gray-500 text-sm font-semibold uppercase">Skor</p>
+                    <p id="finalScore" class="text-4xl font-black text-gray-800">0</p>
+                </div>
+                <div class="w-full bg-yellow-50 rounded-xl p-4 mb-6 text-center">
+                    <p class="text-yellow-600 text-sm font-semibold uppercase">En Yüksek Skor <span id="bestScoreNameDisplay" class="text-xs text-yellow-700 block"></span></p>
+                    <p id="bestScore" class="text-2xl font-black text-yellow-600">0</p>
+                </div>
+                <div class="flex flex-col gap-3 w-full">
+                    <button id="restartBtn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-8 rounded-full shadow-lg transition-colors active:scale-95 w-full text-lg">
+                        Yeniden Oyna
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Canlı Skor -->
+        <div id="scoreDisplay" class="absolute top-10 left-0 w-full text-center text-5xl font-black text-white drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)] z-0 pointer-events-none hidden">
+            0
+        </div>
+
+        <!-- Toplanan Para (Sol Üst Köşe) -->
+        <div id="coinDisplay" class="absolute top-4 left-4 text-2xl font-black text-yellow-400 drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)] z-20 pointer-events-none hidden flex items-center gap-1 bg-black/60 px-4 py-2 rounded-full border border-yellow-500/50 shadow-lg">
+            <span>🪙</span> <span id="coinCount">0</span> <span class="text-sm font-bold text-yellow-200 ml-1 mt-1">TL</span>
+        </div>
+
+        <!-- Seviye -->
+        <div id="levelDisplay" class="absolute top-16 left-6 text-2xl font-black text-yellow-400 drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)] z-10 pointer-events-none hidden">
+            Seviye: 1
+        </div>
+
+        <!-- Canlar (Kalpler) -->
+        <div id="livesDisplay" class="absolute top-6 right-2 flex gap-1 z-10 pointer-events-none hidden bg-black/50 p-2 rounded-full border border-white/20 shadow-lg scale-90 sm:scale-100 origin-right">
+        </div>
+
+        <!-- Boss HP UI -->
+        <div id="bossUI" class="absolute top-24 w-full px-12 hidden z-10 flex flex-col items-center pointer-events-none">
+            <span id="bossName" class="text-white font-black text-sm drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)] mb-1 text-red-400 tracking-wider uppercase">BOSS</span>
+            <div class="w-full h-4 bg-gray-900 rounded-full border-2 border-white/50 overflow-hidden shadow-[0_0_15px_rgba(255,0,0,0.6)]">
+                <div id="bossHpBar" class="h-full bg-gradient-to-r from-red-600 to-red-400 w-full transition-all duration-100"></div>
+            </div>
+        </div>
+
+        <!-- Yetenek Göstergesi (Hayalet Modu) -->
+        <div id="abilityUI" class="absolute bottom-4 right-4 bg-black/70 rounded-lg p-2 flex items-center gap-2 hidden z-20 pointer-events-auto cursor-pointer select-none border border-white/20">
+            <div id="abilityIcon" class="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold border-2 border-white shadow-lg bg-blue-500">X</div>
+            <div class="flex flex-col w-24">
+                <span class="text-white text-[10px] font-bold uppercase tracking-wider">Hayalet Modu</span>
+                <div class="w-full h-2 bg-gray-700 rounded-full overflow-hidden mt-1">
+                    <div id="abilityBar" class="h-full w-full transition-all duration-100 bg-blue-400"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Durdur/Devam Et Butonu -->
+        <div id="pauseUI" class="absolute bottom-4 left-4 hidden z-20 pointer-events-auto">
+            <button id="pauseBtn" class="bg-gray-800/80 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded-full border border-white/20 shadow-lg backdrop-blur-sm transition-all active:scale-95 flex items-center gap-2 text-sm">
+                <span id="pauseIcon">⏸️</span> <span id="pauseText">Durdur</span>
+            </button>
+        </div>
+
+        <!-- Duraklatıldı Ekranı (Arka plan) -->
+        <div id="pauseOverlay" class="absolute inset-0 bg-black/70 hidden z-30 flex flex-col items-center justify-center pointer-events-auto backdrop-blur-sm gap-6">
+            <h2 class="text-4xl font-black text-white tracking-widest drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]">DURAKLATILDI</h2>
+            <div class="flex flex-col gap-4 w-64">
+                <button id="resumeBtn" class="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-8 rounded-full shadow-lg transition-transform active:scale-95 text-lg w-full">
+                    Devam Et
+                </button>
+                <button id="pauseMusicToggleBtn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-8 rounded-full shadow-lg transition-transform active:scale-95 text-lg w-full flex justify-center items-center gap-2">
+                    <span>🔊</span> Müzik: AÇIK
+                </button>
+                <button id="homeBtn" class="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-8 rounded-full shadow-lg transition-transform active:scale-95 text-lg w-full">
+                    Ana Menüye Dön
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- Canlı Skor -->
-    <div id="scoreDisplay" class="absolute top-10 left-0 w-full text-center text-5xl font-black text-white drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)] z-0 pointer-events-none hidden">
-        0
-    </div>
+    <script type="module">
+        // --- FIREBASE İMPORT & KURULUMU (2P MODU İÇİN) ---
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, onSnapshot, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-    <!-- Toplanan Para (Sol Üst Köşe) -->
-    <div id="coinDisplay" class="absolute top-4 left-4 text-2xl font-black text-yellow-400 drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)] z-20 pointer-events-none hidden flex items-center gap-1 bg-black/60 px-4 py-2 rounded-full border border-yellow-500/50 shadow-lg">
-        <span>🪙</span> <span id="coinCount">0</span> <span class="text-sm font-bold text-yellow-200 ml-1 mt-1">TL</span>
-    </div>
+        // ---------------------------------------------------------
+        // KENDİ BİLGİSAYARINDA VEYA KODULAR'DA ÇALIŞTIRMAK İÇİN:
+        // Firebase'den aldığın ayarları aşağıdaki null yerine yapıştır.
+        // ---------------------------------------------------------
 
-    <!-- Seviye -->
-    <div id="levelDisplay" class="absolute top-16 left-6 text-2xl font-black text-yellow-400 drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)] z-10 pointer-events-none hidden">
-        Seviye: 1
-    </div>
-
-    <!-- Canlar (Kalpler) -->
-    <div id="livesDisplay" class="absolute top-6 right-2 flex gap-1 z-10 pointer-events-none hidden bg-black/50 p-2 rounded-full border border-white/20 shadow-lg scale-90 sm:scale-100 origin-right">
-    </div>
-
-    <!-- Boss HP UI -->
-    <div id="bossUI" class="absolute top-24 w-full px-12 hidden z-10 flex flex-col items-center pointer-events-none">
-        <span id="bossName" class="text-white font-black text-sm drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)] mb-1 text-red-400 tracking-wider uppercase">BOSS</span>
-        <div class="w-full h-4 bg-gray-900 rounded-full border-2 border-white/50 overflow-hidden shadow-[0_0_15px_rgba(255,0,0,0.6)]">
-            <div id="bossHpBar" class="h-full bg-gradient-to-r from-red-600 to-red-400 w-full transition-all duration-100"></div>
-        </div>
-    </div>
-
-    <!-- Yetenek Göstergesi (Hayalet Modu) -->
-    <div id="abilityUI" class="absolute bottom-4 right-4 bg-black/70 rounded-lg p-2 flex items-center gap-2 hidden z-20 pointer-events-auto cursor-pointer select-none border border-white/20">
-        <div id="abilityIcon" class="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold border-2 border-white shadow-lg bg-blue-500">X</div>
-        <div class="flex flex-col w-24">
-            <span class="text-white text-[10px] font-bold uppercase tracking-wider">Hayalet Modu</span>
-            <div class="w-full h-2 bg-gray-700 rounded-full overflow-hidden mt-1">
-                <div id="abilityBar" class="h-full w-full transition-all duration-100 bg-blue-400"></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Durdur/Devam Et Butonu -->
-    <div id="pauseUI" class="absolute bottom-4 left-4 hidden z-20 pointer-events-auto">
-        <button id="pauseBtn" class="bg-gray-800/80 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded-full border border-white/20 shadow-lg backdrop-blur-sm transition-all active:scale-95 flex items-center gap-2 text-sm">
-            <span id="pauseIcon">⏸️</span> <span id="pauseText">Durdur</span>
-        </button>
-    </div>
-
-    <!-- Duraklatıldı Ekranı (Arka plan) -->
-    <div id="pauseOverlay" class="absolute inset-0 bg-black/70 hidden z-30 flex flex-col items-center justify-center pointer-events-auto backdrop-blur-sm gap-6">
-        <h2 class="text-4xl font-black text-white tracking-widest drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]">DURAKLATILDI</h2>
-        <div class="flex flex-col gap-4 w-64">
-            <button id="resumeBtn" class="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-8 rounded-full shadow-lg transition-transform active:scale-95 text-lg w-full">
-                Devam Et
-            </button>
-            <button id="pauseMusicToggleBtn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-8 rounded-full shadow-lg transition-transform active:scale-95 text-lg w-full flex justify-center items-center gap-2">
-                <span>🔊</span> Müzik: AÇIK
-            </button>
-            <button id="homeBtn" class="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-8 rounded-full shadow-lg transition-transform active:scale-95 text-lg w-full">
-                Ana Menüye Dön
-            </button>
-        </div>
-    </div>
-</div>
-
-<script type="module">
-    // --- FIREBASE İMPORT & KURULUMU (2P MODU İÇİN) ---
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import { getFirestore, doc, setDoc, getDoc, onSnapshot, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-    // ---------------------------------------------------------
-    // KENDİ BİLGİSAYARINDA VEYA KODULAR'DA ÇALIŞTIRMAK İÇİN:
-    // Firebase'den aldığın ayarları aşağıdaki null yerine yapıştır.
-    // ---------------------------------------------------------
-    
-    const myFirebaseConfig = {
-      apiKey: "AIzaSyDut8MDrjop8Bm0Qk4Z3wWbP6aSKAqZrw4",
-      authDomain: "flappybird-48704.firebaseapp.com",
-      projectId: "flappybird-48704",
-      storageBucket: "flappybird-48704.firebasestorage.app",
-      messagingSenderId: "147727242521",
-      appId: "1:147727242521:web:f496f5f51697de10d72188",
-      measurementId: "G-TWLBKH81LD"
-    };
-
-    const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : myFirebaseConfig;
-    const appId = typeof __app_id !== 'undefined' ? __app_id : 'flappy-multiplayer-app';
-    
-    let db = null;
-    let auth = null;
-    let user = null;
-
-    if (firebaseConfig) {
-        const app = initializeApp(firebaseConfig);
-        auth = getAuth(app);
-        db = getFirestore(app);
-        
-        const initAuth = async () => {
-            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                await signInWithCustomToken(auth, __initial_auth_token);
-            } else {
-                await signInAnonymously(auth);
-            }
+        const myFirebaseConfig = {
+            apiKey: "AIzaSyDut8MDrjop8Bm0Qk4Z3wWbP6aSKAqZrw4",
+            authDomain: "flappybird-48704.firebaseapp.com",
+            projectId: "flappybird-48704",
+            storageBucket: "flappybird-48704.firebasestorage.app",
+            messagingSenderId: "147727242521",
+            appId: "1:147727242521:web:f496f5f51697de10d72188",
+            measurementId: "G-TWLBKH81LD"
         };
-        initAuth();
-        
-        onAuthStateChanged(auth, (u) => {
-            user = u;
-        });
-    }
 
-    // --- TEMEL TANIMLAMALAR ---
-    const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
-    
-    // UI Elementleri
-    const startScreen = document.getElementById('startScreen');
-    const gameOverScreen = document.getElementById('gameOverScreen');
-    const scoreDisplay = document.getElementById('scoreDisplay');
-    const levelDisplay = document.getElementById('levelDisplay');
-    const finalScoreEl = document.getElementById('finalScore');
-    const bestScoreEl = document.getElementById('bestScore');
-    const bestScoreNameDisplay = document.getElementById('bestScoreNameDisplay');
-    const restartBtn = document.getElementById('restartBtn');
-    const ground = document.getElementById('ground');
-    const abilityUI = document.getElementById('abilityUI');
-    const abilityIcon = document.getElementById('abilityIcon');
-    const abilityBar = document.getElementById('abilityBar');
-    const livesDisplay = document.getElementById('livesDisplay');
-    const bossUI = document.getElementById('bossUI');
-    const bossNameEl = document.getElementById('bossName');
-    const bossHpBar = document.getElementById('bossHpBar');
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : myFirebaseConfig;
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'flappy-multiplayer-app';
 
-    const pauseUI = document.getElementById('pauseUI');
-    const pauseBtn = document.getElementById('pauseBtn');
-    const pauseIcon = document.getElementById('pauseIcon');
-    const pauseText = document.getElementById('pauseText');
-    const pauseOverlay = document.getElementById('pauseOverlay');
-    const homeBtn = document.getElementById('homeBtn');
-    const resumeBtn = document.getElementById('resumeBtn');
-    const musicToggleBtn = document.getElementById('musicToggleBtn');
-    const pauseMusicToggleBtn = document.getElementById('pauseMusicToggleBtn');
+        let db = null;
+        let auth = null;
+        let user = null;
 
-    const modeToggleBtn = document.getElementById('modeToggleBtn');
-    const multiplayerModal = document.getElementById('multiplayerModal');
-    const createPartyBtn = document.getElementById('createPartyBtn');
-    const joinPartyBtn = document.getElementById('joinPartyBtn');
-    const roomCodeInput = document.getElementById('roomCodeInput');
-    const mpErrorText = document.getElementById('mpErrorText');
-    const closeMpBtn = document.getElementById('closeMpBtn');
-    const cancelPartyBtn = document.getElementById('cancelPartyBtn');
+        if (firebaseConfig) {
+            const app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            db = getFirestore(app);
 
-    const nicknameInput = document.getElementById('nicknameInput');
-    const startGameBtn = document.getElementById('startGameBtn');
-    const shopBtn = document.getElementById('shopBtn');
-    const shopScreen = document.getElementById('shopScreen');
-    const closeShopBtn = document.getElementById('closeShopBtn');
-    const skinList = document.getElementById('skinList');
-    const shopCoinCount = document.getElementById('shopCoinCount');
-    const coinDisplay = document.getElementById('coinDisplay');
-    const coinCountEl = document.getElementById('coinCount');
-    const finalPlayerName = document.getElementById('finalPlayerName');
+            const initAuth = async () => {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            };
+            initAuth();
 
-    // Oyun Durumu
-    let frames = 0;
-    let groundOffset = 0; 
-    let score = 0;
-    let level = 1;
-    let pendingBoss = false; 
-    let bestScore = localStorage.getItem('flappyBestScore') || 0;
-    let bestScorePlayerName = localStorage.getItem('flappyBestScoreName') || "";
-    let playerName = localStorage.getItem('flappyPlayerName') || "";
-    
-    // Para ve Market Sistemi
-    let coins = parseInt(localStorage.getItem('flappyCoins')) || 0;
-    let ownedSkins = JSON.parse(localStorage.getItem('flappyOwnedSkins')) || ['default'];
-    let equippedSkin = localStorage.getItem('flappyEquippedSkin') || 'default';
-
-    // --- MULTIPLAYER SİSTEMİ ---
-    let isMultiplayer = false;
-    let isHost = false;
-    let roomCode = null;
-    let unsubRoom = null;
-    
-    let otherPlayer = {
-        active: false,
-        y: 150,
-        rotation: 0,
-        dead: false,
-        skin: 'default',
-        score: 0
-    };
-
-    // İki oyuncunun da aynı engellerle karşılaşması için Rastgele Tohum (Seed)
-    let gameSeed = 1;
-    function seededRandom() {
-        let x = Math.sin(gameSeed++) * 10000;
-        return x - Math.floor(x);
-    }
-
-    modeToggleBtn.addEventListener('click', () => {
-        if (!user) {
-            mpErrorText.innerText = "Bulut bağlantısı yok, lütfen 1P oynayın.";
-            mpErrorText.classList.remove('hidden');
-        } else {
-            mpErrorText.innerText = "";
-        }
-        multiplayerModal.classList.remove('hidden');
-        document.getElementById('mpMenu').classList.remove('hidden');
-        document.getElementById('mpWaiting').classList.add('hidden');
-    });
-
-    closeMpBtn.addEventListener('click', () => {
-        multiplayerModal.classList.add('hidden');
-    });
-
-    cancelPartyBtn.addEventListener('click', async () => {
-        if (unsubRoom) unsubRoom();
-        if (isHost && roomCode && db) {
-            const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', roomCode);
-            await deleteDoc(roomRef).catch(e => {});
-        }
-        isMultiplayer = false;
-        roomCode = null;
-        document.getElementById('mpWaiting').classList.add('hidden');
-        document.getElementById('mpMenu').classList.remove('hidden');
-        multiplayerModal.classList.add('hidden');
-    });
-
-    createPartyBtn.addEventListener('click', async () => {
-        if (!user || !db) { mpErrorText.innerText = "Bağlantı hatası!"; return; }
-        createPartyBtn.disabled = true;
-        roomCode = Math.floor(100 + Math.random() * 900).toString(); // 3 Haneli
-        const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', roomCode);
-        
-        try {
-            await setDoc(roomRef, {
-                seed: Math.floor(Math.random() * 100000),
-                host: { y: 150, rotation: 0, dead: false, skin: equippedSkin, score: 0 },
-                guest: null,
-                state: 'waiting'
+            onAuthStateChanged(auth, (u) => {
+                user = u;
             });
-            isHost = true;
-            isMultiplayer = true;
-            document.getElementById('mpMenu').classList.add('hidden');
-            document.getElementById('mpWaiting').classList.remove('hidden');
-            document.getElementById('roomCodeDisplay').innerText = roomCode;
-            
-            unsubRoom = onSnapshot(roomRef, (snap) => {
-                if (!snap.exists()) return;
-                const data = snap.data();
-                if (data.guest && data.state === 'playing' && state.current !== state.game) {
+        }
+
+        // --- TEMEL TANIMLAMALAR ---
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // UI Elementleri
+        const startScreen = document.getElementById('startScreen');
+        const gameOverScreen = document.getElementById('gameOverScreen');
+        const scoreDisplay = document.getElementById('scoreDisplay');
+        const levelDisplay = document.getElementById('levelDisplay');
+        const finalScoreEl = document.getElementById('finalScore');
+        const bestScoreEl = document.getElementById('bestScore');
+        const bestScoreNameDisplay = document.getElementById('bestScoreNameDisplay');
+        const restartBtn = document.getElementById('restartBtn');
+        const ground = document.getElementById('ground');
+        const abilityUI = document.getElementById('abilityUI');
+        const abilityIcon = document.getElementById('abilityIcon');
+        const abilityBar = document.getElementById('abilityBar');
+        const livesDisplay = document.getElementById('livesDisplay');
+        const bossUI = document.getElementById('bossUI');
+        const bossNameEl = document.getElementById('bossName');
+        const bossHpBar = document.getElementById('bossHpBar');
+
+        const pauseUI = document.getElementById('pauseUI');
+        const pauseBtn = document.getElementById('pauseBtn');
+        const pauseIcon = document.getElementById('pauseIcon');
+        const pauseText = document.getElementById('pauseText');
+        const pauseOverlay = document.getElementById('pauseOverlay');
+        const homeBtn = document.getElementById('homeBtn');
+        const resumeBtn = document.getElementById('resumeBtn');
+        const musicToggleBtn = document.getElementById('musicToggleBtn');
+        const pauseMusicToggleBtn = document.getElementById('pauseMusicToggleBtn');
+
+        const modeToggleBtn = document.getElementById('modeToggleBtn');
+        const multiplayerModal = document.getElementById('multiplayerModal');
+        const createPartyBtn = document.getElementById('createPartyBtn');
+        const joinPartyBtn = document.getElementById('joinPartyBtn');
+        const roomCodeInput = document.getElementById('roomCodeInput');
+        const mpErrorText = document.getElementById('mpErrorText');
+        const closeMpBtn = document.getElementById('closeMpBtn');
+        const cancelPartyBtn = document.getElementById('cancelPartyBtn');
+
+        const nicknameInput = document.getElementById('nicknameInput');
+        const startGameBtn = document.getElementById('startGameBtn');
+        const shopBtn = document.getElementById('shopBtn');
+        const shopScreen = document.getElementById('shopScreen');
+        const closeShopBtn = document.getElementById('closeShopBtn');
+        const skinList = document.getElementById('skinList');
+        const shopCoinCount = document.getElementById('shopCoinCount');
+        const coinDisplay = document.getElementById('coinDisplay');
+        const coinCountEl = document.getElementById('coinCount');
+        const finalPlayerName = document.getElementById('finalPlayerName');
+
+        // Oyun Durumu
+        let frames = 0;
+        let groundOffset = 0;
+        let score = 0;
+        let level = 1;
+        let pendingBoss = false;
+        let bestScore = localStorage.getItem('flappyBestScore') || 0;
+        let bestScorePlayerName = localStorage.getItem('flappyBestScoreName') || "";
+        let playerName = localStorage.getItem('flappyPlayerName') || "";
+
+        // Para ve Market Sistemi
+        let coins = parseInt(localStorage.getItem('flappyCoins')) || 0;
+        let ownedSkins = JSON.parse(localStorage.getItem('flappyOwnedSkins')) || ['default'];
+        let equippedSkin = localStorage.getItem('flappyEquippedSkin') || 'default';
+
+        // --- MULTIPLAYER SİSTEMİ ---
+        let isMultiplayer = false;
+        let isHost = false;
+        let roomCode = null;
+        let unsubRoom = null;
+
+        let otherPlayer = {
+            active: false,
+            y: 150,
+            rotation: 0,
+            dead: false,
+            skin: 'default',
+            score: 0,
+            name: "Rakip"
+        };
+
+        // İki oyuncunun da aynı engellerle karşılaşması için Rastgele Tohum (Seed)
+        let gameSeed = 1;
+        function seededRandom() {
+            let x = Math.sin(gameSeed++) * 10000;
+            return x - Math.floor(x);
+        }
+
+        modeToggleBtn.addEventListener('click', () => {
+            if (!user) {
+                mpErrorText.innerText = "Bulut bağlantısı yok, lütfen 1P oynayın.";
+                mpErrorText.classList.remove('hidden');
+            } else {
+                mpErrorText.innerText = "";
+            }
+            multiplayerModal.classList.remove('hidden');
+            document.getElementById('mpMenu').classList.remove('hidden');
+            document.getElementById('mpWaiting').classList.add('hidden');
+        });
+
+        closeMpBtn.addEventListener('click', () => {
+            multiplayerModal.classList.add('hidden');
+        });
+
+        cancelPartyBtn.addEventListener('click', async () => {
+            if (unsubRoom) unsubRoom();
+            if (isHost && roomCode && db) {
+                const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', roomCode);
+                await deleteDoc(roomRef).catch(e => { });
+            }
+            isMultiplayer = false;
+            roomCode = null;
+            document.getElementById('mpWaiting').classList.add('hidden');
+            document.getElementById('mpMenu').classList.remove('hidden');
+            multiplayerModal.classList.add('hidden');
+        });
+
+        createPartyBtn.addEventListener('click', async () => {
+            if (!user || !db) { mpErrorText.innerText = "Bağlantı hatası!"; return; }
+            createPartyBtn.disabled = true;
+
+            // Partiyi kurmadan önce ismi güncelle ve kaydet
+            playerName = nicknameInput.value.trim() || "Oyuncu";
+            localStorage.setItem('flappyPlayerName', playerName);
+
+            roomCode = Math.floor(100 + Math.random() * 900).toString(); // 3 Haneli
+            const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', roomCode);
+
+            try {
+                await setDoc(roomRef, {
+                    seed: Math.floor(Math.random() * 100000),
+                    host: { y: 150, rotation: 0, dead: false, skin: equippedSkin, score: 0, name: playerName },
+                    guest: null,
+                    state: 'waiting'
+                });
+                isHost = true;
+                isMultiplayer = true;
+                document.getElementById('mpMenu').classList.add('hidden');
+                document.getElementById('mpWaiting').classList.remove('hidden');
+                document.getElementById('roomCodeDisplay').innerText = roomCode;
+
+                unsubRoom = onSnapshot(roomRef, (snap) => {
+                    if (!snap.exists()) return;
+                    const data = snap.data();
+                    if (data.guest && data.state === 'playing' && state.current !== state.game) {
+                        gameSeed = data.seed;
+                        multiplayerModal.classList.add('hidden');
+                        startGameFlow();
+                    }
+                    updateOtherPlayer(data.guest);
+                }, (error) => console.error(error));
+            } catch (e) {
+                mpErrorText.innerText = "Hata oluştu!";
+            }
+            createPartyBtn.disabled = false;
+        });
+
+        joinPartyBtn.addEventListener('click', async () => {
+            if (!user || !db) { mpErrorText.innerText = "Bağlantı hatası!"; return; }
+            const code = roomCodeInput.value;
+            if (code.length !== 3) { mpErrorText.innerText = "3 haneli kod girin!"; return; }
+
+            joinPartyBtn.disabled = true;
+
+            // Partiye katılmadan önce ismi güncelle ve kaydet
+            playerName = nicknameInput.value.trim() || "Oyuncu";
+            localStorage.setItem('flappyPlayerName', playerName);
+
+            const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', code);
+
+            try {
+                const snap = await getDoc(roomRef);
+                if (snap.exists() && snap.data().state === 'waiting') {
+                    roomCode = code;
+                    isHost = false;
+                    isMultiplayer = true;
+                    const data = snap.data();
                     gameSeed = data.seed;
+
+                    await updateDoc(roomRef, {
+                        guest: { y: 150, rotation: 0, dead: false, skin: equippedSkin, score: 0, name: playerName },
+                        state: 'playing'
+                    });
+
+                    unsubRoom = onSnapshot(roomRef, (docSnap) => {
+                        if (!docSnap.exists()) return;
+                        updateOtherPlayer(docSnap.data().host);
+                    }, (error) => console.error(error));
+
                     multiplayerModal.classList.add('hidden');
                     startGameFlow();
+                } else {
+                    mpErrorText.innerText = "Oda bulunamadı veya dolu!";
                 }
-                updateOtherPlayer(data.guest);
-            }, (error) => console.error(error));
-        } catch (e) {
-            mpErrorText.innerText = "Hata oluştu!";
-        }
-        createPartyBtn.disabled = false;
-    });
-
-    joinPartyBtn.addEventListener('click', async () => {
-        if (!user || !db) { mpErrorText.innerText = "Bağlantı hatası!"; return; }
-        const code = roomCodeInput.value;
-        if (code.length !== 3) { mpErrorText.innerText = "3 haneli kod girin!"; return; }
-        
-        joinPartyBtn.disabled = true;
-        const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', code);
-        
-        try {
-            const snap = await getDoc(roomRef);
-            if (snap.exists() && snap.data().state === 'waiting') {
-                roomCode = code;
-                isHost = false;
-                isMultiplayer = true;
-                const data = snap.data();
-                gameSeed = data.seed;
-                
-                await updateDoc(roomRef, {
-                    guest: { y: 150, rotation: 0, dead: false, skin: equippedSkin, score: 0 },
-                    state: 'playing'
-                });
-                
-                unsubRoom = onSnapshot(roomRef, (docSnap) => {
-                    if (!docSnap.exists()) return;
-                    updateOtherPlayer(docSnap.data().host);
-                }, (error) => console.error(error));
-                
-                multiplayerModal.classList.add('hidden');
-                startGameFlow();
-            } else {
-                mpErrorText.innerText = "Oda bulunamadı veya dolu!";
+            } catch (e) {
+                mpErrorText.innerText = "Hata oluştu!";
             }
-        } catch (e) {
-            mpErrorText.innerText = "Hata oluştu!";
+            joinPartyBtn.disabled = false;
+        });
+
+        function updateOtherPlayer(data) {
+            if (!data || state.current !== state.game) return;
+            otherPlayer.active = true;
+            otherPlayer.y = data.y;
+            otherPlayer.rotation = data.rotation;
+            otherPlayer.dead = data.dead;
+            otherPlayer.skin = data.skin;
+            otherPlayer.score = data.score;
+            otherPlayer.name = data.name || "Rakip";
         }
-        joinPartyBtn.disabled = false;
-    });
 
-    function updateOtherPlayer(data) {
-        if (!data || state.current !== state.game) return;
-        otherPlayer.active = true;
-        otherPlayer.y = data.y;
-        otherPlayer.rotation = data.rotation;
-        otherPlayer.dead = data.dead;
-        otherPlayer.skin = data.skin;
-        otherPlayer.score = data.score;
-    }
-
-    function syncMultiplayer(forceDead = false) {
-        if (!isMultiplayer || !roomCode || !user || (!forceDead && state.current !== state.game)) return;
-        const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', roomCode);
-        const updateData = {};
-        updateData[isHost ? 'host' : 'guest'] = {
-            y: bird.y,
-            rotation: bird.rotation,
-            dead: forceDead ? true : (lives <= 0),
-            skin: equippedSkin,
-            score: score
-        };
-        updateDoc(roomRef, updateData).catch(e => {});
-    }
-
-    // Gerçek zamanlı multiplayer senkronizasyon döngüsü (10fps)
-    setInterval(() => syncMultiplayer(), 100);
-
-    // --- MÜZİK SİSTEMİ ---
-    const bgMusic = new Audio('normal_muzik.mp3'); 
-    bgMusic.loop = true;
-    bgMusic.volume = 0.4;
-
-    const bossMusic = new Audio('boss_muzik.mp3');
-    bossMusic.loop = true;
-    bossMusic.volume = 0.5;
-
-    let isMusicEnabled = true;
-    let currentMusic = null;
-
-    function switchMusic(newMusic) {
-        if (currentMusic) currentMusic.pause();
-        currentMusic = newMusic;
-        
-        if (isMusicEnabled && state.current === state.game) {
-            let playPromise = currentMusic.play();
-            if (playPromise !== undefined) {
-                playPromise.catch(error => console.log("Müzik başlatılamadı:", error));
-            }
+        function syncMultiplayer(forceDead = false) {
+            if (!isMultiplayer || !roomCode || !user || (!forceDead && state.current !== state.game)) return;
+            const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', roomCode);
+            const updateData = {};
+            updateData[isHost ? 'host' : 'guest'] = {
+                y: bird.y,
+                rotation: bird.rotation,
+                dead: forceDead ? true : (lives <= 0),
+                skin: equippedSkin,
+                score: score,
+                name: playerName
+            };
+            updateDoc(roomRef, updateData).catch(e => { });
         }
-    }
 
-    function toggleMusic() {
-        isMusicEnabled = !isMusicEnabled;
-        const icon = isMusicEnabled ? "🔊" : "🔇";
-        musicToggleBtn.innerText = icon;
-        pauseMusicToggleBtn.innerHTML = `<span>${icon}</span> Müzik: ${isMusicEnabled ? 'AÇIK' : 'KAPALI'}`;
-        
-        if (isMusicEnabled) {
-            if (state.current === state.game) {
-                switchMusic(boss.active ? bossMusic : bgMusic);
-            }
-        } else {
+        // Gerçek zamanlı multiplayer senkronizasyon döngüsü (10fps)
+        setInterval(() => syncMultiplayer(), 100);
+
+        // --- MÜZİK SİSTEMİ ---
+        const bgMusic = new Audio('normal_muzik.mp3');
+        bgMusic.loop = true;
+        bgMusic.volume = 0.4;
+
+        const bossMusic = new Audio('boss_muzik.mp3');
+        bossMusic.loop = true;
+        bossMusic.volume = 0.5;
+
+        let isMusicEnabled = true;
+        let currentMusic = null;
+
+        function switchMusic(newMusic) {
             if (currentMusic) currentMusic.pause();
-        }
-    }
-    
-    musicToggleBtn.addEventListener("click", toggleMusic);
-    musicToggleBtn.addEventListener("touchstart", (e) => { e.preventDefault(); toggleMusic(); }, {passive: false});
-    pauseMusicToggleBtn.addEventListener("click", toggleMusic);
-    pauseMusicToggleBtn.addEventListener("touchstart", (e) => { e.preventDefault(); toggleMusic(); }, {passive: false});
+            currentMusic = newMusic;
 
-    // Kuş Kostümleri
-    const skins = {
-        'default': { name: 'Sarı Kuş', color: '#facc15', wing: 'white', price: 0, desc: 'Sarı lazer atar.' },
-        'red': { name: 'Kırmızı Kuş', color: '#ef4444', wing: 'white', price: 50, desc: 'Kırmızı lazer atar.' },
-        'green': { name: 'Yeşil Kuş', color: '#22c55e', wing: 'white', price: 75, desc: 'Yeşil lazer atar.' },
-        'blue': { name: 'Mavi Kuş', color: '#3b82f6', wing: 'white', price: 100, desc: 'Mavi lazer atar.' },
-        'pink': { name: 'Pembe Kuş', color: '#ec4899', wing: 'white', price: 150, desc: 'Pembe lazer atar.' },
-        'purple': { name: 'Mor Kuş', color: '#a855f7', wing: 'white', price: 200, desc: 'Mor lazer atar.' },
-        'ninja': { name: 'Ninja Kuş', color: '#1f2937', wing: '#4b5563', price: 250, desc: 'Dönen katana fırlatır.' },
-        'dark': { name: 'Gölge Kuş', color: '#09090b', wing: '#27272a', price: 400, desc: 'Kara madde hilali fırlatır.' },
-        'gold': { name: 'Kral Kuş', color: '#fbbf24', wing: '#fef08a', price: 500, desc: 'Altın ok fırlatır.' },
-        'zombie': { name: 'Zombi Kuş', color: '#166534', wing: '#14532d', price: 600, desc: 'Kemik fırlatır.' },
-        'robot': { name: 'Robot Kuş', color: '#94a3b8', wing: '#38bdf8', price: 800, desc: 'Plazma lazeri atar.' },
-        'fire': { name: 'Ateş Kuşu', color: '#dc2626', wing: '#f59e0b', price: 1000, desc: 'Ateş topu fırlatır.' },
-        'masked': { name: 'Maskeli Kuş', color: '#ffcc99', wing: '#f4a460', price: 1200, desc: 'Bumerang fırlatır.' },
-        'ice': { name: 'Buz Kuşu', color: '#7dd3fc', wing: '#e0f2fe', price: 1500, desc: 'Buz sarkıtı fırlatır.' },
-        'diamond': { name: 'Elmas Kuş', color: '#2dd4bf', wing: '#ccfbf1', price: 2500, desc: 'Elmas parçası fırlatır.' },
-        'ghost': { name: 'Hayalet Kuş', color: '#e5e7eb', wing: '#d1d5db', price: 80000, desc: 'ÖLÜMSÜZ! Hasar almaz.' }
-    };
-
-    function updateCoinsUI() {
-        coinCountEl.innerText = coins;
-        shopCoinCount.innerText = coins;
-    }
-    updateCoinsUI();
-
-    function saveData() {
-        localStorage.setItem('flappyCoins', coins);
-        localStorage.setItem('flappyOwnedSkins', JSON.stringify(ownedSkins));
-        localStorage.setItem('flappyEquippedSkin', equippedSkin);
-    }
-    
-    let maxLives = 5;
-    let lives = maxLives;
-    let damageInvulnerableTime = 0;
-
-    function updateLivesUI() {
-        livesDisplay.innerHTML = '';
-        for(let i = 0; i < maxLives; i++) {
-            if (i < lives) {
-                livesDisplay.innerHTML += `<svg class="w-6 h-6 text-red-500 fill-current drop-shadow-md" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>`;
-            } else {
-                livesDisplay.innerHTML += `<svg class="w-6 h-6 text-gray-800/50 fill-current drop-shadow-md" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>`;
+            if (isMusicEnabled && state.current === state.game) {
+                let playPromise = currentMusic.play();
+                if (playPromise !== undefined) {
+                    playPromise.catch(error => console.log("Müzik başlatılamadı:", error));
+                }
             }
         }
-    }
-    updateLivesUI();
 
-    function isInvulnerable() {
-        if (equippedSkin === 'ghost') return true;
-        return ghostMode.active || (damageInvulnerableTime > Date.now());
-    }
+        function toggleMusic() {
+            isMusicEnabled = !isMusicEnabled;
+            const icon = isMusicEnabled ? "🔊" : "🔇";
+            musicToggleBtn.innerText = icon;
+            pauseMusicToggleBtn.innerHTML = `<span>${icon}</span> Müzik: ${isMusicEnabled ? 'AÇIK' : 'KAPALI'}`;
 
-    function takeDamage() {
-        lives--;
+            if (isMusicEnabled) {
+                if (state.current === state.game) {
+                    switchMusic(boss.active ? bossMusic : bgMusic);
+                }
+            } else {
+                if (currentMusic) currentMusic.pause();
+            }
+        }
+
+        musicToggleBtn.addEventListener("click", toggleMusic);
+        musicToggleBtn.addEventListener("touchstart", (e) => { e.preventDefault(); toggleMusic(); }, { passive: false });
+        pauseMusicToggleBtn.addEventListener("click", toggleMusic);
+        pauseMusicToggleBtn.addEventListener("touchstart", (e) => { e.preventDefault(); toggleMusic(); }, { passive: false });
+
+        // Kuş Kostümleri
+        const skins = {
+            'default': { name: 'Sarı Kuş', color: '#facc15', wing: 'white', price: 0, desc: 'Sarı lazer atar.' },
+            'red': { name: 'Kırmızı Kuş', color: '#ef4444', wing: 'white', price: 50, desc: 'Kırmızı lazer atar.' },
+            'green': { name: 'Yeşil Kuş', color: '#22c55e', wing: 'white', price: 75, desc: 'Yeşil lazer atar.' },
+            'blue': { name: 'Mavi Kuş', color: '#3b82f6', wing: 'white', price: 100, desc: 'Mavi lazer atar.' },
+            'pink': { name: 'Pembe Kuş', color: '#ec4899', wing: 'white', price: 150, desc: 'Pembe lazer atar.' },
+            'purple': { name: 'Mor Kuş', color: '#a855f7', wing: 'white', price: 200, desc: 'Mor lazer atar.' },
+            'ninja': { name: 'Ninja Kuş', color: '#1f2937', wing: '#4b5563', price: 250, desc: 'Dönen katana fırlatır.' },
+            'dark': { name: 'Gölge Kuş', color: '#09090b', wing: '#27272a', price: 400, desc: 'Kara madde hilali fırlatır.' },
+            'gold': { name: 'Kral Kuş', color: '#fbbf24', wing: '#fef08a', price: 500, desc: 'Altın ok fırlatır.' },
+            'zombie': { name: 'Zombi Kuş', color: '#166534', wing: '#14532d', price: 600, desc: 'Kemik fırlatır.' },
+            'robot': { name: 'Robot Kuş', color: '#94a3b8', wing: '#38bdf8', price: 800, desc: 'Plazma lazeri atar.' },
+            'fire': { name: 'Ateş Kuşu', color: '#dc2626', wing: '#f59e0b', price: 1000, desc: 'Ateş topu fırlatır.' },
+            'masked': { name: 'Maskeli Kuş', color: '#ffcc99', wing: '#f4a460', price: 1200, desc: 'Bumerang fırlatır.' },
+            'ice': { name: 'Buz Kuşu', color: '#7dd3fc', wing: '#e0f2fe', price: 1500, desc: 'Buz sarkıtı fırlatır.' },
+            'diamond': { name: 'Elmas Kuş', color: '#2dd4bf', wing: '#ccfbf1', price: 2500, desc: 'Elmas parçası fırlatır.' },
+            'ghost': { name: 'Hayalet Kuş', color: '#e5e7eb', wing: '#d1d5db', price: 80000, desc: 'ÖLÜMSÜZ! Hasar almaz.' }
+        };
+
+        function updateCoinsUI() {
+            coinCountEl.innerText = coins;
+            shopCoinCount.innerText = coins;
+        }
+        updateCoinsUI();
+
+        function saveData() {
+            localStorage.setItem('flappyCoins', coins);
+            localStorage.setItem('flappyOwnedSkins', JSON.stringify(ownedSkins));
+            localStorage.setItem('flappyEquippedSkin', equippedSkin);
+        }
+
+        let maxLives = 5;
+        let lives = maxLives;
+        let damageInvulnerableTime = 0;
+
+        function updateLivesUI() {
+            livesDisplay.innerHTML = '';
+            for (let i = 0; i < maxLives; i++) {
+                if (i < lives) {
+                    livesDisplay.innerHTML += `<svg class="w-6 h-6 text-red-500 fill-current drop-shadow-md" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>`;
+                } else {
+                    livesDisplay.innerHTML += `<svg class="w-6 h-6 text-gray-800/50 fill-current drop-shadow-md" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>`;
+                }
+            }
+        }
         updateLivesUI();
-        
-        if (lives <= 0) {
-            state.current = state.over;
-            syncMultiplayer(true); // Çok oyunculuda öldüğünü rakibe bildir
-            showGameOver(false);
-        } else {
-            damageInvulnerableTime = Date.now() + 2000;
-            if (bird.y + bird.radius >= canvas.height - 100) {
-                bird.speed = -bird.jump * 1.5;
+
+        function isInvulnerable() {
+            if (equippedSkin === 'ghost') return true;
+            return ghostMode.active || (damageInvulnerableTime > Date.now());
+        }
+
+        function takeDamage() {
+            lives--;
+            updateLivesUI();
+
+            if (lives <= 0) {
+                state.current = state.over;
+                syncMultiplayer(true); // Çok oyunculuda öldüğünü rakibe bildir
+                showGameOver(false);
+            } else {
+                damageInvulnerableTime = Date.now() + 2000;
+                if (bird.y + bird.radius >= canvas.height - 100) {
+                    bird.speed = -bird.jump * 1.5;
+                }
             }
         }
-    }
 
-    const ghostMode = {
-        active: false,
-        cooldown: false,
-        duration: 5000, 
-        cooldownTime: 30000,
-        endTime: 0,
-        cooldownEndTime: 0
-    };
+        const ghostMode = {
+            active: false,
+            cooldown: false,
+            duration: 5000,
+            cooldownTime: 30000,
+            endTime: 0,
+            cooldownEndTime: 0
+        };
 
-    function activateGhostMode() {
-        ghostMode.active = true;
-        ghostMode.endTime = Date.now() + ghostMode.duration;
-    }
-
-    function updateGhostMode() {
-        if(state.current !== state.game) return;
-        const now = Date.now();
-        if (ghostMode.active) {
-            let timeLeft = ghostMode.endTime - now;
-            if (timeLeft <= 0) {
-                ghostMode.active = false;
-                ghostMode.cooldown = true;
-                ghostMode.cooldownEndTime = now + ghostMode.cooldownTime;
-                abilityBar.className = "h-full transition-all duration-100 bg-gray-400";
-                abilityIcon.className = "w-8 h-8 rounded-full flex items-center justify-center text-white font-bold border-2 border-white shadow-lg bg-gray-500";
-            } else {
-                let pct = (timeLeft / ghostMode.duration) * 100;
-                abilityBar.style.width = `${pct}%`;
-                abilityBar.className = "h-full transition-all duration-100 bg-yellow-400";
-                abilityIcon.className = "w-8 h-8 rounded-full flex items-center justify-center text-white font-bold border-2 border-white bg-yellow-500 shadow-[0_0_15px_yellow]";
-            }
-        } else if (ghostMode.cooldown) {
-            let timeLeft = ghostMode.cooldownEndTime - now;
-            if (timeLeft <= 0) {
-                ghostMode.cooldown = false;
-                abilityBar.style.width = `100%`;
-                abilityBar.className = "h-full transition-all duration-300 bg-blue-400";
-                abilityIcon.className = "w-8 h-8 rounded-full flex items-center justify-center text-white font-bold border-2 border-white shadow-lg bg-blue-500";
-            } else {
-                let pct = 100 - ((timeLeft / ghostMode.cooldownTime) * 100);
-                abilityBar.style.width = `${pct}%`;
-            }
+        function activateGhostMode() {
+            ghostMode.active = true;
+            ghostMode.endTime = Date.now() + ghostMode.duration;
         }
-    }
 
-    function resetGhostMode() {
-        ghostMode.active = false;
-        ghostMode.cooldown = false;
-        abilityBar.style.width = `100%`;
-        abilityBar.className = "h-full w-full transition-all duration-100 bg-blue-400";
-        abilityIcon.className = "w-8 h-8 rounded-full flex items-center justify-center text-white font-bold border-2 border-white shadow-lg bg-blue-500";
-    }
-    
-    const state = { current: 0, getReady: 0, game: 1, over: 2, shop: 3, paused: 4 };
-
-    // Mermiler ve Çarpışmalar
-    const projectiles = {
-        player: [],
-        boss: [],
-        update: function() {
+        function updateGhostMode() {
             if (state.current !== state.game) return;
-            
-            for(let i = 0; i < this.player.length; i++) {
-                let p = this.player[i];
-                p.x += p.dx;
-                if (boss.active) {
-                    let dx = p.x - boss.x;
-                    let dy = p.y - boss.y;
-                    if (Math.sqrt(dx*dx + dy*dy) < 40 + p.radius) { 
-                        boss.hp--;
+            const now = Date.now();
+            if (ghostMode.active) {
+                let timeLeft = ghostMode.endTime - now;
+                if (timeLeft <= 0) {
+                    ghostMode.active = false;
+                    ghostMode.cooldown = true;
+                    ghostMode.cooldownEndTime = now + ghostMode.cooldownTime;
+                    abilityBar.className = "h-full transition-all duration-100 bg-gray-400";
+                    abilityIcon.className = "w-8 h-8 rounded-full flex items-center justify-center text-white font-bold border-2 border-white shadow-lg bg-gray-500";
+                } else {
+                    let pct = (timeLeft / ghostMode.duration) * 100;
+                    abilityBar.style.width = `${pct}%`;
+                    abilityBar.className = "h-full transition-all duration-100 bg-yellow-400";
+                    abilityIcon.className = "w-8 h-8 rounded-full flex items-center justify-center text-white font-bold border-2 border-white bg-yellow-500 shadow-[0_0_15px_yellow]";
+                }
+            } else if (ghostMode.cooldown) {
+                let timeLeft = ghostMode.cooldownEndTime - now;
+                if (timeLeft <= 0) {
+                    ghostMode.cooldown = false;
+                    abilityBar.style.width = `100%`;
+                    abilityBar.className = "h-full transition-all duration-300 bg-blue-400";
+                    abilityIcon.className = "w-8 h-8 rounded-full flex items-center justify-center text-white font-bold border-2 border-white shadow-lg bg-blue-500";
+                } else {
+                    let pct = 100 - ((timeLeft / ghostMode.cooldownTime) * 100);
+                    abilityBar.style.width = `${pct}%`;
+                }
+            }
+        }
+
+        function resetGhostMode() {
+            ghostMode.active = false;
+            ghostMode.cooldown = false;
+            abilityBar.style.width = `100%`;
+            abilityBar.className = "h-full w-full transition-all duration-100 bg-blue-400";
+            abilityIcon.className = "w-8 h-8 rounded-full flex items-center justify-center text-white font-bold border-2 border-white shadow-lg bg-blue-500";
+        }
+
+        const state = { current: 0, getReady: 0, game: 1, over: 2, shop: 3, paused: 4 };
+
+        // Mermiler ve Çarpışmalar
+        const projectiles = {
+            player: [],
+            boss: [],
+            update: function () {
+                if (state.current !== state.game) return;
+
+                for (let i = 0; i < this.player.length; i++) {
+                    let p = this.player[i];
+                    p.x += p.dx;
+                    if (boss.active) {
+                        let dx = p.x - boss.x;
+                        let dy = p.y - boss.y;
+                        if (Math.sqrt(dx * dx + dy * dy) < 40 + p.radius) {
+                            boss.hp--;
+                            this.player.splice(i, 1);
+                            i--;
+                            continue;
+                        }
+                    }
+                    if (p.x > canvas.width) {
                         this.player.splice(i, 1);
                         i--;
-                        continue;
                     }
                 }
-                if (p.x > canvas.width) {
-                    this.player.splice(i, 1);
-                    i--;
-                }
-            }
 
-            for(let i = 0; i < this.boss.length; i++) {
-                let b = this.boss[i];
-                b.x += b.dx;
-                b.y += b.dy;
-                
-                if (!isInvulnerable()) {
-                    let dx = b.x - bird.x;
-                    let dy = b.y - bird.y;
-                    if (Math.sqrt(dx*dx + dy*dy) < bird.radius + b.radius) {
-                        takeDamage();
+                for (let i = 0; i < this.boss.length; i++) {
+                    let b = this.boss[i];
+                    b.x += b.dx;
+                    b.y += b.dy;
+
+                    if (!isInvulnerable()) {
+                        let dx = b.x - bird.x;
+                        let dy = b.y - bird.y;
+                        if (Math.sqrt(dx * dx + dy * dy) < bird.radius + b.radius) {
+                            takeDamage();
+                            this.boss.splice(i, 1);
+                            i--;
+                            continue;
+                        }
+                    }
+
+                    if (b.x < -20 || b.y < -20 || b.y > canvas.height + 20) {
                         this.boss.splice(i, 1);
                         i--;
-                        continue;
                     }
                 }
-                
-                if (b.x < -20 || b.y < -20 || b.y > canvas.height + 20) {
-                    this.boss.splice(i, 1);
-                    i--;
+            },
+            draw: function () {
+                for (let p of this.player) {
+                    ctx.save();
+                    ctx.translate(p.x, p.y);
+                    p.rot += 0.2;
+
+                    if (p.skin === 'ninja') {
+                        ctx.rotate(p.rot);
+                        ctx.fillStyle = "#1f2937"; ctx.fillRect(-10, -1, 4, 2);
+                        ctx.fillStyle = "#fbbf24"; ctx.fillRect(-6, -3, 2, 6);
+                        ctx.fillStyle = "#e5e7eb";
+                        ctx.beginPath(); ctx.moveTo(-4, -1); ctx.lineTo(10, -1); ctx.lineTo(12, 1); ctx.lineTo(-4, 1); ctx.fill();
+                    } else if (p.skin === 'fire') {
+                        ctx.fillStyle = "#ef4444"; ctx.shadowColor = "#f97316"; ctx.shadowBlur = 10;
+                        ctx.beginPath(); ctx.arc(0, 0, 7, 0, Math.PI * 2); ctx.fill();
+                        ctx.fillStyle = "#facc15"; ctx.beginPath(); ctx.arc(-2, 0, 4, 0, Math.PI * 2); ctx.fill();
+                    } else if (p.skin === 'ice') {
+                        ctx.fillStyle = "#bae6fd"; ctx.shadowColor = "#7dd3fc"; ctx.shadowBlur = 5;
+                        ctx.beginPath(); ctx.moveTo(-8, -3); ctx.lineTo(10, 0); ctx.lineTo(-8, 3); ctx.fill();
+                    } else if (p.skin === 'zombie') {
+                        ctx.fillStyle = "#f3f4f6"; ctx.rotate(p.rot);
+                        ctx.fillRect(-6, -2, 12, 4);
+                        ctx.beginPath(); ctx.arc(-6, -2, 3, 0, Math.PI * 2); ctx.arc(-6, 2, 3, 0, Math.PI * 2);
+                        ctx.arc(6, -2, 3, 0, Math.PI * 2); ctx.arc(6, 2, 3, 0, Math.PI * 2); ctx.fill();
+                    } else if (p.skin === 'robot') {
+                        ctx.fillStyle = "#ef4444"; ctx.shadowColor = "#ef4444"; ctx.shadowBlur = 8;
+                        ctx.fillRect(-10, -1.5, 20, 3);
+                        ctx.fillStyle = "white"; ctx.fillRect(-8, -0.5, 16, 1);
+                    } else if (p.skin === 'diamond') {
+                        ctx.fillStyle = "#2dd4bf"; ctx.strokeStyle = "white"; ctx.lineWidth = 1;
+                        ctx.beginPath(); ctx.moveTo(-6, 0); ctx.lineTo(0, -5); ctx.lineTo(8, 0); ctx.lineTo(0, 5); ctx.closePath();
+                        ctx.fill(); ctx.stroke();
+                    } else if (p.skin === 'gold') {
+                        ctx.fillStyle = "#fbbf24"; ctx.shadowColor = "#fcd34d"; ctx.shadowBlur = 5;
+                        ctx.beginPath(); ctx.moveTo(-6, -4); ctx.lineTo(8, 0); ctx.lineTo(-6, 4); ctx.lineTo(-3, 0); ctx.fill();
+                    } else if (p.skin === 'masked') {
+                        ctx.fillStyle = "#111827"; ctx.shadowColor = "rgba(0,0,0,0.5)"; ctx.shadowBlur = 4;
+                        ctx.beginPath(); ctx.moveTo(-6, -5); ctx.lineTo(8, -2); ctx.lineTo(2, 0); ctx.lineTo(8, 2); ctx.lineTo(-6, 5); ctx.lineTo(-2, 0); ctx.fill();
+                    } else if (p.skin === 'ghost') {
+                        ctx.fillStyle = "rgba(209, 213, 219, 0.8)"; ctx.shadowColor = "white"; ctx.shadowBlur = 8;
+                        ctx.beginPath(); ctx.arc(0, Math.sin(p.rot) * 3, 5, 0, Math.PI * 2); ctx.fill();
+                    } else if (p.skin === 'dark') {
+                        ctx.fillStyle = "#09090b"; ctx.shadowColor = "#3f3f46"; ctx.shadowBlur = 6;
+                        ctx.beginPath(); ctx.arc(0, 0, 7, Math.PI / 2, Math.PI * 1.5);
+                        ctx.arc(-4, 0, 7, Math.PI * 1.5, Math.PI / 2, true); ctx.fill();
+                    } else {
+                        ctx.fillStyle = skins[p.skin] ? skins[p.skin].color : "#06b6d4";
+                        ctx.fillRect(-8, -2, 16, 4);
+                    }
+                    ctx.restore();
+                }
+
+                for (let b of this.boss) {
+                    ctx.fillStyle = b.color || "#ef4444";
+                    ctx.shadowColor = b.color || "#ef4444";
+                    ctx.shadowBlur = 10;
+                    ctx.beginPath();
+                    ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
                 }
             }
-        },
-        draw: function() {
-            for(let p of this.player) {
-                ctx.save();
-                ctx.translate(p.x, p.y);
-                p.rot += 0.2; 
+        };
 
-                if (p.skin === 'ninja') {
-                    ctx.rotate(p.rot);
-                    ctx.fillStyle = "#1f2937"; ctx.fillRect(-10, -1, 4, 2); 
-                    ctx.fillStyle = "#fbbf24"; ctx.fillRect(-6, -3, 2, 6);  
-                    ctx.fillStyle = "#e5e7eb"; 
-                    ctx.beginPath(); ctx.moveTo(-4, -1); ctx.lineTo(10, -1); ctx.lineTo(12, 1); ctx.lineTo(-4, 1); ctx.fill();
-                } else if (p.skin === 'fire') {
-                    ctx.fillStyle = "#ef4444"; ctx.shadowColor = "#f97316"; ctx.shadowBlur = 10;
-                    ctx.beginPath(); ctx.arc(0, 0, 7, 0, Math.PI*2); ctx.fill();
-                    ctx.fillStyle = "#facc15"; ctx.beginPath(); ctx.arc(-2, 0, 4, 0, Math.PI*2); ctx.fill();
-                } else if (p.skin === 'ice') {
-                    ctx.fillStyle = "#bae6fd"; ctx.shadowColor = "#7dd3fc"; ctx.shadowBlur = 5;
-                    ctx.beginPath(); ctx.moveTo(-8, -3); ctx.lineTo(10, 0); ctx.lineTo(-8, 3); ctx.fill();
-                } else if (p.skin === 'zombie') {
-                    ctx.fillStyle = "#f3f4f6"; ctx.rotate(p.rot);
-                    ctx.fillRect(-6, -2, 12, 4);
-                    ctx.beginPath(); ctx.arc(-6, -2, 3, 0, Math.PI*2); ctx.arc(-6, 2, 3, 0, Math.PI*2);
-                    ctx.arc(6, -2, 3, 0, Math.PI*2); ctx.arc(6, 2, 3, 0, Math.PI*2); ctx.fill();
-                } else if (p.skin === 'robot') {
-                    ctx.fillStyle = "#ef4444"; ctx.shadowColor = "#ef4444"; ctx.shadowBlur = 8;
-                    ctx.fillRect(-10, -1.5, 20, 3);
-                    ctx.fillStyle = "white"; ctx.fillRect(-8, -0.5, 16, 1);
-                } else if (p.skin === 'diamond') {
-                    ctx.fillStyle = "#2dd4bf"; ctx.strokeStyle = "white"; ctx.lineWidth = 1;
-                    ctx.beginPath(); ctx.moveTo(-6, 0); ctx.lineTo(0, -5); ctx.lineTo(8, 0); ctx.lineTo(0, 5); ctx.closePath();
-                    ctx.fill(); ctx.stroke();
-                } else if (p.skin === 'gold') {
-                    ctx.fillStyle = "#fbbf24"; ctx.shadowColor = "#fcd34d"; ctx.shadowBlur = 5;
-                    ctx.beginPath(); ctx.moveTo(-6, -4); ctx.lineTo(8, 0); ctx.lineTo(-6, 4); ctx.lineTo(-3, 0); ctx.fill();
-                } else if (p.skin === 'masked') {
-                    ctx.fillStyle = "#111827"; ctx.shadowColor = "rgba(0,0,0,0.5)"; ctx.shadowBlur = 4;
-                    ctx.beginPath(); ctx.moveTo(-6, -5); ctx.lineTo(8, -2); ctx.lineTo(2, 0); ctx.lineTo(8, 2); ctx.lineTo(-6, 5); ctx.lineTo(-2, 0); ctx.fill();
-                } else if (p.skin === 'ghost') {
-                    ctx.fillStyle = "rgba(209, 213, 219, 0.8)"; ctx.shadowColor = "white"; ctx.shadowBlur = 8;
-                    ctx.beginPath(); ctx.arc(0, Math.sin(p.rot)*3, 5, 0, Math.PI*2); ctx.fill();
-                } else if (p.skin === 'dark') {
-                    ctx.fillStyle = "#09090b"; ctx.shadowColor = "#3f3f46"; ctx.shadowBlur = 6;
-                    ctx.beginPath(); ctx.arc(0, 0, 7, Math.PI/2, Math.PI*1.5); 
-                    ctx.arc(-4, 0, 7, Math.PI*1.5, Math.PI/2, true); ctx.fill();
+        const boss = {
+            active: false,
+            x: 500, y: 300,
+            hp: 0, maxHp: 0,
+            type: 0, name: "", color: "",
+            moveAngle: 0,
+            spawn: function (lvl) {
+                this.active = true;
+                this.x = canvas.width + 50;
+                this.y = canvas.height / 2;
+                this.moveAngle = 0;
+
+                if (lvl === 3) { this.maxHp = 30; this.name = "Basit Boss"; this.color = "#22c55e"; this.type = 1; }
+                else if (lvl === 6) { this.maxHp = 60; this.name = "Orta Boss"; this.color = "#eab308"; this.type = 2; }
+                else if (lvl === 9) { this.maxHp = 90; this.name = "Zor Boss"; this.color = "#ef4444"; this.type = 3; }
+                else if (lvl === 12) { this.maxHp = 120; this.name = "Ekstra Zor Boss"; this.color = "#000000"; this.type = 4; }
+                else if (lvl === 15) { this.maxHp = 150; this.name = "Efsanevi Boss"; this.color = "#8b5cf6"; this.type = 5; }
+                else { this.active = false; return; }
+
+                this.hp = this.maxHp;
+                bossUI.classList.remove('hidden');
+                bossNameEl.innerText = `BOSS: ${this.name}`;
+
+                switchMusic(bossMusic);
+            },
+            update: function () {
+                if (!this.active) return;
+
+                if (this.x > canvas.width - 60) {
+                    this.x -= (0.8 + this.type * 0.2);
                 } else {
-                    ctx.fillStyle = skins[p.skin] ? skins[p.skin].color : "#06b6d4";
-                    ctx.fillRect(-8, -2, 16, 4);
+                    this.moveAngle += 0.02 + (this.type * 0.008);
+
+                    let targetY = canvas.height / 2 + Math.sin(this.moveAngle) * 150;
+                    if (this.type >= 3) {
+                        targetY = bird.y + Math.sin(this.moveAngle) * 100;
+                    }
+                    targetY = Math.max(100, Math.min(canvas.height - 150, targetY));
+
+                    let followSpeed = 0.02 + (this.type * 0.005);
+                    this.y += (targetY - this.y) * followSpeed;
                 }
-                ctx.restore();
-            }
-            
-            for(let b of this.boss) {
-                ctx.fillStyle = b.color || "#ef4444";
-                ctx.shadowColor = b.color || "#ef4444";
-                ctx.shadowBlur = 10;
-                ctx.beginPath();
-                ctx.arc(b.x, b.y, b.radius, 0, Math.PI*2);
-                ctx.fill();
-                ctx.shadowBlur = 0; 
-            }
-        }
-    };
 
-    const boss = {
-        active: false,
-        x: 500, y: 300,
-        hp: 0, maxHp: 0,
-        type: 0, name: "", color: "",
-        moveAngle: 0,
-        spawn: function(lvl) {
-            this.active = true;
-            this.x = canvas.width + 50;
-            this.y = canvas.height / 2;
-            this.moveAngle = 0;
-            
-            if (lvl === 3) { this.maxHp = 30; this.name = "Basit Boss"; this.color = "#22c55e"; this.type = 1; }
-            else if (lvl === 6) { this.maxHp = 60; this.name = "Orta Boss"; this.color = "#eab308"; this.type = 2; }
-            else if (lvl === 9) { this.maxHp = 90; this.name = "Zor Boss"; this.color = "#ef4444"; this.type = 3; }
-            else if (lvl === 12) { this.maxHp = 120; this.name = "Ekstra Zor Boss"; this.color = "#000000"; this.type = 4; }
-            else if (lvl === 15) { this.maxHp = 150; this.name = "Efsanevi Boss"; this.color = "#8b5cf6"; this.type = 5; }
-            else { this.active = false; return; }
-            
-            this.hp = this.maxHp;
-            bossUI.classList.remove('hidden');
-            bossNameEl.innerText = `BOSS: ${this.name}`;
-            
-            switchMusic(bossMusic);
-        },
-        update: function() {
-            if (!this.active) return;
-            
-            if (this.x > canvas.width - 60) {
-                this.x -= (0.8 + this.type * 0.2); 
-            } else {
-                this.moveAngle += 0.02 + (this.type * 0.008); 
-                
-                let targetY = canvas.height / 2 + Math.sin(this.moveAngle) * 150;
-                if (this.type >= 3) { 
-                    targetY = bird.y + Math.sin(this.moveAngle) * 100; 
+                let shootRate = 110;
+                if (this.type === 2) shootRate = 90;
+                if (this.type === 3) shootRate = 70;
+                if (this.type === 4) shootRate = 50;
+                if (this.type === 5) shootRate = 40;
+
+                if (frames % shootRate === 0 && this.x < canvas.width) {
+                    this.shoot();
                 }
-                targetY = Math.max(100, Math.min(canvas.height - 150, targetY));
-                
-                let followSpeed = 0.02 + (this.type * 0.005);
-                this.y += (targetY - this.y) * followSpeed;
-            }
-            
-            let shootRate = 110; 
-            if (this.type === 2) shootRate = 90; 
-            if (this.type === 3) shootRate = 70; 
-            if (this.type === 4) shootRate = 50; 
-            if (this.type === 5) shootRate = 40; 
 
-            if (frames % shootRate === 0 && this.x < canvas.width) {
-                this.shoot();
-            }
+                bossHpBar.style.width = `${(this.hp / this.maxHp) * 100}%`;
 
-            bossHpBar.style.width = `${(this.hp / this.maxHp) * 100}%`;
-
-            if (!isInvulnerable()) {
-                let dx = bird.x - this.x;
-                let dy = bird.y - this.y;
-                if (Math.sqrt(dx*dx + dy*dy) < bird.radius + 35) {
-                    takeDamage();
-                }
-            }
-
-            if (this.hp <= 0) {
-                this.die();
-            }
-        },
-        shoot: function() {
-            let speedX = -3 - (this.type * 0.5); 
-            if (this.type === 1) { 
-                projectiles.boss.push({x: this.x, y: this.y, dx: speedX, dy: 0, radius: 8});
-            } else if (this.type === 2) { 
-                projectiles.boss.push({x: this.x, y: this.y, dx: speedX, dy: -1.5, radius: 8});
-                projectiles.boss.push({x: this.x, y: this.y, dx: speedX, dy: 1.5, radius: 8});
-            } else if (this.type === 3) { 
-                projectiles.boss.push({x: this.x, y: this.y, dx: speedX, dy: -2, radius: 8});
-                projectiles.boss.push({x: this.x, y: this.y, dx: speedX, dy: 0, radius: 8});
-                projectiles.boss.push({x: this.x, y: this.y, dx: speedX, dy: 2, radius: 8});
-            } else if (this.type === 4) { 
-                projectiles.boss.push({x: this.x, y: this.y, dx: speedX, dy: -3, radius: 10, color: "fuchsia"});
-                projectiles.boss.push({x: this.x, y: this.y, dx: speedX, dy: 0, radius: 10, color: "fuchsia"});
-                projectiles.boss.push({x: this.x, y: this.y, dx: speedX, dy: 3, radius: 10, color: "fuchsia"});
-                
-                let angle = Math.atan2(bird.y - this.y, bird.x - this.x);
-                projectiles.boss.push({
-                    x: this.x, y: this.y + 20, 
-                    dx: Math.cos(angle) * 10, dy: Math.sin(angle) * 10, 
-                    radius: 11, color: "orange"
-                });
-            }
-        },
-        die: function() {
-            this.active = false;
-            bossUI.classList.add('hidden');
-            score += 100; 
-            
-            let reward = 20;
-            if (this.type === 1) reward = 20;        
-            else if (this.type === 2) reward = 40;   
-            else if (this.type === 3) reward = 60;   
-            else if (this.type === 4) reward = 80;   
-            else if (this.type === 5) reward = 1000; 
-            
-            coins += reward;
-            updateCoinsUI();
-            saveData();
-            scoreDisplay.innerText = score;
-            
-            bossMusic.currentTime = 0; 
-            switchMusic(bgMusic);
-        },
-        draw: function() {
-            if (!this.active) return;
-            ctx.save();
-            ctx.translate(this.x, this.y);
-            
-            ctx.fillStyle = this.color;
-            ctx.beginPath();
-            ctx.ellipse(0, 0, 40, 20, 0, 0, Math.PI*2);
-            ctx.fill();
-            ctx.lineWidth = 3;
-            ctx.strokeStyle = "white";
-            ctx.stroke();
-
-            ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
-            ctx.beginPath();
-            ctx.arc(0, -10, 15, 0, Math.PI, true);
-            ctx.fill();
-
-            ctx.fillStyle = (frames % 20 < 10) ? "red" : "yellow";
-            for(let i = -20; i <= 20; i+=20) {
-                ctx.beginPath();
-                ctx.arc(i, 5, 3, 0, Math.PI*2);
-                ctx.fill();
-            }
-
-            ctx.restore();
-        }
-    };
-
-    const bird = {
-        animation: [0, 1, 2, 1],
-        frame: 0,
-        x: 50,
-        y: 150,
-        w: 34,
-        h: 24,
-        radius: 12,
-        speed:0,
-        gravity: 0.3, 
-        jump: 5.0,    
-        rotation: 0,
-        
-        draw: function(isOpponent = false) {
-            ctx.save();
-            ctx.translate(this.x, this.y);
-            ctx.rotate(this.rotation);
-            
-            let skinKey = isOpponent ? otherPlayer.skin : equippedSkin;
-            let skin = skins[skinKey] || skins['default'];
-
-            let alpha = 1.0;
-            if (isOpponent) {
-                alpha = 0.4; // 2P Kuşu yarı saydamdır
-            } else if (skinKey === 'ghost') {
-                alpha = 0.5; 
-            } else if (isInvulnerable()) {
-                alpha = 0.4 + Math.abs(Math.sin(Date.now() / 150)) * 0.4;
-            }
-            ctx.globalAlpha = alpha;
-
-            if (skinKey === 'ninja') {
-                ctx.fillStyle = "#ef4444"; 
-                ctx.fillRect(-this.radius - 12, -4, 14, 4);
-                ctx.fillRect(-this.radius - 10, 0, 10, 4);
-            }
-            if (skinKey === 'fire') {
-                ctx.fillStyle = "#f97316"; 
-                ctx.beginPath();
-                ctx.moveTo(-this.radius + 2, 0);
-                ctx.lineTo(-this.radius - 15, -8);
-                ctx.lineTo(-this.radius - 2, -3);
-                ctx.lineTo(-this.radius - 18, 3);
-                ctx.lineTo(-this.radius - 2, 5);
-                ctx.lineTo(-this.radius - 12, 12);
-                ctx.lineTo(-this.radius + 2, 8);
-                ctx.fill();
-            }
-
-            ctx.beginPath();
-            if (skinKey === 'ghost') {
-                ctx.arc(0, -2, this.radius, Math.PI, 0);
-                ctx.lineTo(this.radius, this.radius + 2);
-                ctx.lineTo(this.radius/2, this.radius - 2);
-                ctx.lineTo(0, this.radius + 2);
-                ctx.lineTo(-this.radius/2, this.radius - 2);
-                ctx.lineTo(-this.radius, this.radius + 2);
-                ctx.closePath();
-            } else {
-                ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
-            }
-            ctx.fillStyle = skin.color; 
-            ctx.fill();
-            ctx.lineWidth = 2;
-            ctx.strokeStyle = "#000";
-            ctx.stroke();
-
-            if (skinKey === 'diamond') {
-                ctx.strokeStyle = "rgba(255, 255, 255, 0.6)"; 
-                ctx.lineWidth = 1.5;
-                ctx.beginPath();
-                ctx.moveTo(-8, -6); ctx.lineTo(8, -6); ctx.lineTo(0, 8); ctx.closePath();
-                ctx.stroke();
-                ctx.beginPath();
-                ctx.moveTo(-8, -6); ctx.lineTo(0, -11); ctx.lineTo(8, -6);
-                ctx.stroke();
-                ctx.lineWidth = 2; 
-                ctx.strokeStyle = "#000";
-            }
-            if (skinKey === 'zombie') {
-                ctx.strokeStyle = "#064e3b"; 
-                ctx.beginPath();
-                ctx.moveTo(-6, -6); ctx.lineTo(-10, 2);
-                ctx.moveTo(-9, -4); ctx.lineTo(-5, -3);
-                ctx.moveTo(-10, -1); ctx.lineTo(-6, 0);
-                ctx.stroke();
-                ctx.strokeStyle = "#000"; 
-            }
-
-            if (skinKey === 'ninja') {
-                ctx.fillStyle = "#ef4444";
-                ctx.fillRect(-this.radius, -8, this.radius * 2, 4); 
-            }
-            if (skinKey === 'gold') {
-                ctx.fillStyle = "#fcd34d"; 
-                ctx.beginPath();
-                ctx.moveTo(-8, -this.radius + 2);
-                ctx.lineTo(-12, -this.radius - 8);
-                ctx.lineTo(-4, -this.radius - 4);
-                ctx.lineTo(0, -this.radius - 12);
-                ctx.lineTo(4, -this.radius - 4);
-                ctx.lineTo(12, -this.radius - 8);
-                ctx.lineTo(8, -this.radius + 2);
-                ctx.fill();
-                ctx.stroke();
-            }
-            if (skinKey === 'robot') {
-                ctx.fillStyle = "#475569"; 
-                ctx.fillRect(-2, -this.radius - 6, 4, 6);
-                ctx.fillStyle = "#ef4444"; 
-                ctx.beginPath();
-                ctx.arc(0, -this.radius - 6, 3, 0, Math.PI*2);
-                ctx.fill();
-                ctx.stroke();
-            }
-            if (skinKey === 'masked') {
-                ctx.fillStyle = "#000000"; 
-                ctx.beginPath();
-                ctx.ellipse(4, -4, 9, 5, 0, 0, Math.PI*2);
-                ctx.fill();
-                ctx.beginPath();
-                ctx.moveTo(-4, -4);
-                ctx.lineTo(-this.radius - 8, -8);
-                ctx.lineTo(-this.radius - 4, -2);
-                ctx.fill();
-            }
-            if (skinKey === 'ice') {
-                ctx.fillStyle = "#bae6fd"; 
-                ctx.beginPath();
-                ctx.moveTo(-4, -this.radius + 2);
-                ctx.lineTo(-2, -this.radius - 10);
-                ctx.lineTo(2, -this.radius + 1);
-                ctx.fill();
-                ctx.beginPath();
-                ctx.moveTo(2, -this.radius + 2);
-                ctx.lineTo(6, -this.radius - 6);
-                ctx.lineTo(8, -this.radius + 4);
-                ctx.fill();
-            }
-
-            if (skinKey === 'robot') {
-                ctx.fillStyle = "#0ff"; 
-                ctx.fillRect(2, -6, 6, 6);
-                ctx.strokeRect(2, -6, 6, 6);
-                ctx.fillStyle = "white"; 
-                ctx.fillRect(4, -4, 2, 2);
-            } else if (skinKey === 'ninja') {
-                ctx.fillStyle = "white"; 
-                ctx.beginPath();
-                ctx.moveTo(1, -6); ctx.lineTo(9, -2); ctx.lineTo(1, -2); ctx.closePath();
-                ctx.fill(); ctx.stroke();
-                ctx.fillStyle = "black";
-                ctx.beginPath(); ctx.arc(6, -3, 1.5, 0, Math.PI*2); ctx.fill();
-            } else {
-                ctx.beginPath(); 
-                ctx.arc(5, -4, 4, 0, Math.PI * 2);
-                ctx.fillStyle = "white";
-                ctx.fill();
-                ctx.stroke();
-                
-                ctx.beginPath(); 
-                ctx.arc(6, -4, 1.5, 0, Math.PI * 2);
-                ctx.fillStyle = (skinKey === 'zombie') ? "#ef4444" : "black"; 
-                ctx.fill();
-            }
-
-            ctx.beginPath();
-            ctx.moveTo(8, 0);
-            ctx.lineTo(18, 2);
-            ctx.lineTo(8, 6);
-            ctx.closePath();
-            ctx.fillStyle = (skinKey === 'zombie') ? "#9a3412" : "#f97316"; 
-            ctx.fill();
-            ctx.stroke();
-            
-            const wingY = (this.frame % 2 === 0) ? 2 : -2;
-            ctx.beginPath();
-            if (skinKey === 'robot') {
-                ctx.rect(-8, wingY - 2, 10, 6); 
-            } else {
-                ctx.ellipse(-4, wingY, 6, 4, 0, 0, Math.PI * 2); 
-            }
-            ctx.fillStyle = skin.wing || "white";
-            ctx.fill();
-            ctx.stroke();
-
-            ctx.restore();
-        },
-        
-        flap: function() {
-            this.speed = -this.jump;
-        },
-        
-        update: function() {
-            this.period = state.current === state.getReady ? 10 : 5;
-            this.frame += frames % this.period === 0 ? 1 : 0;
-            this.frame = this.frame % this.animation.length;
-            
-            if(state.current === state.getReady) {
-                this.y = 150 + Math.cos(frames/10) * 5;
-                this.rotation = 0;
-            } else {
-                this.speed += this.gravity;
-                this.y += this.speed;
-                
-                if(this.y + this.radius >= canvas.height - 100) {
-                    this.y = canvas.height - 100 - this.radius;
-                    if(state.current === state.game && !isInvulnerable()) {
+                if (!isInvulnerable()) {
+                    let dx = bird.x - this.x;
+                    let dy = bird.y - this.y;
+                    if (Math.sqrt(dx * dx + dy * dy) < bird.radius + 35) {
                         takeDamage();
                     }
                 }
 
-                if(this.y - this.radius <= 0) {
-                    this.y = this.radius;
-                    this.speed = 0;
+                if (this.hp <= 0) {
+                    this.die();
                 }
-                
-                if(this.speed >= this.jump) {
-                    this.rotation = Math.min(Math.PI / 4, this.rotation + 0.1);
-                    this.frame = 1; 
-                } else {
-                    this.rotation = -25 * Math.PI / 180;
-                }
+            },
+            shoot: function () {
+                let speedX = -3 - (this.type * 0.5);
+                if (this.type === 1) {
+                    projectiles.boss.push({ x: this.x, y: this.y, dx: speedX, dy: 0, radius: 8 });
+                } else if (this.type === 2) {
+                    projectiles.boss.push({ x: this.x, y: this.y, dx: speedX, dy: -1.5, radius: 8 });
+                    projectiles.boss.push({ x: this.x, y: this.y, dx: speedX, dy: 1.5, radius: 8 });
+                } else if (this.type === 3) {
+                    projectiles.boss.push({ x: this.x, y: this.y, dx: speedX, dy: -2, radius: 8 });
+                    projectiles.boss.push({ x: this.x, y: this.y, dx: speedX, dy: 0, radius: 8 });
+                    projectiles.boss.push({ x: this.x, y: this.y, dx: speedX, dy: 2, radius: 8 });
+                } else if (this.type === 4) {
+                    projectiles.boss.push({ x: this.x, y: this.y, dx: speedX, dy: -3, radius: 10, color: "fuchsia" });
+                    projectiles.boss.push({ x: this.x, y: this.y, dx: speedX, dy: 0, radius: 10, color: "fuchsia" });
+                    projectiles.boss.push({ x: this.x, y: this.y, dx: speedX, dy: 3, radius: 10, color: "fuchsia" });
 
-                if (boss.active && frames % 15 === 0) {
-                    projectiles.player.push({x: this.x + 15, y: this.y, dx: 12, radius: 6, skin: equippedSkin, rot: 0});
-                }
-            }
-        },
-        reset: function() {
-            this.speed = 0;
-            this.y = 150;
-            this.rotation = 0;
-        }
-    };
-
-    const pipes = {
-        position: [],
-        width: 50,
-        gap: 170, 
-        dx: 4.5, 
-        spawnTimer: 0, 
-        
-        draw: function() {
-            for(let i = 0; i < this.position.length; i++) {
-                let p = this.position[i];
-                let topYPos = p.y;
-                let bottomYPos = p.y + this.gap;
-                
-                ctx.fillStyle = "#74bf2e";
-                ctx.fillRect(p.x, 0, this.width, topYPos);
-                ctx.lineWidth = 2;
-                ctx.strokeStyle = "#558c22";
-                ctx.strokeRect(p.x, 0, this.width, topYPos);
-                
-                ctx.fillRect(p.x - 4, topYPos - 20, this.width + 8, 20);
-                ctx.strokeRect(p.x - 4, topYPos - 20, this.width + 8, 20);
-                
-                let bottomHeight = canvas.height - 100 - bottomYPos; 
-                ctx.fillStyle = "#74bf2e";
-                ctx.fillRect(p.x, bottomYPos, this.width, bottomHeight);
-                ctx.strokeRect(p.x, bottomYPos, this.width, bottomHeight);
-                
-                ctx.fillRect(p.x - 4, bottomYPos, this.width + 8, 20);
-                ctx.strokeRect(p.x - 4, bottomYPos, this.width + 8, 20);
-                
-                if (p.coin && !p.coin.collected) {
-                    let cx = p.x + this.width / 2;
-                    let cy = p.coin.y;
-                    ctx.save();
-                    ctx.translate(cx, cy);
-                    let scale = 1 + 0.1 * Math.sin(frames / 15);
-                    ctx.scale(scale, scale);
-                    
-                    ctx.beginPath();
-                    ctx.arc(0, 0, p.coin.radius, 0, Math.PI * 2);
-                    ctx.fillStyle = "#fbbf24"; 
-                    ctx.fill();
-                    ctx.lineWidth = 1.5;
-                    ctx.strokeStyle = "#d97706"; 
-                    ctx.stroke();
-                    
-                    ctx.beginPath();
-                    ctx.arc(0, 0, p.coin.radius - 3, 0, Math.PI * 2);
-                    ctx.fillStyle = "#fde68a"; 
-                    ctx.fill();
-                    
-                    ctx.fillStyle = "#b45309"; 
-                    ctx.font = "bold 12px Arial";
-                    ctx.textAlign = "center";
-                    ctx.textBaseline = "middle";
-                    ctx.fillText("₺", 0, 1);
-                    
-                    ctx.restore();
-                }
-
-                if (p.heart && !p.heart.collected) {
-                    let hx = p.x + this.width / 2;
-                    let hy = p.heart.y;
-                    ctx.save();
-                    ctx.translate(hx, hy);
-                    let scale = 1 + 0.15 * Math.sin(frames / 10);
-                    ctx.scale(scale, scale);
-                    ctx.fillStyle = "#ef4444"; 
-                    ctx.shadowColor = "rgba(239, 68, 68, 0.8)";
-                    ctx.shadowBlur = 15;
-                    ctx.beginPath();
-                    ctx.moveTo(0, 3);
-                    ctx.bezierCurveTo(0, -5, -12, -5, -12, 3);
-                    ctx.bezierCurveTo(-12, 12, 0, 16, 0, 22);
-                    ctx.bezierCurveTo(0, 16, 12, 12, 12, 3);
-                    ctx.bezierCurveTo(12, -5, 0, -5, 0, 3);
-                    ctx.fill();
-                    ctx.restore();
-                }
-            }
-        },
-        
-        update: function() {
-            if(state.current !== state.game) return;
-            
-            if (!boss.active && !pendingBoss) {
-                this.spawnTimer += this.dx;
-                if (this.spawnTimer >= 220) { 
-                    this.spawnTimer -= 220; 
-                    let maxYPos = canvas.height - 100 - this.gap - 50;
-                    let minYPos = 50;
-                    // Multiplayer için tohumlu rastgele üretim kullanıyoruz
-                    let randomY = Math.floor(seededRandom() * (maxYPos - minYPos + 1)) + minYPos;
-                    
-                    let spawnHeart = (lives < maxLives) && (seededRandom() < 0.4);
-                    let spawnCoin = !spawnHeart && (seededRandom() < 0.6); 
-                    let heartObj = null;
-                    let coinObj = null;
-                    
-                    if (spawnHeart) {
-                        heartObj = { y: randomY + this.gap / 2, radius: 12, collected: false };
-                    } else if (spawnCoin) {
-                        coinObj = { y: randomY + this.gap / 2, radius: 10, collected: false };
-                    }
-
-                    this.position.push({
-                        x: canvas.width,
-                        y: randomY,
-                        passed: false, 
-                        heart: heartObj,
-                        coin: coinObj
+                    let angle = Math.atan2(bird.y - this.y, bird.x - this.x);
+                    projectiles.boss.push({
+                        x: this.x, y: this.y + 20,
+                        dx: Math.cos(angle) * 10, dy: Math.sin(angle) * 10,
+                        radius: 11, color: "orange"
                     });
                 }
-            }
+            },
+            die: function () {
+                this.active = false;
+                bossUI.classList.add('hidden');
+                score += 100;
 
-            if (pendingBoss && this.position.length === 0) {
-                boss.spawn(level);
-                pendingBoss = false;
-            }
-            
-            for(let i = 0; i < this.position.length; i++) {
-                let p = this.position[i];
-                let bottomPipeYPos = p.y + this.gap;
-                
-                if (p.coin && !p.coin.collected) {
-                    let cx = p.x + this.width / 2;
-                    let cy = p.coin.y;
-                    let dx = bird.x - cx;
-                    let dy = bird.y - cy;
-                    if (Math.sqrt(dx*dx + dy*dy) < bird.radius + p.coin.radius + 8) {
-                        p.coin.collected = true;
-                        let randomCoinAmount = Math.floor(seededRandom() * 100) + 1; 
-                        coins += randomCoinAmount;
-                        updateCoinsUI();
-                        saveData();
-                    }
+                let reward = 20;
+                if (this.type === 1) reward = 20;
+                else if (this.type === 2) reward = 40;
+                else if (this.type === 3) reward = 60;
+                else if (this.type === 4) reward = 80;
+                else if (this.type === 5) reward = 1000;
+
+                coins += reward;
+                updateCoinsUI();
+                saveData();
+                scoreDisplay.innerText = score;
+
+                bossMusic.currentTime = 0;
+                switchMusic(bgMusic);
+            },
+            draw: function () {
+                if (!this.active) return;
+                ctx.save();
+                ctx.translate(this.x, this.y);
+
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.ellipse(0, 0, 40, 20, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.lineWidth = 3;
+                ctx.strokeStyle = "white";
+                ctx.stroke();
+
+                ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
+                ctx.beginPath();
+                ctx.arc(0, -10, 15, 0, Math.PI, true);
+                ctx.fill();
+
+                ctx.fillStyle = (frames % 20 < 10) ? "red" : "yellow";
+                for (let i = -20; i <= 20; i += 20) {
+                    ctx.beginPath();
+                    ctx.arc(i, 5, 3, 0, Math.PI * 2);
+                    ctx.fill();
                 }
 
-                if (p.heart && !p.heart.collected && lives < maxLives) {
-                    let hx = p.x + this.width / 2;
-                    let hy = p.heart.y;
-                    let dx = bird.x - hx;
-                    let dy = bird.y - hy;
-                    if (Math.sqrt(dx*dx + dy*dy) < bird.radius + p.heart.radius + 8) {
-                        p.heart.collected = true;
-                        lives++; 
-                        updateLivesUI(); 
-                    }
+                ctx.restore();
+            }
+        };
+
+        const bird = {
+            animation: [0, 1, 2, 1],
+            frame: 0,
+            x: 50,
+            y: 150,
+            w: 34,
+            h: 24,
+            radius: 12,
+            speed: 0,
+            gravity: 0.3,
+            jump: 5.0,
+            rotation: 0,
+
+            draw: function (isOpponent = false) {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+
+                // --- İSİM ÇİZİMİ (Kuşun dönüşünden etkilenmemesi için buraya eklendi) ---
+                let displayName = isOpponent ? (otherPlayer.name || "Rakip") : (playerName || "Oyuncu");
+                ctx.font = "bold 12px 'Segoe UI', Arial, sans-serif";
+                ctx.textAlign = "center";
+                ctx.lineWidth = 3;
+                ctx.strokeStyle = "black";
+                ctx.fillStyle = "white";
+                ctx.globalAlpha = isOpponent ? 0.4 : 1.0; // Rakibin ismi de biraz saydam
+                ctx.strokeText(displayName, 0, -this.radius - 18);
+                ctx.fillText(displayName, 0, -this.radius - 18);
+                ctx.globalAlpha = 1.0; // Saydamlığı sıfırla
+
+                ctx.rotate(this.rotation);
+
+                let skinKey = isOpponent ? otherPlayer.skin : equippedSkin;
+                let skin = skins[skinKey] || skins['default'];
+
+                let alpha = 1.0;
+                if (isOpponent) {
+                    alpha = 0.4; // 2P Kuşu yarı saydamdır
+                } else if (skinKey === 'ghost') {
+                    alpha = 0.5;
+                } else if (isInvulnerable()) {
+                    alpha = 0.4 + Math.abs(Math.sin(Date.now() / 150)) * 0.4;
+                }
+                ctx.globalAlpha = alpha;
+
+                if (skinKey === 'ninja') {
+                    ctx.fillStyle = "#ef4444";
+                    ctx.fillRect(-this.radius - 12, -4, 14, 4);
+                    ctx.fillRect(-this.radius - 10, 0, 10, 4);
+                }
+                if (skinKey === 'fire') {
+                    ctx.fillStyle = "#f97316";
+                    ctx.beginPath();
+                    ctx.moveTo(-this.radius + 2, 0);
+                    ctx.lineTo(-this.radius - 15, -8);
+                    ctx.lineTo(-this.radius - 2, -3);
+                    ctx.lineTo(-this.radius - 18, 3);
+                    ctx.lineTo(-this.radius - 2, 5);
+                    ctx.lineTo(-this.radius - 12, 12);
+                    ctx.lineTo(-this.radius + 2, 8);
+                    ctx.fill();
                 }
 
-                if(!isInvulnerable()) {
-                    if(bird.x + bird.radius > p.x && bird.x - bird.radius < p.x + this.width) {
-                        if(bird.y - bird.radius < p.y || bird.y + bird.radius > bottomPipeYPos) {
+                ctx.beginPath();
+                if (skinKey === 'ghost') {
+                    ctx.arc(0, -2, this.radius, Math.PI, 0);
+                    ctx.lineTo(this.radius, this.radius + 2);
+                    ctx.lineTo(this.radius / 2, this.radius - 2);
+                    ctx.lineTo(0, this.radius + 2);
+                    ctx.lineTo(-this.radius / 2, this.radius - 2);
+                    ctx.lineTo(-this.radius, this.radius + 2);
+                    ctx.closePath();
+                } else {
+                    ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+                }
+                ctx.fillStyle = skin.color;
+                ctx.fill();
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = "#000";
+                ctx.stroke();
+
+                if (skinKey === 'diamond') {
+                    ctx.strokeStyle = "rgba(255, 255, 255, 0.6)";
+                    ctx.lineWidth = 1.5;
+                    ctx.beginPath();
+                    ctx.moveTo(-8, -6); ctx.lineTo(8, -6); ctx.lineTo(0, 8); ctx.closePath();
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.moveTo(-8, -6); ctx.lineTo(0, -11); ctx.lineTo(8, -6);
+                    ctx.stroke();
+                    ctx.lineWidth = 2;
+                    ctx.strokeStyle = "#000";
+                }
+                if (skinKey === 'zombie') {
+                    ctx.strokeStyle = "#064e3b";
+                    ctx.beginPath();
+                    ctx.moveTo(-6, -6); ctx.lineTo(-10, 2);
+                    ctx.moveTo(-9, -4); ctx.lineTo(-5, -3);
+                    ctx.moveTo(-10, -1); ctx.lineTo(-6, 0);
+                    ctx.stroke();
+                    ctx.strokeStyle = "#000";
+                }
+
+                if (skinKey === 'ninja') {
+                    ctx.fillStyle = "#ef4444";
+                    ctx.fillRect(-this.radius, -8, this.radius * 2, 4);
+                }
+                if (skinKey === 'gold') {
+                    ctx.fillStyle = "#fcd34d";
+                    ctx.beginPath();
+                    ctx.moveTo(-8, -this.radius + 2);
+                    ctx.lineTo(-12, -this.radius - 8);
+                    ctx.lineTo(-4, -this.radius - 4);
+                    ctx.lineTo(0, -this.radius - 12);
+                    ctx.lineTo(4, -this.radius - 4);
+                    ctx.lineTo(12, -this.radius - 8);
+                    ctx.lineTo(8, -this.radius + 2);
+                    ctx.fill();
+                    ctx.stroke();
+                }
+                if (skinKey === 'robot') {
+                    ctx.fillStyle = "#475569";
+                    ctx.fillRect(-2, -this.radius - 6, 4, 6);
+                    ctx.fillStyle = "#ef4444";
+                    ctx.beginPath();
+                    ctx.arc(0, -this.radius - 6, 3, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.stroke();
+                }
+                if (skinKey === 'masked') {
+                    ctx.fillStyle = "#000000";
+                    ctx.beginPath();
+                    ctx.ellipse(4, -4, 9, 5, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.beginPath();
+                    ctx.moveTo(-4, -4);
+                    ctx.lineTo(-this.radius - 8, -8);
+                    ctx.lineTo(-this.radius - 4, -2);
+                    ctx.fill();
+                }
+                if (skinKey === 'ice') {
+                    ctx.fillStyle = "#bae6fd";
+                    ctx.beginPath();
+                    ctx.moveTo(-4, -this.radius + 2);
+                    ctx.lineTo(-2, -this.radius - 10);
+                    ctx.lineTo(2, -this.radius + 1);
+                    ctx.fill();
+                    ctx.beginPath();
+                    ctx.moveTo(2, -this.radius + 2);
+                    ctx.lineTo(6, -this.radius - 6);
+                    ctx.lineTo(8, -this.radius + 4);
+                    ctx.fill();
+                }
+
+                if (skinKey === 'robot') {
+                    ctx.fillStyle = "#0ff";
+                    ctx.fillRect(2, -6, 6, 6);
+                    ctx.strokeRect(2, -6, 6, 6);
+                    ctx.fillStyle = "white";
+                    ctx.fillRect(4, -4, 2, 2);
+                } else if (skinKey === 'ninja') {
+                    ctx.fillStyle = "white";
+                    ctx.beginPath();
+                    ctx.moveTo(1, -6); ctx.lineTo(9, -2); ctx.lineTo(1, -2); ctx.closePath();
+                    ctx.fill(); ctx.stroke();
+                    ctx.fillStyle = "black";
+                    ctx.beginPath(); ctx.arc(6, -3, 1.5, 0, Math.PI * 2); ctx.fill();
+                } else {
+                    ctx.beginPath();
+                    ctx.arc(5, -4, 4, 0, Math.PI * 2);
+                    ctx.fillStyle = "white";
+                    ctx.fill();
+                    ctx.stroke();
+
+                    ctx.beginPath();
+                    ctx.arc(6, -4, 1.5, 0, Math.PI * 2);
+                    ctx.fillStyle = (skinKey === 'zombie') ? "#ef4444" : "black";
+                    ctx.fill();
+                }
+
+                ctx.beginPath();
+                ctx.moveTo(8, 0);
+                ctx.lineTo(18, 2);
+                ctx.lineTo(8, 6);
+                ctx.closePath();
+                ctx.fillStyle = (skinKey === 'zombie') ? "#9a3412" : "#f97316";
+                ctx.fill();
+                ctx.stroke();
+
+                const wingY = (this.frame % 2 === 0) ? 2 : -2;
+                ctx.beginPath();
+                if (skinKey === 'robot') {
+                    ctx.rect(-8, wingY - 2, 10, 6);
+                } else {
+                    ctx.ellipse(-4, wingY, 6, 4, 0, 0, Math.PI * 2);
+                }
+                ctx.fillStyle = skin.wing || "white";
+                ctx.fill();
+                ctx.stroke();
+
+                ctx.restore();
+            },
+
+            flap: function () {
+                this.speed = -this.jump;
+            },
+
+            update: function () {
+                this.period = state.current === state.getReady ? 10 : 5;
+                this.frame += frames % this.period === 0 ? 1 : 0;
+                this.frame = this.frame % this.animation.length;
+
+                if (state.current === state.getReady) {
+                    this.y = 150 + Math.cos(frames / 10) * 5;
+                    this.rotation = 0;
+                } else {
+                    this.speed += this.gravity;
+                    this.y += this.speed;
+
+                    if (this.y + this.radius >= canvas.height - 100) {
+                        this.y = canvas.height - 100 - this.radius;
+                        if (state.current === state.game && !isInvulnerable()) {
                             takeDamage();
                         }
                     }
+
+                    if (this.y - this.radius <= 0) {
+                        this.y = this.radius;
+                        this.speed = 0;
+                    }
+
+                    if (this.speed >= this.jump) {
+                        this.rotation = Math.min(Math.PI / 4, this.rotation + 0.1);
+                        this.frame = 1;
+                    } else {
+                        this.rotation = -25 * Math.PI / 180;
+                    }
+
+                    if (boss.active && frames % 15 === 0) {
+                        projectiles.player.push({ x: this.x + 15, y: this.y, dx: 12, radius: 6, skin: equippedSkin, rot: 0 });
+                    }
                 }
-                
-                p.x -= this.dx;
-                
-                if(p.x + this.width < bird.x && !p.passed) {
-                    score += 10; 
-                    scoreDisplay.innerText = score;
-                    p.passed = true;
+            },
+            reset: function () {
+                this.speed = 0;
+                this.y = 150;
+                this.rotation = 0;
+            }
+        };
+
+        const pipes = {
+            position: [],
+            width: 50,
+            gap: 170,
+            dx: 4.5,
+            spawnTimer: 0,
+
+            draw: function () {
+                for (let i = 0; i < this.position.length; i++) {
+                    let p = this.position[i];
+                    let topYPos = p.y;
+                    let bottomYPos = p.y + this.gap;
+
+                    ctx.fillStyle = "#74bf2e";
+                    ctx.fillRect(p.x, 0, this.width, topYPos);
+                    ctx.lineWidth = 2;
+                    ctx.strokeStyle = "#558c22";
+                    ctx.strokeRect(p.x, 0, this.width, topYPos);
+
+                    ctx.fillRect(p.x - 4, topYPos - 20, this.width + 8, 20);
+                    ctx.strokeRect(p.x - 4, topYPos - 20, this.width + 8, 20);
+
+                    let bottomHeight = canvas.height - 100 - bottomYPos;
+                    ctx.fillStyle = "#74bf2e";
+                    ctx.fillRect(p.x, bottomYPos, this.width, bottomHeight);
+                    ctx.strokeRect(p.x, bottomYPos, this.width, bottomHeight);
+
+                    ctx.fillRect(p.x - 4, bottomYPos, this.width + 8, 20);
+                    ctx.strokeRect(p.x - 4, bottomYPos, this.width + 8, 20);
+
+                    if (p.coin && !p.coin.collected) {
+                        let cx = p.x + this.width / 2;
+                        let cy = p.coin.y;
+                        ctx.save();
+                        ctx.translate(cx, cy);
+                        let scale = 1 + 0.1 * Math.sin(frames / 15);
+                        ctx.scale(scale, scale);
+
+                        ctx.beginPath();
+                        ctx.arc(0, 0, p.coin.radius, 0, Math.PI * 2);
+                        ctx.fillStyle = "#fbbf24";
+                        ctx.fill();
+                        ctx.lineWidth = 1.5;
+                        ctx.strokeStyle = "#d97706";
+                        ctx.stroke();
+
+                        ctx.beginPath();
+                        ctx.arc(0, 0, p.coin.radius - 3, 0, Math.PI * 2);
+                        ctx.fillStyle = "#fde68a";
+                        ctx.fill();
+
+                        ctx.fillStyle = "#b45309";
+                        ctx.font = "bold 12px Arial";
+                        ctx.textAlign = "center";
+                        ctx.textBaseline = "middle";
+                        ctx.fillText("₺", 0, 1);
+
+                        ctx.restore();
+                    }
+
+                    if (p.heart && !p.heart.collected) {
+                        let hx = p.x + this.width / 2;
+                        let hy = p.heart.y;
+                        ctx.save();
+                        ctx.translate(hx, hy);
+                        let scale = 1 + 0.15 * Math.sin(frames / 10);
+                        ctx.scale(scale, scale);
+                        ctx.fillStyle = "#ef4444";
+                        ctx.shadowColor = "rgba(239, 68, 68, 0.8)";
+                        ctx.shadowBlur = 15;
+                        ctx.beginPath();
+                        ctx.moveTo(0, 3);
+                        ctx.bezierCurveTo(0, -5, -12, -5, -12, 3);
+                        ctx.bezierCurveTo(-12, 12, 0, 16, 0, 22);
+                        ctx.bezierCurveTo(0, 16, 12, 12, 12, 3);
+                        ctx.bezierCurveTo(12, -5, 0, -5, 0, 3);
+                        ctx.fill();
+                        ctx.restore();
+                    }
                 }
-                
-                if(p.x + this.width <= 0) {
-                    this.position.shift();
-                    i--;
+            },
+
+            update: function () {
+                if (state.current !== state.game) return;
+
+                if (!boss.active && !pendingBoss) {
+                    this.spawnTimer += this.dx;
+                    if (this.spawnTimer >= 220) {
+                        this.spawnTimer -= 220;
+                        let maxYPos = canvas.height - 100 - this.gap - 50;
+                        let minYPos = 50;
+                        // Multiplayer için tohumlu rastgele üretim kullanıyoruz
+                        let randomY = Math.floor(seededRandom() * (maxYPos - minYPos + 1)) + minYPos;
+
+                        let spawnHeart = (lives < maxLives) && (seededRandom() < 0.4);
+                        let spawnCoin = !spawnHeart && (seededRandom() < 0.6);
+                        let heartObj = null;
+                        let coinObj = null;
+
+                        if (spawnHeart) {
+                            heartObj = { y: randomY + this.gap / 2, radius: 12, collected: false };
+                        } else if (spawnCoin) {
+                            coinObj = { y: randomY + this.gap / 2, radius: 10, collected: false };
+                        }
+
+                        this.position.push({
+                            x: canvas.width,
+                            y: randomY,
+                            passed: false,
+                            heart: heartObj,
+                            coin: coinObj
+                        });
+                    }
+                }
+
+                if (pendingBoss && this.position.length === 0) {
+                    boss.spawn(level);
+                    pendingBoss = false;
+                }
+
+                for (let i = 0; i < this.position.length; i++) {
+                    let p = this.position[i];
+                    let bottomPipeYPos = p.y + this.gap;
+
+                    if (p.coin && !p.coin.collected) {
+                        let cx = p.x + this.width / 2;
+                        let cy = p.coin.y;
+                        let dx = bird.x - cx;
+                        let dy = bird.y - cy;
+                        if (Math.sqrt(dx * dx + dy * dy) < bird.radius + p.coin.radius + 8) {
+                            p.coin.collected = true;
+                            let randomCoinAmount = Math.floor(seededRandom() * 100) + 1;
+                            coins += randomCoinAmount;
+                            updateCoinsUI();
+                            saveData();
+                        }
+                    }
+
+                    if (p.heart && !p.heart.collected && lives < maxLives) {
+                        let hx = p.x + this.width / 2;
+                        let hy = p.heart.y;
+                        let dx = bird.x - hx;
+                        let dy = bird.y - hy;
+                        if (Math.sqrt(dx * dx + dy * dy) < bird.radius + p.heart.radius + 8) {
+                            p.heart.collected = true;
+                            lives++;
+                            updateLivesUI();
+                        }
+                    }
+
+                    if (!isInvulnerable()) {
+                        if (bird.x + bird.radius > p.x && bird.x - bird.radius < p.x + this.width) {
+                            if (bird.y - bird.radius < p.y || bird.y + bird.radius > bottomPipeYPos) {
+                                takeDamage();
+                            }
+                        }
+                    }
+
+                    p.x -= this.dx;
+
+                    if (p.x + this.width < bird.x && !p.passed) {
+                        score += 10;
+                        scoreDisplay.innerText = score;
+                        p.passed = true;
+                    }
+
+                    if (p.x + this.width <= 0) {
+                        this.position.shift();
+                        i--;
+                    }
+                }
+            },
+            reset: function () {
+                this.position = [];
+            }
+        };
+
+        const clouds = {
+            list: [
+                { x: 50, y: 50, speed: 0.5, size: 30 },
+                { x: 250, y: 80, speed: 0.3, size: 20 },
+                { x: 150, y: 200, speed: 0.4, size: 40 }
+            ],
+            draw: function () {
+                ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
+                for (let i = 0; i < this.list.length; i++) {
+                    let c = this.list[i];
+                    ctx.beginPath();
+                    ctx.arc(c.x, c.y, c.size, 0, Math.PI * 2);
+                    ctx.arc(c.x + c.size * 0.8, c.y - c.size * 0.3, c.size * 0.8, 0, Math.PI * 2);
+                    ctx.arc(c.x + c.size * 1.6, c.y, c.size * 0.9, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            },
+            update: function () {
+                if (state.current === state.over) return;
+                for (let i = 0; i < this.list.length; i++) {
+                    let c = this.list[i];
+                    c.x -= c.speed;
+                    if (c.x + c.size * 2 < 0) {
+                        c.x = canvas.width + c.size;
+                        c.y = Math.random() * 200 + 30;
+                    }
                 }
             }
-        },
-        reset: function() {
-            this.position = [];
         }
-    };
 
-    const clouds = {
-        list: [
-            {x: 50, y: 50, speed: 0.5, size: 30},
-            {x: 250, y: 80, speed: 0.3, size: 20},
-            {x: 150, y: 200, speed: 0.4, size: 40}
-        ],
-        draw: function() {
-            ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
-            for(let i=0; i<this.list.length; i++){
-                let c = this.list[i];
-                ctx.beginPath();
-                ctx.arc(c.x, c.y, c.size, 0, Math.PI*2);
-                ctx.arc(c.x + c.size*0.8, c.y - c.size*0.3, c.size*0.8, 0, Math.PI*2);
-                ctx.arc(c.x + c.size*1.6, c.y, c.size*0.9, 0, Math.PI*2);
-                ctx.fill();
+        function draw() {
+            ctx.fillStyle = "#70c5ce";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = "#87ceeb";
+            ctx.fillRect(0, canvas.height - 150, canvas.width, 50);
+            ctx.fillStyle = "#5fb8b5";
+            for (let i = 0; i < 10; i++) {
+                ctx.fillRect(i * 45 + (frames * 0.2) % 45 - 45, canvas.height - 100 - (i % 3) * 15 - 20, 30, (i % 3) * 15 + 20);
             }
-        },
-        update: function() {
-            if(state.current === state.over) return;
-            for(let i=0; i<this.list.length; i++){
-                let c = this.list[i];
-                c.x -= c.speed;
-                if(c.x + c.size*2 < 0){
-                    c.x = canvas.width + c.size;
-                    c.y = Math.random() * 200 + 30;
+
+            clouds.draw();
+            pipes.draw();
+            boss.draw();
+            projectiles.draw();
+
+            // 2P Kuşunu Çiz (Diğer oyuncu)
+            if (isMultiplayer && otherPlayer.active && !otherPlayer.dead) {
+                bird.draw.call({
+                    x: 50,
+                    y: otherPlayer.y,
+                    rotation: otherPlayer.rotation,
+                    radius: bird.radius,
+                    frame: bird.frame
+                }, true); // true = Rakip (Yarı saydam)
+            }
+
+            // Kendi Kuşunu Çiz
+            bird.draw(false);
+        }
+
+        function update() {
+            bird.update();
+            pipes.update();
+            boss.update();
+            projectiles.update();
+            clouds.update();
+            updateGhostMode();
+
+            if (state.current === state.game) {
+                groundOffset += pipes.dx;
+                ground.style.transform = `translateX(-${groundOffset % 40}px)`;
+
+                if (score >= level * 100) {
+                    level++;
+                    levelDisplay.innerText = `Seviye: ${level}`;
+                    pipes.dx = 4.5 + ((level - 1) * 0.3);
+
+                    if (level > 15) {
+                        state.current = state.over;
+                        syncMultiplayer(true);
+                        showGameOver(true);
+                    } else if (level % 3 === 0) {
+                        pendingBoss = true;
+                    }
                 }
             }
         }
-    }
 
-    function draw() {
-        ctx.fillStyle = "#70c5ce";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        
-        ctx.fillStyle = "#87ceeb";
-        ctx.fillRect(0, canvas.height - 150, canvas.width, 50);
-        ctx.fillStyle = "#5fb8b5";
-        for(let i=0; i<10; i++){
-            ctx.fillRect(i*45 + (frames*0.2)%45 - 45, canvas.height - 100 - (i%3)*15 - 20, 30, (i%3)*15 + 20);
+        let lastTime = 0;
+        const targetFPS = 60;
+        const frameInterval = 1000 / targetFPS;
+
+        function loop(timestamp) {
+            requestAnimationFrame(loop);
+
+            if (!lastTime) lastTime = timestamp;
+            let deltaTime = timestamp - lastTime;
+
+            if (state.current === state.paused) {
+                lastTime = timestamp;
+                draw();
+                return;
+            }
+
+            if (deltaTime >= frameInterval) {
+                update();
+                draw();
+                frames++;
+                lastTime = timestamp - (deltaTime % frameInterval);
+            }
         }
 
-        clouds.draw();
-        pipes.draw();
-        boss.draw();
-        projectiles.draw();
-        
-        // 2P Kuşunu Çiz (Diğer oyuncu)
-        if (isMultiplayer && otherPlayer.active && !otherPlayer.dead) {
-            bird.draw.call({
-                x: 50,
-                y: otherPlayer.y,
-                rotation: otherPlayer.rotation,
-                radius: bird.radius,
-                frame: bird.frame
-            }, true); // true = Rakip (Yarı saydam)
-        }
-        
-        // Kendi Kuşunu Çiz
-        bird.draw(false);
-    }
+        function togglePause() {
+            if (state.current === state.game) {
+                state.current = state.paused;
+                pauseIcon.innerText = "▶️";
+                pauseText.innerText = "Devam Et";
+                pauseOverlay.classList.remove('hidden');
+                pauseBtn.classList.replace('bg-gray-800/80', 'bg-green-600/90');
 
-    function update() {
-        bird.update();
-        pipes.update();
-        boss.update();
-        projectiles.update();
-        clouds.update();
-        updateGhostMode();
-        
-        if(state.current === state.game) {
-            groundOffset += pipes.dx;
-            ground.style.transform = `translateX(-${groundOffset % 40}px)`;
-            
-            if (score >= level * 100) {
-                level++;
-                levelDisplay.innerText = `Seviye: ${level}`;
-                pipes.dx = 4.5 + ((level - 1) * 0.3);
-                
-                if (level > 15) {
-                    state.current = state.over;
-                    syncMultiplayer(true); 
-                    showGameOver(true);
-                } else if (level % 3 === 0) {
-                    pendingBoss = true;
+                if (currentMusic) currentMusic.pause();
+
+            } else if (state.current === state.paused) {
+                state.current = state.game;
+                pauseIcon.innerText = "⏸️";
+                pauseText.innerText = "Durdur";
+                pauseOverlay.classList.add('hidden');
+                pauseBtn.classList.replace('bg-green-600/90', 'bg-gray-800/80');
+
+                if (isMusicEnabled && currentMusic) {
+                    currentMusic.play().catch(e => console.log(e));
                 }
             }
         }
-    }
 
-    let lastTime = 0;
-    const targetFPS = 60;
-    const frameInterval = 1000 / targetFPS;
+        function controlAction(e) {
+            if (state.current === state.getReady || state.current === state.shop) {
+                return;
+            }
 
-    function loop(timestamp) {
-        requestAnimationFrame(loop);
-        
-        if (!lastTime) lastTime = timestamp;
-        let deltaTime = timestamp - lastTime;
-        
-        if (state.current === state.paused) {
-            lastTime = timestamp;
-            draw(); 
-            return;
+            if (e.type === "keydown") {
+                if (e.code === "KeyP" || e.code === "Escape") {
+                    if (state.current === state.game || state.current === state.paused) {
+                        togglePause();
+                    }
+                    return;
+                }
+                if (e.code === "KeyX") {
+                    if (state.current === state.game && !ghostMode.active && !ghostMode.cooldown) {
+                        activateGhostMode();
+                    }
+                    return;
+                }
+                if (e.code !== "Space") return;
+            }
+
+            if (state.current === state.game) {
+                bird.flap();
+            }
         }
 
-        if (deltaTime >= frameInterval) {
-            update();
-            draw();
-            frames++;
-            lastTime = timestamp - (deltaTime % frameInterval);
-        }
-    }
+        window.renderShop = function () {
+            shopCoinCount.innerText = coins;
+            skinList.innerHTML = '';
+            for (let key in skins) {
+                let skin = skins[key];
+                let isOwned = ownedSkins.includes(key);
+                let isEquipped = equippedSkin === key;
 
-    function togglePause() {
-        if (state.current === state.game) {
-            state.current = state.paused;
-            pauseIcon.innerText = "▶️";
-            pauseText.innerText = "Devam Et";
-            pauseOverlay.classList.remove('hidden');
-            pauseBtn.classList.replace('bg-gray-800/80', 'bg-green-600/90');
-            
-            if (currentMusic) currentMusic.pause();
-            
-        } else if (state.current === state.paused) {
+                let btnHtml = '';
+                if (isEquipped) {
+                    btnHtml = `<button disabled class="bg-green-500 text-white font-bold py-2 px-4 rounded-full opacity-50 cursor-not-allowed text-sm flex-shrink-0">Kuşanıldı</button>`;
+                } else if (isOwned) {
+                    btnHtml = `<button onclick="window.equipSkin('${key}')" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-full active:scale-95 transition-transform text-sm flex-shrink-0">Kuşan</button>`;
+                } else {
+                    let canBuy = coins >= skin.price;
+                    btnHtml = `<button onclick="window.buySkin('${key}')" class="${canBuy ? 'bg-yellow-500 hover:bg-yellow-600' : 'bg-gray-500 cursor-not-allowed'} text-white font-bold py-2 px-4 rounded-full active:scale-95 transition-transform flex items-center gap-1 text-sm flex-shrink-0">
+                        ${skin.price} TL
+                    </button>`;
+                }
+
+                skinList.innerHTML += `
+                    <div class="flex items-center justify-between bg-white/10 p-3 rounded-xl border ${isEquipped ? 'border-green-400' : 'border-white/20'}">
+                        <div class="flex items-center gap-3 overflow-hidden">
+                            <div class="w-10 h-10 flex-shrink-0 rounded-full border-2 border-white shadow-inner" style="background-color: ${skin.color}"></div>
+                            <div class="flex flex-col overflow-hidden text-left">
+                                <span class="text-white font-bold text-base truncate">${skin.name}</span>
+                                <span class="text-gray-400 text-xs truncate leading-tight">${skin.desc}</span>
+                            </div>
+                        </div>
+                        ${btnHtml}
+                    </div>
+                `;
+            }
+        }
+
+        window.buySkin = function (key) {
+            let skin = skins[key];
+            if (coins >= skin.price && !ownedSkins.includes(key)) {
+                coins -= skin.price;
+                ownedSkins.push(key);
+                equippedSkin = key;
+                saveData();
+                updateCoinsUI();
+                window.renderShop();
+            }
+        }
+
+        window.equipSkin = function (key) {
+            if (ownedSkins.includes(key)) {
+                equippedSkin = key;
+                saveData();
+                window.renderShop();
+            }
+        }
+
+        function startGameFlow() {
+            let name = nicknameInput.value.trim();
+            if (!name) name = "Oyuncu";
+            playerName = name;
+            localStorage.setItem('flappyPlayerName', playerName);
+
+            if (!isMultiplayer) {
+                gameSeed = Math.floor(Math.random() * 100000);
+            }
+
             state.current = state.game;
-            pauseIcon.innerText = "⏸️";
-            pauseText.innerText = "Durdur";
-            pauseOverlay.classList.add('hidden');
-            pauseBtn.classList.replace('bg-green-600/90', 'bg-gray-800/80');
-            
-            if (isMusicEnabled && currentMusic) {
-                currentMusic.play().catch(e => console.log(e));
-            }
-        }
-    }
+            startScreen.classList.add('hidden');
+            scoreDisplay.classList.remove('hidden');
+            levelDisplay.classList.remove('hidden');
+            livesDisplay.classList.remove('hidden');
+            abilityUI.classList.remove('hidden');
+            coinDisplay.classList.remove('hidden');
+            pauseUI.classList.remove('hidden');
 
-    function controlAction(e) {
-        if (state.current === state.getReady || state.current === state.shop) {
-            return; 
-        }
+            bgMusic.currentTime = 0;
+            switchMusic(bgMusic);
 
-        if(e.type === "keydown") {
-            if (e.code === "KeyP" || e.code === "Escape") {
-                if (state.current === state.game || state.current === state.paused) {
-                    togglePause();
-                }
-                return;
-            }
-            if (e.code === "KeyX") {
-                if (state.current === state.game && !ghostMode.active && !ghostMode.cooldown) {
-                    activateGhostMode();
-                }
-                return;
-            }
-            if (e.code !== "Space") return;
-        }
-        
-        if (state.current === state.game) {
             bird.flap();
         }
-    }
 
-    window.renderShop = function() {
-        shopCoinCount.innerText = coins;
-        skinList.innerHTML = '';
-        for (let key in skins) {
-            let skin = skins[key];
-            let isOwned = ownedSkins.includes(key);
-            let isEquipped = equippedSkin === key;
+        function showGameOver(isVictory) {
+            scoreDisplay.classList.add('hidden');
+            levelDisplay.classList.add('hidden');
+            livesDisplay.classList.add('hidden');
+            abilityUI.classList.add('hidden');
+            coinDisplay.classList.add('hidden');
+            bossUI.classList.add('hidden');
+            pauseUI.classList.add('hidden');
+            pauseOverlay.classList.add('hidden');
+            gameOverScreen.classList.remove('hidden');
 
-            let btnHtml = '';
-            if (isEquipped) {
-                btnHtml = `<button disabled class="bg-green-500 text-white font-bold py-2 px-4 rounded-full opacity-50 cursor-not-allowed text-sm flex-shrink-0">Kuşanıldı</button>`;
-            } else if (isOwned) {
-                btnHtml = `<button onclick="window.equipSkin('${key}')" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-full active:scale-95 transition-transform text-sm flex-shrink-0">Kuşan</button>`;
-            } else {
-                let canBuy = coins >= skin.price;
-                btnHtml = `<button onclick="window.buySkin('${key}')" class="${canBuy ? 'bg-yellow-500 hover:bg-yellow-600' : 'bg-gray-500 cursor-not-allowed'} text-white font-bold py-2 px-4 rounded-full active:scale-95 transition-transform flex items-center gap-1 text-sm flex-shrink-0">
-                    ${skin.price} TL
-                </button>`;
+            if (currentMusic) currentMusic.pause();
+
+            finalPlayerName.innerText = playerName;
+            finalScoreEl.innerText = score;
+
+            if (score > bestScore) {
+                bestScore = score;
+                bestScorePlayerName = playerName;
+                localStorage.setItem('flappyBestScore', bestScore);
+                localStorage.setItem('flappyBestScoreName', bestScorePlayerName);
             }
-
-            skinList.innerHTML += `
-                <div class="flex items-center justify-between bg-white/10 p-3 rounded-xl border ${isEquipped ? 'border-green-400' : 'border-white/20'}">
-                    <div class="flex items-center gap-3 overflow-hidden">
-                        <div class="w-10 h-10 flex-shrink-0 rounded-full border-2 border-white shadow-inner" style="background-color: ${skin.color}"></div>
-                        <div class="flex flex-col overflow-hidden text-left">
-                            <span class="text-white font-bold text-base truncate">${skin.name}</span>
-                            <span class="text-gray-400 text-xs truncate leading-tight">${skin.desc}</span>
-                        </div>
-                    </div>
-                    ${btnHtml}
-                </div>
-            `;
-        }
-    }
-
-    window.buySkin = function(key) {
-        let skin = skins[key];
-        if (coins >= skin.price && !ownedSkins.includes(key)) {
-            coins -= skin.price;
-            ownedSkins.push(key);
-            equippedSkin = key;
-            saveData();
-            updateCoinsUI();
-            window.renderShop();
-        }
-    }
-
-    window.equipSkin = function(key) {
-        if (ownedSkins.includes(key)) {
-            equippedSkin = key;
-            saveData();
-            window.renderShop();
-        }
-    }
-
-    function startGameFlow() {
-        let name = nicknameInput.value.trim();
-        if(!name) name = "Oyuncu";
-        playerName = name;
-        localStorage.setItem('flappyPlayerName', playerName);
-
-        if (!isMultiplayer) {
-            gameSeed = Math.floor(Math.random() * 100000); 
+            bestScoreEl.innerText = bestScore;
+            bestScoreNameDisplay.innerText = bestScorePlayerName ? `(${bestScorePlayerName})` : '';
         }
 
-        state.current = state.game;
-        startScreen.classList.add('hidden');
-        scoreDisplay.classList.remove('hidden');
-        levelDisplay.classList.remove('hidden');
-        livesDisplay.classList.remove('hidden');
-        abilityUI.classList.remove('hidden');
-        coinDisplay.classList.remove('hidden');
-        pauseUI.classList.remove('hidden'); 
-        
-        bgMusic.currentTime = 0;
-        switchMusic(bgMusic);
-        
-        bird.flap();
-    }
+        function resetGame() {
+            bird.reset();
+            pipes.reset();
+            pipes.dx = 4.5;
+            pipes.spawnTimer = 0;
+            resetGhostMode();
 
-    function showGameOver(isVictory) {
-        scoreDisplay.classList.add('hidden');
-        levelDisplay.classList.add('hidden');
-        livesDisplay.classList.add('hidden');
-        abilityUI.classList.add('hidden');
-        coinDisplay.classList.add('hidden');
-        bossUI.classList.add('hidden');
-        pauseUI.classList.add('hidden'); 
-        pauseOverlay.classList.add('hidden'); 
-        gameOverScreen.classList.remove('hidden');
-        
-        if (currentMusic) currentMusic.pause();
+            if (currentMusic) currentMusic.pause();
+            bgMusic.currentTime = 0;
+            bossMusic.currentTime = 0;
 
-        finalPlayerName.innerText = playerName;
-        finalScoreEl.innerText = score;
-        
-        if(score > bestScore) {
-            bestScore = score;
-            bestScorePlayerName = playerName;
-            localStorage.setItem('flappyBestScore', bestScore);
-            localStorage.setItem('flappyBestScoreName', bestScorePlayerName);
+            pauseIcon.innerText = "⏸️";
+            pauseText.innerText = "Durdur";
+            pauseBtn.classList.remove('bg-green-600/90');
+            pauseBtn.classList.add('bg-gray-800/80');
+
+            scoreDisplay.classList.add('hidden');
+            levelDisplay.classList.add('hidden');
+            livesDisplay.classList.add('hidden');
+            abilityUI.classList.add('hidden');
+            coinDisplay.classList.add('hidden');
+            bossUI.classList.add('hidden');
+            pauseUI.classList.add('hidden');
+
+            // Multiplayer verilerini sıfırla
+            if (unsubRoom) unsubRoom();
+            isMultiplayer = false;
+            roomCode = null;
+            otherPlayer.active = false;
+            document.getElementById('mpWaiting').classList.add('hidden');
+            document.getElementById('mpMenu').classList.remove('hidden');
+
+            score = 0;
+            level = 1;
+            lives = maxLives;
+            damageInvulnerableTime = 0;
+            pendingBoss = false;
+            boss.active = false;
+            projectiles.player = [];
+            projectiles.boss = [];
+            groundOffset = 0;
+
+            updateLivesUI();
+            scoreDisplay.innerText = "0";
+            levelDisplay.innerText = "Seviye: 1";
+            frames = 0;
+
+            gameOverScreen.classList.add('hidden');
+            startScreen.classList.remove('hidden');
+            ground.style.transform = `translateX(0px)`;
+
+            state.current = state.getReady;
         }
-        bestScoreEl.innerText = bestScore;
-        bestScoreNameDisplay.innerText = bestScorePlayerName ? `(${bestScorePlayerName})` : '';
-    }
 
-    function resetGame() {
-        bird.reset();
-        pipes.reset();
-        pipes.dx = 4.5; 
-        pipes.spawnTimer = 0; 
-        resetGhostMode();
-        
-        if (currentMusic) currentMusic.pause();
-        bgMusic.currentTime = 0;
-        bossMusic.currentTime = 0;
-        
-        pauseIcon.innerText = "⏸️";
-        pauseText.innerText = "Durdur";
-        pauseBtn.classList.remove('bg-green-600/90');
-        pauseBtn.classList.add('bg-gray-800/80');
+        canvas.addEventListener("mousedown", controlAction);
+        canvas.addEventListener("touchstart", (e) => {
+            e.preventDefault();
+            controlAction(e);
+        }, { passive: false });
+        document.addEventListener("keydown", controlAction);
 
-        scoreDisplay.classList.add('hidden');
-        levelDisplay.classList.add('hidden');
-        livesDisplay.classList.add('hidden');
-        abilityUI.classList.add('hidden');
-        coinDisplay.classList.add('hidden');
-        bossUI.classList.add('hidden');
-        pauseUI.classList.add('hidden');
-        
-        // Multiplayer verilerini sıfırla
-        if (unsubRoom) unsubRoom();
-        isMultiplayer = false;
-        roomCode = null;
-        otherPlayer.active = false;
-        document.getElementById('mpWaiting').classList.add('hidden');
-        document.getElementById('mpMenu').classList.remove('hidden');
+        abilityUI.addEventListener("mousedown", (e) => {
+            e.stopPropagation();
+            if (state.current === state.game && !ghostMode.active && !ghostMode.cooldown) {
+                activateGhostMode();
+            }
+        });
+        abilityUI.addEventListener("touchstart", (e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            if (state.current === state.game && !ghostMode.active && !ghostMode.cooldown) {
+                activateGhostMode();
+            }
+        }, { passive: false });
 
-        score = 0;
-        level = 1;
-        lives = maxLives;
-        damageInvulnerableTime = 0;
-        pendingBoss = false;
-        boss.active = false;
-        projectiles.player = [];
-        projectiles.boss = [];
-        groundOffset = 0; 
-        
-        updateLivesUI();
-        scoreDisplay.innerText = "0";
-        levelDisplay.innerText = "Seviye: 1";
-        frames = 0;
-        
-        gameOverScreen.classList.add('hidden');
-        startScreen.classList.remove('hidden');
-        ground.style.transform = `translateX(0px)`;
-        
-        state.current = state.getReady;
-    }
+        pauseBtn.addEventListener("mousedown", (e) => {
+            e.stopPropagation();
+            togglePause();
+        });
+        pauseBtn.addEventListener("touchstart", (e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            togglePause();
+        }, { passive: false });
 
-    canvas.addEventListener("mousedown", controlAction);
-    canvas.addEventListener("touchstart", (e) => {
-        e.preventDefault(); 
-        controlAction(e);
-    }, {passive: false});
-    document.addEventListener("keydown", controlAction);
+        resumeBtn.addEventListener("click", () => {
+            togglePause();
+        });
+        resumeBtn.addEventListener("touchstart", (e) => {
+            e.preventDefault();
+            togglePause();
+        }, { passive: false });
 
-    abilityUI.addEventListener("mousedown", (e) => {
-        e.stopPropagation();
-        if (state.current === state.game && !ghostMode.active && !ghostMode.cooldown) {
-            activateGhostMode();
-        }
-    });
-    abilityUI.addEventListener("touchstart", (e) => {
-        e.stopPropagation();
-        e.preventDefault();
-        if (state.current === state.game && !ghostMode.active && !ghostMode.cooldown) {
-            activateGhostMode();
-        }
-    }, {passive: false});
+        homeBtn.addEventListener("click", () => {
+            pauseOverlay.classList.add('hidden');
+            resetGame();
+        });
+        homeBtn.addEventListener("touchstart", (e) => {
+            e.preventDefault();
+            pauseOverlay.classList.add('hidden');
+            resetGame();
+        }, { passive: false });
 
-    pauseBtn.addEventListener("mousedown", (e) => {
-        e.stopPropagation();
-        togglePause();
-    });
-    pauseBtn.addEventListener("touchstart", (e) => {
-        e.stopPropagation();
-        e.preventDefault();
-        togglePause();
-    }, {passive: false});
+        restartBtn.addEventListener("click", resetGame);
+        restartBtn.addEventListener("touchstart", (e) => {
+            e.preventDefault();
+            resetGame();
+        }, { passive: false });
 
-    resumeBtn.addEventListener("click", () => {
-        togglePause();
-    });
-    resumeBtn.addEventListener("touchstart", (e) => {
-        e.preventDefault();
-        togglePause();
-    }, {passive: false});
-
-    homeBtn.addEventListener("click", () => {
-        pauseOverlay.classList.add('hidden');
-        resetGame();
-    });
-    homeBtn.addEventListener("touchstart", (e) => {
-        e.preventDefault();
-        pauseOverlay.classList.add('hidden');
-        resetGame();
-    }, {passive: false});
-
-    restartBtn.addEventListener("click", resetGame);
-    restartBtn.addEventListener("touchstart", (e) => {
-        e.preventDefault();
-        resetGame();
-    }, {passive: false});
-
-    startGameBtn.addEventListener("click", () => {
-        if (isMultiplayer) {
-            alert("Lütfen önce Parti Oluşturun veya Katılın.");
-            return;
-        }
-        startGameFlow();
-    });
-    startGameBtn.addEventListener("touchstart", (e) => {
-        e.preventDefault();
-        if (isMultiplayer) return;
-        startGameFlow();
-    }, {passive: false});
-    
-    shopBtn.addEventListener("click", () => {
-        state.current = state.shop;
-        startScreen.classList.add('hidden');
-        shopScreen.classList.remove('hidden');
-        window.renderShop();
-    });
-    closeShopBtn.addEventListener("click", () => {
-        state.current = state.getReady;
-        shopScreen.classList.add('hidden');
-        startScreen.classList.remove('hidden');
-    });
-
-    nicknameInput.addEventListener("keydown", (e) => {
-        if (e.code === "Enter" && state.current === state.getReady) {
+        startGameBtn.addEventListener("click", () => {
+            if (isMultiplayer) {
+                alert("Lütfen önce Parti Oluşturun veya Katılın.");
+                return;
+            }
             startGameFlow();
+        });
+        startGameBtn.addEventListener("touchstart", (e) => {
+            e.preventDefault();
+            if (isMultiplayer) return;
+            startGameFlow();
+        }, { passive: false });
+
+        shopBtn.addEventListener("click", () => {
+            state.current = state.shop;
+            startScreen.classList.add('hidden');
+            shopScreen.classList.remove('hidden');
+            window.renderShop();
+        });
+        closeShopBtn.addEventListener("click", () => {
+            state.current = state.getReady;
+            shopScreen.classList.add('hidden');
+            startScreen.classList.remove('hidden');
+        });
+
+        nicknameInput.addEventListener("keydown", (e) => {
+            if (e.code === "Enter" && state.current === state.getReady) {
+                startGameFlow();
+            }
+        });
+
+        bestScoreEl.innerText = bestScore;
+        if (bestScorePlayerName) bestScoreNameDisplay.innerText = `(${bestScorePlayerName})`;
+        if (playerName) nicknameInput.value = playerName;
+
+        function resize() {
+            const container = document.getElementById('game-container');
         }
-    });
+        window.addEventListener('resize', resize);
+        resize();
 
-    bestScoreEl.innerText = bestScore;
-    if (bestScorePlayerName) bestScoreNameDisplay.innerText = `(${bestScorePlayerName})`;
-    if(playerName) nicknameInput.value = playerName;
-    
-    function resize() {
-        const container = document.getElementById('game-container');
-    }
-    window.addEventListener('resize', resize);
-    resize();
-
-    requestAnimationFrame(loop);
-</script>
+        requestAnimationFrame(loop);
+    </script>
 </body>
 </html>
