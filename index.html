@@ -97,6 +97,9 @@
                 <button id="shopBtn" class="text-white text-xl font-bold bg-purple-500 hover:bg-purple-600 px-4 py-3 rounded-full shadow-lg transition-transform active:scale-95" title="Market">
                     🛒
                 </button>
+                <button id="leaderboardBtn" class="text-white text-xl font-bold bg-orange-500 hover:bg-orange-600 px-4 py-3 rounded-full shadow-lg transition-transform active:scale-95" title="Liderlik Tablosu">
+                    🏆
+                </button>
             </div>
 
             <p class="text-white/80 text-sm mt-4 text-center px-4 pointer-events-none">
@@ -159,6 +162,17 @@
             </div>
             <div id="skinList" class="w-full max-w-sm flex flex-col gap-3 px-4 pb-24">
                 <!-- Kuş kıyafetleri buraya JS ile eklenecek -->
+            </div>
+        </div>
+
+        <!-- Liderlik Tablosu Ekranı -->
+        <div id="leaderboardScreen" class="ui-layer bg-black/95 hidden z-50 pointer-events-auto flex-col items-center justify-start pt-12 overflow-y-auto">
+            <button id="closeLeaderboardBtn" class="absolute top-4 right-4 text-white/70 hover:text-white bg-white/10 hover:bg-red-500 rounded-full w-10 h-10 flex items-center justify-center text-xl font-bold transition-all shadow-lg active:scale-90" title="Kapat">
+                ✕
+            </button>
+            <h2 class="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-yellow-400 mb-6 drop-shadow-lg text-center tracking-wider">İLK 10 OYUNCU</h2>
+            <div id="leaderboardList" class="w-full max-w-sm flex flex-col gap-3 px-4 pb-24">
+                <p class="text-center text-white/50 font-bold">Yükleniyor...</p>
             </div>
         </div>
 
@@ -249,7 +263,7 @@
         // --- FIREBASE İMPORT & KURULUMU (2P MODU İÇİN) ---
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, onSnapshot, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc, onSnapshot, updateDoc, deleteDoc, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // ---------------------------------------------------------
         // KENDİ BİLGİSAYARINDA VEYA KODULAR'DA ÇALIŞTIRMAK İÇİN:
@@ -272,6 +286,7 @@
         let db = null;
         let auth = null;
         let user = null;
+        let topScores = []; // Liderlik tablosu verisi
 
         if (firebaseConfig) {
             const app = initializeApp(firebaseConfig);
@@ -289,6 +304,23 @@
 
             onAuthStateChanged(auth, (u) => {
                 user = u;
+                if (user && db) {
+                    // Liderlik tablosunu gerçek zamanlı dinle
+                    const leaderboardRef = collection(db, 'artifacts', appId, 'public', 'data', 'leaderboard');
+                    onSnapshot(leaderboardRef, (snap) => {
+                        let tempScores = [];
+                        snap.forEach(docSnap => tempScores.push(docSnap.data()));
+
+                        // Skoru yüksek olandan düşüğe doğru sırala
+                        tempScores.sort((a, b) => b.score - a.score);
+                        topScores = tempScores.slice(0, 10); // Sadece ilk 10'u al
+
+                        // Eğer liderlik tablosu açıksa anında güncelle
+                        if (state.current === state.leaderboard) {
+                            window.renderLeaderboard();
+                        }
+                    }, (error) => console.error("Liderlik tablosu okunamadı:", error));
+                }
             });
         }
 
@@ -340,6 +372,12 @@
         const closeShopBtn = document.getElementById('closeShopBtn');
         const skinList = document.getElementById('skinList');
         const shopCoinCount = document.getElementById('shopCoinCount');
+
+        const leaderboardBtn = document.getElementById('leaderboardBtn');
+        const leaderboardScreen = document.getElementById('leaderboardScreen');
+        const closeLeaderboardBtn = document.getElementById('closeLeaderboardBtn');
+        const leaderboardList = document.getElementById('leaderboardList');
+
         const coinDisplay = document.getElementById('coinDisplay');
         const coinCountEl = document.getElementById('coinCount');
         const finalPlayerName = document.getElementById('finalPlayerName');
@@ -689,7 +727,7 @@
             abilityIcon.className = "w-8 h-8 rounded-full flex items-center justify-center text-white font-bold border-2 border-white shadow-lg bg-blue-500";
         }
 
-        const state = { current: 0, getReady: 0, game: 1, over: 2, shop: 3, paused: 4 };
+        const state = { current: 0, getReady: 0, game: 1, over: 2, shop: 3, paused: 4, leaderboard: 5 };
 
         // Mermiler ve Çarpışmalar
         const projectiles = {
@@ -1635,6 +1673,25 @@
             }
             bestScoreEl.innerText = bestScore;
             bestScoreNameDisplay.innerText = bestScorePlayerName ? `(${bestScorePlayerName})` : '';
+
+            // Firebase Liderlik Tablosuna Skoru Kaydet (Sadece en iyiyse)
+            if (user && db && score > 0) {
+                const userScoreRef = doc(db, 'artifacts', appId, 'public', 'data', 'leaderboard', user.uid);
+                getDoc(userScoreRef).then(docSnap => {
+                    let dbScore = 0;
+                    if (docSnap.exists()) {
+                        dbScore = docSnap.data().score || 0;
+                    }
+                    // Sadece mevcut veritabanındaki skorundan daha yüksek yaptıysa güncelle
+                    if (score > dbScore) {
+                        setDoc(userScoreRef, {
+                            name: playerName,
+                            score: score,
+                            timestamp: Date.now()
+                        }, { merge: true }).catch(e => console.error("Skor kaydedilemedi:", e));
+                    }
+                }).catch(e => console.error("Skor okuma hatası:", e));
+            }
         }
 
         function resetGame() {
@@ -1770,6 +1827,50 @@
             shopScreen.classList.add('hidden');
             startScreen.classList.remove('hidden');
         });
+
+        leaderboardBtn.addEventListener("click", () => {
+            state.current = state.leaderboard;
+            startScreen.classList.add('hidden');
+            leaderboardScreen.classList.remove('hidden');
+            window.renderLeaderboard();
+        });
+        closeLeaderboardBtn.addEventListener("click", () => {
+            state.current = state.getReady;
+            leaderboardScreen.classList.add('hidden');
+            startScreen.classList.remove('hidden');
+        });
+
+        window.renderLeaderboard = function () {
+            leaderboardList.innerHTML = '';
+            if (!user || !db) {
+                leaderboardList.innerHTML = '<p class="text-center text-red-400 font-bold">Bulut bağlantısı yok.</p>';
+                return;
+            }
+            if (topScores.length === 0) {
+                leaderboardList.innerHTML = '<p class="text-center text-white/50 font-bold mt-4">Henüz rekor kıran kimse yok. İlk sen ol!</p>';
+                return;
+            }
+
+            topScores.forEach((item, index) => {
+                let medal = '';
+                let bgClass = 'bg-white/10 border-white/20';
+
+                if (index === 0) { medal = '🥇'; bgClass = 'bg-yellow-500/20 border-yellow-400/50 shadow-[0_0_15px_rgba(250,204,21,0.3)]'; }
+                else if (index === 1) { medal = '🥈'; bgClass = 'bg-gray-300/20 border-gray-300/50'; }
+                else if (index === 2) { medal = '🥉'; bgClass = 'bg-orange-700/20 border-orange-700/50'; }
+                else medal = `<span class="text-gray-400 font-black w-6 inline-block text-center">${index + 1}</span>`;
+
+                leaderboardList.innerHTML += `
+                    <div class="flex items-center justify-between p-3 rounded-xl border ${bgClass} transition-all">
+                        <div class="flex items-center gap-3">
+                            <div class="text-2xl flex justify-center w-8">${medal}</div>
+                            <span class="text-white font-bold text-lg truncate w-32">${item.name || 'Gizemli Oyuncu'}</span>
+                        </div>
+                        <span class="text-yellow-400 font-black text-2xl drop-shadow-md">${item.score}</span>
+                    </div>
+                `;
+            });
+        };
 
         nicknameInput.addEventListener("keydown", (e) => {
             if (e.code === "Enter" && state.current === state.getReady) {
