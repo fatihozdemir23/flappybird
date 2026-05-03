@@ -88,7 +88,10 @@
             <h1 class="text-4xl font-black text-white mb-4 drop-shadow-lg text-center tracking-wider">UÇAN KUŞ</h1>
 
             <!-- Takma İsim Girişi -->
-            <input type="text" id="nicknameInput" placeholder="Takma Adın" class="mb-4 px-4 py-2 rounded-full text-center font-bold text-gray-800 outline-none focus:ring-4 focus:ring-yellow-400 w-48 shadow-lg" maxlength="15" autocomplete="off">
+            <div class="relative flex items-center mb-4">
+                <input type="text" id="nicknameInput" placeholder="Takma Adın" class="px-4 py-2 rounded-full text-center font-bold text-gray-800 outline-none focus:ring-4 focus:ring-yellow-400 w-48 shadow-lg pr-8" maxlength="15" autocomplete="off">
+                <button id="editNameBtn" class="absolute right-2 text-lg hover:scale-110 transition-transform hidden" title="İsmi Değiştir">✏️</button>
+            </div>
 
             <div class="flex gap-2 mb-2">
                 <button id="startGameBtn" class="text-white text-lg font-bold bg-yellow-500 hover:bg-yellow-600 px-8 py-3 rounded-full shadow-lg transition-transform active:scale-95">
@@ -99,6 +102,9 @@
                 </button>
                 <button id="leaderboardBtn" class="text-white text-xl font-bold bg-orange-500 hover:bg-orange-600 px-4 py-3 rounded-full shadow-lg transition-transform active:scale-95" title="Liderlik Tablosu">
                     🏆
+                </button>
+                <button id="onlineBtn" class="text-white text-xl font-bold bg-green-500 hover:bg-green-600 px-4 py-3 rounded-full shadow-lg transition-transform active:scale-95" title="Çevrimiçi Oyuncular">
+                    🌍
                 </button>
             </div>
 
@@ -172,6 +178,17 @@
             </button>
             <h2 class="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-yellow-400 mb-6 drop-shadow-lg text-center tracking-wider">İLK 10 OYUNCU</h2>
             <div id="leaderboardList" class="w-full max-w-sm flex flex-col gap-3 px-4 pb-24">
+                <p class="text-center text-white/50 font-bold">Yükleniyor...</p>
+            </div>
+        </div>
+
+        <!-- Çevrimiçi Oyuncular Ekranı -->
+        <div id="onlineScreen" class="ui-layer bg-black/95 hidden z-50 pointer-events-auto flex-col items-center justify-start pt-12 overflow-y-auto">
+            <button id="closeOnlineBtn" class="absolute top-4 right-4 text-white/70 hover:text-white bg-white/10 hover:bg-red-500 rounded-full w-10 h-10 flex items-center justify-center text-xl font-bold transition-all shadow-lg active:scale-90" title="Kapat">
+                ✕
+            </button>
+            <h2 class="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-blue-400 mb-6 drop-shadow-lg text-center tracking-wider">ÇEVRİMİÇİLER</h2>
+            <div id="onlineList" class="w-full max-w-sm flex flex-col gap-3 px-4 pb-24">
                 <p class="text-center text-white/50 font-bold">Yükleniyor...</p>
             </div>
         </div>
@@ -292,6 +309,7 @@
         let auth = null;
         let user = null;
         let topScores = []; // Liderlik tablosu verisi
+        let onlineUsers = []; // Çevrimiçi kullanıcılar verisi
 
         if (firebaseConfig) {
             const app = initializeApp(firebaseConfig);
@@ -325,9 +343,47 @@
                             window.renderLeaderboard();
                         }
                     }, (error) => console.error("Liderlik tablosu okunamadı:", error));
+
+                    // Çevrimiçi Oyuncuları Dinle
+                    const presenceRef = collection(db, 'artifacts', appId, 'public', 'data', 'presence');
+                    onSnapshot(presenceRef, (snap) => {
+                        let tempOnline = [];
+                        snap.forEach(docSnap => tempOnline.push(docSnap.data()));
+                        onlineUsers = tempOnline;
+
+                        if (state.current === state.online) {
+                            window.renderOnlineList();
+                        }
+                    }, (error) => console.error("Çevrimiçi listesi okunamadı:", error));
+
+                    // Kullanıcıyı çevrimiçi tutmak için kalp atışı (Heartbeat) başlat
+                    setInterval(syncPresence, 5000);
+                    setTimeout(syncPresence, 1000);
                 }
             });
         }
+
+        function syncPresence() {
+            if (!user || !db || !playerName) return; // İsim onaylanmadan duruma dahil etme
+            const presenceDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'presence', user.uid);
+            let currentStatus = (state.current === state.game) ? "Oyunda" : "Menüde";
+
+            setDoc(presenceDocRef, {
+                uid: user.uid,
+                name: playerName,
+                level: level,
+                status: currentStatus,
+                lastSeen: Date.now()
+            }, { merge: true }).catch(e => console.error("Durum güncellenemedi:", e));
+        }
+
+        // Oyuncu sekmeyi kapattığında durumunu hemen silmeye çalış
+        window.addEventListener('beforeunload', () => {
+            if (user && db) {
+                const presenceDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'presence', user.uid);
+                deleteDoc(presenceDocRef).catch(e => { });
+            }
+        });
 
         // --- TEMEL TANIMLAMALAR ---
         const canvas = document.getElementById('gameCanvas');
@@ -371,6 +427,7 @@
         const cancelPartyBtn = document.getElementById('cancelPartyBtn');
 
         const nicknameInput = document.getElementById('nicknameInput');
+        const editNameBtn = document.getElementById('editNameBtn');
         const startGameBtn = document.getElementById('startGameBtn');
         const shopBtn = document.getElementById('shopBtn');
         const shopScreen = document.getElementById('shopScreen');
@@ -382,6 +439,11 @@
         const leaderboardScreen = document.getElementById('leaderboardScreen');
         const closeLeaderboardBtn = document.getElementById('closeLeaderboardBtn');
         const leaderboardList = document.getElementById('leaderboardList');
+
+        const onlineBtn = document.getElementById('onlineBtn');
+        const onlineScreen = document.getElementById('onlineScreen');
+        const closeOnlineBtn = document.getElementById('closeOnlineBtn');
+        const onlineList = document.getElementById('onlineList');
 
         const coinDisplay = document.getElementById('coinDisplay');
         const coinCountEl = document.getElementById('coinCount');
@@ -813,7 +875,7 @@
             abilityIcon.className = "w-8 h-8 rounded-full flex items-center justify-center text-white font-bold border-2 border-white shadow-lg bg-blue-500";
         }
 
-        const state = { current: 0, getReady: 0, game: 1, over: 2, shop: 3, paused: 4, leaderboard: 5 };
+        const state = { current: 0, getReady: 0, game: 1, over: 2, shop: 3, paused: 4, leaderboard: 5, online: 6 };
 
         // Mermiler ve Çarpışmalar
         const projectiles = {
@@ -1624,6 +1686,7 @@
                     pipes.dx = 4.5 + ((level - 1) * 0.3);
 
                     updateBiomeUI(); // Seviye atladığında yeni biyoma geç
+                    syncPresence(); // Seviye atladığında durumu anında güncelle
 
                     if (level > 15) {
                         state.current = state.over;
@@ -1767,8 +1830,23 @@
         function lockNicknameInput() {
             nicknameInput.disabled = true;
             nicknameInput.classList.add('opacity-80', 'cursor-not-allowed', 'bg-gray-300');
-            nicknameInput.title = "Takma ad cihaza kaydedildi, değiştirilemez.";
+            nicknameInput.title = "Takma ad cihaza kaydedildi.";
+            editNameBtn.classList.remove('hidden');
         }
+
+        function unlockNicknameInput() {
+            nicknameInput.disabled = false;
+            nicknameInput.classList.remove('opacity-80', 'cursor-not-allowed', 'bg-gray-300');
+            nicknameInput.title = "";
+            editNameBtn.classList.add('hidden');
+            nicknameInput.focus();
+        }
+
+        editNameBtn.addEventListener('click', unlockNicknameInput);
+        editNameBtn.addEventListener("touchstart", (e) => {
+            e.preventDefault();
+            unlockNicknameInput();
+        }, { passive: false });
 
         async function validateAndClaimName(name) {
             if (!name) {
@@ -1776,8 +1854,10 @@
                 return false;
             }
 
-            // Cihazda zaten kayıtlı olan isimse doğrudan izin ver (Gerçek kullanıcı koruması)
-            if (localStorage.getItem('flappyPlayerName') === name) {
+            let oldName = localStorage.getItem('flappyPlayerName');
+
+            // Cihazda zaten kayıtlı olan aynı isimse doğrudan izin ver
+            if (oldName === name) {
                 lockNicknameInput();
                 return true;
             }
@@ -1798,14 +1878,35 @@
                     lockNicknameInput();
                     return true; // İsim zaten bu oyuncuya ait
                 } else {
+                    // Eski ismini SİLMİYORUZ (başkası alamasın diye), sadece pasif olarak güncelliyoruz
+                    if (oldName) {
+                        let oldSafeName = oldName.toLocaleLowerCase('tr-TR').replace(/\s+/g, '');
+                        if (oldSafeName !== safeName) {
+                            const oldNameDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'usernames', oldSafeName);
+                            const oldSnap = await getDoc(oldNameDocRef);
+                            if (oldSnap.exists() && oldSnap.data().uid === user.uid) {
+                                await updateDoc(oldNameDocRef, { isOldName: true, updatedTo: name });
+                            }
+                        }
+                    }
+
                     await setDoc(nameDocRef, { uid: user.uid, name: name });
+
+                    // Liderlik tablosundaki ismini de beklemeden anında güncelle
+                    const userScoreRef = doc(db, 'artifacts', appId, 'public', 'data', 'leaderboard', user.uid);
+                    getDoc(userScoreRef).then(scoreSnap => {
+                        if (scoreSnap.exists()) {
+                            updateDoc(userScoreRef, { name: name }).catch(e => console.log(e));
+                        }
+                    }).catch(e => console.log(e));
+
                     lockNicknameInput();
                     return true;
                 }
             } catch (e) {
                 console.error("İsim kontrol hatası:", e);
                 window.showToast("Bağlantı hatası, lütfen tekrar deneyin.", true);
-                return false; // HATA DURUMUNDA OYUNA GİRİŞİ ENGELLİYORUZ (Önceki bug buradaydı)
+                return false; // HATA DURUMUNDA OYUNA GİRİŞİ ENGELLİYORUZ
             }
         }
 
@@ -1839,6 +1940,7 @@
             switchMusic(bgMusic);
 
             bird.flap();
+            syncPresence(); // Oyuna başladığında durumu "Oyunda" olarak anında güncelle
         }
 
         function showGameOver(isVictory) {
@@ -1940,6 +2042,7 @@
             ground.style.transform = `translateX(0px)`;
 
             state.current = state.getReady;
+            syncPresence(); // Menüye döndüğünde durumu "Menüde" olarak anında güncelle
         }
 
         canvas.addEventListener("mousedown", controlAction);
@@ -2034,6 +2137,19 @@
             startScreen.classList.remove('hidden');
         });
 
+        onlineBtn.addEventListener("click", () => {
+            state.current = state.online;
+            startScreen.classList.add('hidden');
+            onlineScreen.classList.remove('hidden');
+            window.renderOnlineList();
+        });
+
+        closeOnlineBtn.addEventListener("click", () => {
+            state.current = state.getReady;
+            onlineScreen.classList.add('hidden');
+            startScreen.classList.remove('hidden');
+        });
+
         window.renderLeaderboard = function () {
             leaderboardList.innerHTML = '';
             if (!user || !db) {
@@ -2061,6 +2177,41 @@
                                 <span class="text-white font-bold text-lg truncate w-32">${item.name || 'Gizemli Oyuncu'}</span>
                             </div>
                             <span class="text-yellow-400 font-black text-2xl drop-shadow-md">${item.score}</span>
+                        </div>
+                    `;
+            });
+        };
+
+        window.renderOnlineList = function () {
+            onlineList.innerHTML = '';
+            if (!user || !db) {
+                onlineList.innerHTML = '<p class="text-center text-red-400 font-bold">Bulut bağlantısı yok.</p>';
+                return;
+            }
+
+            const now = Date.now();
+            // Son 15 saniye içinde aktif olanları çevrimiçi kabul et (Heartbeat mekanizması)
+            const activeUsers = onlineUsers.filter(u => (now - u.lastSeen) < 15000);
+
+            if (activeUsers.length === 0) {
+                onlineList.innerHTML = '<p class="text-center text-white/50 font-bold mt-4">Şu an kimse aktif değil.</p>';
+                return;
+            }
+
+            // Oyuncuları seviyelerine göre yüksekten düşüğe doğru sırala
+            activeUsers.sort((a, b) => b.level - a.level);
+
+            activeUsers.forEach(u => {
+                let statusColor = u.status === "Oyunda" ? "text-green-400" : "text-yellow-400";
+                let statusIcon = u.status === "Oyunda" ? "🎮" : "💤";
+
+                onlineList.innerHTML += `
+                        <div class="flex items-center justify-between p-3 rounded-xl border bg-white/10 border-white/20 transition-all">
+                            <div class="flex items-center gap-3">
+                                <span class="text-white font-bold text-lg truncate max-w-[100px] sm:max-w-[120px]">${u.name}</span>
+                                <span class="text-[10px] sm:text-xs font-bold ${statusColor} bg-black/50 px-2 py-1 rounded-full whitespace-nowrap">${statusIcon} ${u.status}</span>
+                            </div>
+                            <span class="text-blue-200 font-black text-sm bg-blue-600/50 px-3 py-1 rounded-lg whitespace-nowrap">Seviye: ${u.level}</span>
                         </div>
                     `;
             });
