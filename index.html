@@ -1764,14 +1764,30 @@
             }
         }
 
+        function lockNicknameInput() {
+            nicknameInput.disabled = true;
+            nicknameInput.classList.add('opacity-80', 'cursor-not-allowed', 'bg-gray-300');
+            nicknameInput.title = "Takma ad cihaza kaydedildi, değiştirilemez.";
+        }
+
         async function validateAndClaimName(name) {
             if (!name) {
                 window.showToast("Lütfen bir takma ad girin!", true);
                 return false;
             }
+
+            // Cihazda zaten kayıtlı olan isimse doğrudan izin ver (Gerçek kullanıcı koruması)
+            if (localStorage.getItem('flappyPlayerName') === name) {
+                lockNicknameInput();
+                return true;
+            }
+
             if (!user || !db) return true; // Bulut yoksa kontrole gerek yok
 
-            const nameDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'usernames', name.toLowerCase());
+            // İsimleri standartlaştır (Türkçe karakter ve boşluk hilelerini engelle)
+            let safeName = name.toLocaleLowerCase('tr-TR').replace(/\s+/g, '');
+            const nameDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'usernames', safeName);
+
             try {
                 const snap = await getDoc(nameDocRef);
                 if (snap.exists()) {
@@ -1779,14 +1795,17 @@
                         window.showToast("Bu takma ad alınmış! Başka seçin.", true);
                         return false;
                     }
+                    lockNicknameInput();
                     return true; // İsim zaten bu oyuncuya ait
                 } else {
                     await setDoc(nameDocRef, { uid: user.uid, name: name });
+                    lockNicknameInput();
                     return true;
                 }
             } catch (e) {
                 console.error("İsim kontrol hatası:", e);
-                return true;
+                window.showToast("Bağlantı hatası, lütfen tekrar deneyin.", true);
+                return false; // HATA DURUMUNDA OYUNA GİRİŞİ ENGELLİYORUZ (Önceki bug buradaydı)
             }
         }
 
@@ -2055,7 +2074,12 @@
 
         bestScoreEl.innerText = bestScore;
         if (bestScorePlayerName) bestScoreNameDisplay.innerText = `(${bestScorePlayerName})`;
-        if (playerName) nicknameInput.value = playerName;
+
+        // Oyun açılışında kayıtlı bir isim varsa direkt kilitle
+        if (playerName) {
+            nicknameInput.value = playerName;
+            lockNicknameInput();
+        }
 
         updateBiomeUI(); // Oyun ilk açıldığında arka planı ayarla
 
