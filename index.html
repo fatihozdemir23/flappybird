@@ -257,6 +257,11 @@
                 </button>
             </div>
         </div>
+
+        <!-- Özel Bildirim (Toast) Mesajı -->
+        <div id="toastMessage" class="absolute top-24 left-1/2 transform -translate-x-1/2 text-white font-bold py-2 px-6 rounded-full shadow-lg z-50 pointer-events-none transition-opacity duration-300 opacity-0 hidden text-sm whitespace-nowrap">
+            Bildirim
+        </div>
     </div>
 
     <script type="module">
@@ -381,6 +386,18 @@
         const coinDisplay = document.getElementById('coinDisplay');
         const coinCountEl = document.getElementById('coinCount');
         const finalPlayerName = document.getElementById('finalPlayerName');
+        const toastMessage = document.getElementById('toastMessage');
+
+        window.showToast = function (msg, isError = false) {
+            toastMessage.innerText = msg;
+            toastMessage.className = `absolute top-24 left-1/2 transform -translate-x-1/2 text-white font-bold py-2 px-6 rounded-full shadow-lg z-50 pointer-events-none transition-opacity duration-300 ${isError ? 'bg-red-600' : 'bg-green-600'}`;
+            toastMessage.classList.remove('hidden');
+            setTimeout(() => toastMessage.classList.remove('opacity-0'), 10);
+            setTimeout(() => {
+                toastMessage.classList.add('opacity-0');
+                setTimeout(() => toastMessage.classList.add('hidden'), 300);
+            }, 3000);
+        }
 
         // Oyun Durumu
         let frames = 0;
@@ -396,6 +413,52 @@
         let coins = parseInt(localStorage.getItem('flappyCoins')) || 0;
         let ownedSkins = JSON.parse(localStorage.getItem('flappyOwnedSkins')) || ['default'];
         let equippedSkin = localStorage.getItem('flappyEquippedSkin') || 'default';
+
+        // --- BİYOM (ARKAPLAN) SİSTEMİ ---
+        const biomes = [
+            { // 1: Klasik Orman
+                skyTop: "#70c5ce", skyBottom: "#87ceeb", city: "#5fb8b5",
+                pipeFill: "#74bf2e", pipeStroke: "#558c22",
+                cloud: "rgba(255, 255, 255, 0.7)",
+                groundBg: "repeating-linear-gradient(45deg, #ded895, #ded895 20px, #e8e19e 20px, #e8e19e 40px)",
+                groundBorder: "5px solid #73bf2e"
+            },
+            { // 2: Çöl
+                skyTop: "#fcd34d", skyBottom: "#fbbf24", city: "#d97706",
+                pipeFill: "#f59e0b", pipeStroke: "#b45309",
+                cloud: "rgba(255, 255, 255, 0.5)",
+                groundBg: "repeating-linear-gradient(45deg, #fde047, #fde047 20px, #fef08a 20px, #fef08a 40px)",
+                groundBorder: "5px solid #eab308"
+            },
+            { // 3: Kış/Buz
+                skyTop: "#bae6fd", skyBottom: "#e0f2fe", city: "#7dd3fc",
+                pipeFill: "#38bdf8", pipeStroke: "#0284c7",
+                cloud: "rgba(255, 255, 255, 0.9)",
+                groundBg: "repeating-linear-gradient(45deg, #f1f5f9, #f1f5f9 20px, #ffffff 20px, #ffffff 40px)",
+                groundBorder: "5px solid #94a3b8"
+            },
+            { // 4: Volkan/Lav
+                skyTop: "#7f1d1d", skyBottom: "#b91c1c", city: "#450a0a",
+                pipeFill: "#991b1b", pipeStroke: "#450a0a",
+                cloud: "rgba(0, 0, 0, 0.5)",
+                groundBg: "repeating-linear-gradient(45deg, #450a0a, #450a0a 20px, #7f1d1d 20px, #7f1d1d 40px)",
+                groundBorder: "5px solid #dc2626"
+            },
+            { // 5: Gece/Uzay
+                skyTop: "#111827", skyBottom: "#374151", city: "#1f2937",
+                pipeFill: "#8b5cf6", pipeStroke: "#5b21b6",
+                cloud: "rgba(255, 255, 255, 0.1)",
+                groundBg: "repeating-linear-gradient(45deg, #1f2937, #1f2937 20px, #374151 20px, #374151 40px)",
+                groundBorder: "5px solid #6d28d9"
+            }
+        ];
+
+        function updateBiomeUI() {
+            let b = biomes[(level - 1) % biomes.length];
+            ground.style.background = b.groundBg;
+            ground.style.borderTop = b.groundBorder;
+            document.getElementById('game-container').style.backgroundColor = b.skyTop;
+        }
 
         // --- MULTIPLAYER SİSTEMİ ---
         let isMultiplayer = false;
@@ -451,10 +514,21 @@
 
         createPartyBtn.addEventListener('click', async () => {
             if (!user || !db) { mpErrorText.innerText = "Bağlantı hatası!"; return; }
+
+            let name = nicknameInput.value.trim();
+            if (!name) { mpErrorText.innerText = "Lütfen takma ad girin!"; return; }
+
             createPartyBtn.disabled = true;
 
+            let isValid = await validateAndClaimName(name);
+            if (!isValid) {
+                mpErrorText.innerText = "Bu takma ad alınmış!";
+                createPartyBtn.disabled = false;
+                return;
+            }
+
             // Partiyi kurmadan önce ismi güncelle ve kaydet
-            playerName = nicknameInput.value.trim() || "Oyuncu";
+            playerName = name;
             localStorage.setItem('flappyPlayerName', playerName);
 
             roomCode = Math.floor(100 + Math.random() * 900).toString(); // 3 Haneli
@@ -494,10 +568,20 @@
             const code = roomCodeInput.value;
             if (code.length !== 3) { mpErrorText.innerText = "3 haneli kod girin!"; return; }
 
+            let name = nicknameInput.value.trim();
+            if (!name) { mpErrorText.innerText = "Lütfen takma ad girin!"; return; }
+
             joinPartyBtn.disabled = true;
 
+            let isValid = await validateAndClaimName(name);
+            if (!isValid) {
+                mpErrorText.innerText = "Bu takma ad alınmış!";
+                joinPartyBtn.disabled = false;
+                return;
+            }
+
             // Partiye katılmadan önce ismi güncelle ve kaydet
-            playerName = nicknameInput.value.trim() || "Oyuncu";
+            playerName = name;
             localStorage.setItem('flappyPlayerName', playerName);
 
             const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', code);
@@ -622,6 +706,8 @@
             'masked': { name: 'Maskeli Kuş', color: '#ffcc99', wing: '#f4a460', price: 1200, desc: 'Bumerang fırlatır.' },
             'ice': { name: 'Buz Kuşu', color: '#7dd3fc', wing: '#e0f2fe', price: 1500, desc: 'Buz sarkıtı fırlatır.' },
             'diamond': { name: 'Elmas Kuş', color: '#2dd4bf', wing: '#ccfbf1', price: 2500, desc: 'Elmas parçası fırlatır.' },
+            'sonic': { name: 'Sonic Kuş', color: '#2563eb', wing: '#ef4444', price: 3000, desc: 'Mavi diken fırlatır.' },
+            'shadow': { name: 'Shadow Kuş', color: '#111827', wing: '#1f2937', price: 4000, desc: 'Siyah diken fırlatır.' },
             'ghost': { name: 'Hayalet Kuş', color: '#e5e7eb', wing: '#d1d5db', price: 80000, desc: 'ÖLÜMSÜZ! Hasar almaz.' }
         };
 
@@ -822,6 +908,21 @@
                         ctx.fillStyle = "#09090b"; ctx.shadowColor = "#3f3f46"; ctx.shadowBlur = 6;
                         ctx.beginPath(); ctx.arc(0, 0, 7, Math.PI / 2, Math.PI * 1.5);
                         ctx.arc(-4, 0, 7, Math.PI * 1.5, Math.PI / 2, true); ctx.fill();
+                    } else if (p.skin === 'sonic' || p.skin === 'shadow') {
+                        // Diken fırlatma animasyonu (Sonic ve Shadow için)
+                        ctx.fillStyle = p.skin === 'sonic' ? "#2563eb" : "#111827";
+                        ctx.strokeStyle = p.skin === 'sonic' ? "#60a5fa" : "#991b1b"; // Shadow için kırmızıyı azalttık ve koyulaştırdık
+                        ctx.lineWidth = 1.5;
+                        ctx.shadowColor = p.skin === 'sonic' ? "#2563eb" : "#7f1d1d";
+                        ctx.shadowBlur = 5;
+                        ctx.beginPath();
+                        for (let j = 0; j < 5; j++) {
+                            ctx.lineTo(Math.cos(p.rot + j * Math.PI * 2 / 5) * 8, Math.sin(p.rot + j * Math.PI * 2 / 5) * 8);
+                            ctx.lineTo(Math.cos(p.rot + (j + 0.5) * Math.PI * 2 / 5) * 4, Math.sin(p.rot + (j + 0.5) * Math.PI * 2 / 5) * 4);
+                        }
+                        ctx.closePath();
+                        ctx.fill(); ctx.stroke();
+                        ctx.shadowBlur = 0;
                     } else {
                         ctx.fillStyle = skins[p.skin] ? skins[p.skin].color : "#06b6d4";
                         ctx.fillRect(-8, -2, 16, 4);
@@ -1030,6 +1131,38 @@
                     ctx.fillRect(-this.radius - 12, -4, 14, 4);
                     ctx.fillRect(-this.radius - 10, 0, 10, 4);
                 }
+
+                if (skinKey === 'sonic' || skinKey === 'shadow') {
+                    // Sonic ve Shadow için arkaya dikenler/saçlar
+                    ctx.fillStyle = skinKey === 'sonic' ? '#1e3a8a' : '#000000';
+                    ctx.beginPath();
+                    ctx.moveTo(-this.radius + 2, -this.radius / 2);
+                    ctx.lineTo(-this.radius - 10, -this.radius);
+                    ctx.lineTo(-this.radius + 2, -2);
+
+                    ctx.moveTo(-this.radius, 0);
+                    ctx.lineTo(-this.radius - 14, 2);
+                    ctx.lineTo(-this.radius, 6);
+
+                    ctx.moveTo(-this.radius + 2, 6);
+                    ctx.lineTo(-this.radius - 10, 12);
+                    ctx.lineTo(-this.radius / 2, 10);
+                    ctx.fill();
+
+                    // Shadow için kırmızı vurgular (Sadece şerit olarak azaltıldı)
+                    if (skinKey === 'shadow') {
+                        ctx.strokeStyle = "#dc2626";
+                        ctx.lineWidth = 1.5;
+                        ctx.beginPath();
+                        ctx.moveTo(-this.radius + 1, -this.radius / 2 - 1);
+                        ctx.lineTo(-this.radius - 6, -this.radius / 2 - 3);
+                        ctx.moveTo(-this.radius + 1, 1);
+                        ctx.lineTo(-this.radius - 8, 2);
+                        ctx.stroke();
+                        ctx.strokeStyle = "#000"; // Sınır rengini geri yükle
+                    }
+                }
+
                 if (skinKey === 'fire') {
                     ctx.fillStyle = "#f97316";
                     ctx.beginPath();
@@ -1156,7 +1289,7 @@
 
                     ctx.beginPath();
                     ctx.arc(6, -4, 1.5, 0, Math.PI * 2);
-                    ctx.fillStyle = (skinKey === 'zombie') ? "#ef4444" : "black";
+                    ctx.fillStyle = (skinKey === 'zombie' || skinKey === 'shadow') ? "#ef4444" : "black"; // Shadow'un göz bebeğini de kırmızı yaptık
                     ctx.fill();
                 }
 
@@ -1237,23 +1370,26 @@
             dx: 4.5,
             spawnTimer: 0,
 
-            draw: function () {
+            draw: function (fillColor, strokeColor) {
+                let fill = fillColor || "#74bf2e";
+                let stroke = strokeColor || "#558c22";
+
                 for (let i = 0; i < this.position.length; i++) {
                     let p = this.position[i];
                     let topYPos = p.y;
                     let bottomYPos = p.y + this.gap;
 
-                    ctx.fillStyle = "#74bf2e";
+                    ctx.fillStyle = fill;
                     ctx.fillRect(p.x, 0, this.width, topYPos);
                     ctx.lineWidth = 2;
-                    ctx.strokeStyle = "#558c22";
+                    ctx.strokeStyle = stroke;
                     ctx.strokeRect(p.x, 0, this.width, topYPos);
 
                     ctx.fillRect(p.x - 4, topYPos - 20, this.width + 8, 20);
                     ctx.strokeRect(p.x - 4, topYPos - 20, this.width + 8, 20);
 
                     let bottomHeight = canvas.height - 100 - bottomYPos;
-                    ctx.fillStyle = "#74bf2e";
+                    ctx.fillStyle = fill;
                     ctx.fillRect(p.x, bottomYPos, this.width, bottomHeight);
                     ctx.strokeRect(p.x, bottomYPos, this.width, bottomHeight);
 
@@ -1413,8 +1549,8 @@
                 { x: 250, y: 80, speed: 0.3, size: 20 },
                 { x: 150, y: 200, speed: 0.4, size: 40 }
             ],
-            draw: function () {
-                ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
+            draw: function (cloudColor) {
+                ctx.fillStyle = cloudColor || "rgba(255, 255, 255, 0.7)";
                 for (let i = 0; i < this.list.length; i++) {
                     let c = this.list[i];
                     ctx.beginPath();
@@ -1438,18 +1574,20 @@
         }
 
         function draw() {
-            ctx.fillStyle = "#70c5ce";
+            let b = biomes[(level - 1) % biomes.length];
+
+            ctx.fillStyle = b.skyTop;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            ctx.fillStyle = "#87ceeb";
+            ctx.fillStyle = b.skyBottom;
             ctx.fillRect(0, canvas.height - 150, canvas.width, 50);
-            ctx.fillStyle = "#5fb8b5";
+            ctx.fillStyle = b.city;
             for (let i = 0; i < 10; i++) {
                 ctx.fillRect(i * 45 + (frames * 0.2) % 45 - 45, canvas.height - 100 - (i % 3) * 15 - 20, 30, (i % 3) * 15 + 20);
             }
 
-            clouds.draw();
-            pipes.draw();
+            clouds.draw(b.cloud);
+            pipes.draw(b.pipeFill, b.pipeStroke);
             boss.draw();
             projectiles.draw();
 
@@ -1484,6 +1622,8 @@
                     level++;
                     levelDisplay.innerText = `Seviye: ${level}`;
                     pipes.dx = 4.5 + ((level - 1) * 0.3);
+
+                    updateBiomeUI(); // Seviye atladığında yeni biyoma geç
 
                     if (level > 15) {
                         state.current = state.over;
@@ -1585,22 +1725,22 @@
                 } else {
                     let canBuy = coins >= skin.price;
                     btnHtml = `<button onclick="window.buySkin('${key}')" class="${canBuy ? 'bg-yellow-500 hover:bg-yellow-600' : 'bg-gray-500 cursor-not-allowed'} text-white font-bold py-2 px-4 rounded-full active:scale-95 transition-transform flex items-center gap-1 text-sm flex-shrink-0">
-                        ${skin.price} TL
-                    </button>`;
+                            ${skin.price} TL
+                        </button>`;
                 }
 
                 skinList.innerHTML += `
-                    <div class="flex items-center justify-between bg-white/10 p-3 rounded-xl border ${isEquipped ? 'border-green-400' : 'border-white/20'}">
-                        <div class="flex items-center gap-3 overflow-hidden">
-                            <div class="w-10 h-10 flex-shrink-0 rounded-full border-2 border-white shadow-inner" style="background-color: ${skin.color}"></div>
-                            <div class="flex flex-col overflow-hidden text-left">
-                                <span class="text-white font-bold text-base truncate">${skin.name}</span>
-                                <span class="text-gray-400 text-xs truncate leading-tight">${skin.desc}</span>
+                        <div class="flex items-center justify-between bg-white/10 p-3 rounded-xl border ${isEquipped ? 'border-green-400' : 'border-white/20'}">
+                            <div class="flex items-center gap-3 overflow-hidden">
+                                <div class="w-10 h-10 flex-shrink-0 rounded-full border-2 border-white shadow-inner" style="background-color: ${skin.color}"></div>
+                                <div class="flex flex-col overflow-hidden text-left">
+                                    <span class="text-white font-bold text-base truncate">${skin.name}</span>
+                                    <span class="text-gray-400 text-xs truncate leading-tight">${skin.desc}</span>
+                                </div>
                             </div>
+                            ${btnHtml}
                         </div>
-                        ${btnHtml}
-                    </div>
-                `;
+                    `;
             }
         }
 
@@ -1624,9 +1764,42 @@
             }
         }
 
-        function startGameFlow() {
+        async function validateAndClaimName(name) {
+            if (!name) {
+                window.showToast("Lütfen bir takma ad girin!", true);
+                return false;
+            }
+            if (!user || !db) return true; // Bulut yoksa kontrole gerek yok
+
+            const nameDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'usernames', name.toLowerCase());
+            try {
+                const snap = await getDoc(nameDocRef);
+                if (snap.exists()) {
+                    if (snap.data().uid !== user.uid) {
+                        window.showToast("Bu takma ad alınmış! Başka seçin.", true);
+                        return false;
+                    }
+                    return true; // İsim zaten bu oyuncuya ait
+                } else {
+                    await setDoc(nameDocRef, { uid: user.uid, name: name });
+                    return true;
+                }
+            } catch (e) {
+                console.error("İsim kontrol hatası:", e);
+                return true;
+            }
+        }
+
+        async function startGameFlow() {
             let name = nicknameInput.value.trim();
-            if (!name) name = "Oyuncu";
+            if (!name) {
+                window.showToast("Lütfen bir takma ad girin!", true);
+                return;
+            }
+
+            let isValid = await validateAndClaimName(name);
+            if (!isValid) return;
+
             playerName = name;
             localStorage.setItem('flappyPlayerName', playerName);
 
@@ -1728,6 +1901,8 @@
 
             score = 0;
             level = 1;
+            updateBiomeUI(); // Başlangıç ekranı için biyomu Klasik (1.Seviye) yap
+
             lives = maxLives;
             damageInvulnerableTime = 0;
             pendingBoss = false;
@@ -1861,14 +2036,14 @@
                 else medal = `<span class="text-gray-400 font-black w-6 inline-block text-center">${index + 1}</span>`;
 
                 leaderboardList.innerHTML += `
-                    <div class="flex items-center justify-between p-3 rounded-xl border ${bgClass} transition-all">
-                        <div class="flex items-center gap-3">
-                            <div class="text-2xl flex justify-center w-8">${medal}</div>
-                            <span class="text-white font-bold text-lg truncate w-32">${item.name || 'Gizemli Oyuncu'}</span>
+                        <div class="flex items-center justify-between p-3 rounded-xl border ${bgClass} transition-all">
+                            <div class="flex items-center gap-3">
+                                <div class="text-2xl flex justify-center w-8">${medal}</div>
+                                <span class="text-white font-bold text-lg truncate w-32">${item.name || 'Gizemli Oyuncu'}</span>
+                            </div>
+                            <span class="text-yellow-400 font-black text-2xl drop-shadow-md">${item.score}</span>
                         </div>
-                        <span class="text-yellow-400 font-black text-2xl drop-shadow-md">${item.score}</span>
-                    </div>
-                `;
+                    `;
             });
         };
 
@@ -1881,6 +2056,8 @@
         bestScoreEl.innerText = bestScore;
         if (bestScorePlayerName) bestScoreNameDisplay.innerText = `(${bestScorePlayerName})`;
         if (playerName) nicknameInput.value = playerName;
+
+        updateBiomeUI(); // Oyun ilk açıldığında arka planı ayarla
 
         function resize() {
             const container = document.getElementById('game-container');
