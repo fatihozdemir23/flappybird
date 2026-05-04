@@ -373,15 +373,26 @@
                 name: playerName,
                 level: level,
                 status: currentStatus,
-                lastSeen: Date.now()
+                lastSeen: serverTimestamp()
             }, { merge: true }).catch(e => console.error("Durum güncellenemedi:", e));
         }
-
+        // 1. "visibilitychange" sekmeler arası geçişte ve mobilde daha güvenilirdir
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'hidden' && user && db) {
+                const presenceDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'presence', user.uid);
+                // "navigator.sendBeacon" benzeri hızlı bir işlem için deleteDoc
+                deleteDoc(presenceDocRef).catch(() => { });
+            } else if (document.visibilityState === 'visible') {
+                syncPresence(); // Sekme tekrar açılırsa durumu güncelle
+            }
+        });
         // Oyuncu sekmeyi kapattığında durumunu hemen silmeye çalış
-        window.addEventListener('beforeunload', () => {
+        window.addEventListener('beforeunload', (event) => {
             if (user && db) {
                 const presenceDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'presence', user.uid);
-                deleteDoc(presenceDocRef).catch(e => { });
+
+                // Firestore işlemlerinin tamamlanması için zaman tanımaya çalışır
+                deleteDoc(presenceDocRef);
             }
         });
 
@@ -601,7 +612,8 @@
                     seed: Math.floor(Math.random() * 100000),
                     host: { y: 150, rotation: 0, dead: false, skin: equippedSkin, score: 0, name: playerName },
                     guest: null,
-                    state: 'waiting'
+                    state: 'waiting',
+                    expireAt: new Date(Date.now() + 5 * 60 * 1000) // 5 dakika sonra silinsin
                 });
                 isHost = true;
                 isMultiplayer = true;
@@ -1788,22 +1800,22 @@
                 } else {
                     let canBuy = coins >= skin.price;
                     btnHtml = `<button onclick="window.buySkin('${key}')" class="${canBuy ? 'bg-yellow-500 hover:bg-yellow-600' : 'bg-gray-500 cursor-not-allowed'} text-white font-bold py-2 px-4 rounded-full active:scale-95 transition-transform flex items-center gap-1 text-sm flex-shrink-0">
-                            ${skin.price} TL
-                        </button>`;
+                                ${skin.price} TL
+                            </button>`;
                 }
 
                 skinList.innerHTML += `
-                        <div class="flex items-center justify-between bg-white/10 p-3 rounded-xl border ${isEquipped ? 'border-green-400' : 'border-white/20'}">
-                            <div class="flex items-center gap-3 overflow-hidden">
-                                <div class="w-10 h-10 flex-shrink-0 rounded-full border-2 border-white shadow-inner" style="background-color: ${skin.color}"></div>
-                                <div class="flex flex-col overflow-hidden text-left">
-                                    <span class="text-white font-bold text-base truncate">${skin.name}</span>
-                                    <span class="text-gray-400 text-xs truncate leading-tight">${skin.desc}</span>
+                            <div class="flex items-center justify-between bg-white/10 p-3 rounded-xl border ${isEquipped ? 'border-green-400' : 'border-white/20'}">
+                                <div class="flex items-center gap-3 overflow-hidden">
+                                    <div class="w-10 h-10 flex-shrink-0 rounded-full border-2 border-white shadow-inner" style="background-color: ${skin.color}"></div>
+                                    <div class="flex flex-col overflow-hidden text-left">
+                                        <span class="text-white font-bold text-base truncate">${skin.name}</span>
+                                        <span class="text-gray-400 text-xs truncate leading-tight">${skin.desc}</span>
+                                    </div>
                                 </div>
+                                ${btnHtml}
                             </div>
-                            ${btnHtml}
-                        </div>
-                    `;
+                        `;
             }
         }
 
@@ -2171,14 +2183,14 @@
                 else medal = `<span class="text-gray-400 font-black w-6 inline-block text-center">${index + 1}</span>`;
 
                 leaderboardList.innerHTML += `
-                        <div class="flex items-center justify-between p-3 rounded-xl border ${bgClass} transition-all">
-                            <div class="flex items-center gap-3">
-                                <div class="text-2xl flex justify-center w-8">${medal}</div>
-                                <span class="text-white font-bold text-lg truncate w-32">${item.name || 'Gizemli Oyuncu'}</span>
+                            <div class="flex items-center justify-between p-3 rounded-xl border ${bgClass} transition-all">
+                                <div class="flex items-center gap-3">
+                                    <div class="text-2xl flex justify-center w-8">${medal}</div>
+                                    <span class="text-white font-bold text-lg truncate w-32">${item.name || 'Gizemli Oyuncu'}</span>
+                                </div>
+                                <span class="text-yellow-400 font-black text-2xl drop-shadow-md">${item.score}</span>
                             </div>
-                            <span class="text-yellow-400 font-black text-2xl drop-shadow-md">${item.score}</span>
-                        </div>
-                    `;
+                        `;
             });
         };
 
@@ -2206,14 +2218,14 @@
                 let statusIcon = u.status === "Oyunda" ? "🎮" : "💤";
 
                 onlineList.innerHTML += `
-                        <div class="flex items-center justify-between p-3 rounded-xl border bg-white/10 border-white/20 transition-all">
-                            <div class="flex items-center gap-3">
-                                <span class="text-white font-bold text-lg truncate max-w-[100px] sm:max-w-[120px]">${u.name}</span>
-                                <span class="text-[10px] sm:text-xs font-bold ${statusColor} bg-black/50 px-2 py-1 rounded-full whitespace-nowrap">${statusIcon} ${u.status}</span>
+                            <div class="flex items-center justify-between p-3 rounded-xl border bg-white/10 border-white/20 transition-all">
+                                <div class="flex items-center gap-3">
+                                    <span class="text-white font-bold text-lg truncate max-w-[100px] sm:max-w-[120px]">${u.name}</span>
+                                    <span class="text-[10px] sm:text-xs font-bold ${statusColor} bg-black/50 px-2 py-1 rounded-full whitespace-nowrap">${statusIcon} ${u.status}</span>
+                                </div>
+                                <span class="text-blue-200 font-black text-sm bg-blue-600/50 px-3 py-1 rounded-lg whitespace-nowrap">Seviye: ${u.level}</span>
                             </div>
-                            <span class="text-blue-200 font-black text-sm bg-blue-600/50 px-3 py-1 rounded-lg whitespace-nowrap">Seviye: ${u.level}</span>
-                        </div>
-                    `;
+                        `;
             });
         };
 
