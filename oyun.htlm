@@ -1,0 +1,1952 @@
+<!DOCTYPE html>
+<html lang="tr" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Flappy Dash - Modern Cyber Edition</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Kanit', 'Rubik', 'sans-serif'],
+                    },
+                    colors: {
+                        cyber: {
+                            blue: '#00f0ff',
+                            darkblue: '#002699',
+                            yellow: '#ffe600',
+                            purple: '#7000ff',
+                            pink: '#ff007f',
+                            green: '#00ff88',
+                            dark: '#030712'
+                        }
+                    },
+                    animation: {
+                        'pulse-fast': 'pulse 0.8s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'float': 'float 2.5s ease-in-out infinite',
+                        'shine': 'shine 2s infinite',
+                        'glow': 'glow 1.5s ease-in-out infinite alternate',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0px) rotate(-2deg)' },
+                            '50%': { transform: 'translateY(-10px) rotate(2deg)' },
+                        },
+                        shine: {
+                            '0%': { transform: 'translateX(-100%)' },
+                            '100%': { transform: 'translateX(200%)' }
+                        },
+                        glow: {
+                            '0%': { filter: 'drop-shadow(0 0 5px rgba(0, 240, 255, 0.6))' },
+                            '100%': { filter: 'drop-shadow(0 0 15px rgba(255, 0, 127, 0.9))' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome & Google Fonts -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:ital,wght@0,700;0,800;0,900;1,700;1,800;1,900&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+            font-family: 'Kanit', sans-serif;
+        }
+
+        body {
+            background: #020617;
+            color: #ffffff;
+            overflow: hidden;
+        }
+
+        #gameContainer {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            max-width: 480px;
+            max-height: 920px;
+            margin: 0 auto;
+            box-shadow: 0 0 70px rgba(0, 240, 255, 0.25), 0 25px 50px -12px rgba(0, 0, 0, 0.95);
+            overflow: hidden;
+            background: #030712;
+            border: 2px solid rgba(0, 240, 255, 0.4);
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Glassmorphic Cyber Cards & Buttons */
+        .cyber-glass {
+            background: rgba(15, 23, 42, 0.65);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border: 1.5px solid rgba(56, 189, 248, 0.3);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5), inset 0 0 12px rgba(0, 240, 255, 0.15);
+        }
+
+        .cyber-pill {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(8px);
+            border: 1.5px solid rgba(0, 240, 255, 0.4);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            border-radius: 9999px;
+        }
+
+        .cyber-skew {
+            transform: skewX(-8deg);
+        }
+
+        .cyber-unskew {
+            transform: skewX(8deg);
+        }
+
+        /* Dynamic Cyber Dash Buttons */
+        .btn-cyber-play {
+            background: linear-gradient(135deg, #ffe600 0%, #ff9900 100%);
+            border: 2px solid #ffffff;
+            box-shadow: 0 0 20px rgba(255, 230, 0, 0.5), 0 6px 0 0 #cc6600;
+            text-shadow: 2px 2px 0px #804000;
+        }
+        .btn-cyber-play:active {
+            transform: translateY(3px) skewX(-8deg);
+            box-shadow: 0 0 10px rgba(255, 230, 0, 0.4), 0 3px 0 0 #cc6600;
+        }
+
+        .btn-cyber-blue {
+            background: linear-gradient(135deg, #00f0ff 0%, #0055ff 100%);
+            border: 2px solid #ffffff;
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.4), 0 5px 0 0 #002699;
+            text-shadow: 1px 2px 0px #001a66;
+        }
+        .btn-cyber-blue:active {
+            transform: translateY(2px) skewX(-8deg);
+            box-shadow: 0 3px 0 0 #002699;
+        }
+
+        .btn-cyber-green {
+            background: linear-gradient(135deg, #00ff88 0%, #00b34a 100%);
+            border: 2px solid #ffffff;
+            box-shadow: 0 0 15px rgba(0, 255, 136, 0.4), 0 5px 0 0 #00662a;
+            text-shadow: 1px 2px 0px #003315;
+        }
+        .btn-cyber-green:active {
+            transform: translateY(2px) skewX(-8deg);
+            box-shadow: 0 3px 0 0 #00662a;
+        }
+
+        .cyber-text-stroke {
+            -webkit-text-stroke: 1.5px #000000;
+        }
+
+        .cyber-title-stroke {
+            -webkit-text-stroke: 2px #002699;
+            filter: drop-shadow(0 0 10px rgba(0, 240, 255, 0.8));
+        }
+
+        .custom-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scroll::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.6);
+            border-radius: 10px;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: linear-gradient(to bottom, #00f0ff, #ff007f);
+            border-radius: 10px;
+        }
+
+        /* Virtual Joystick */
+        #joystickContainer {
+            position: absolute;
+            bottom: 40px;
+            left: 40px;
+            width: 110px;
+            height: 110px;
+            border-radius: 50%;
+            background: rgba(0, 240, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(0, 240, 255, 0.6);
+            box-shadow: 0 0 25px rgba(0, 240, 255, 0.4);
+            display: none;
+            touch-action: none;
+            z-index: 40;
+        }
+
+        #joystickKnob {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #00f0ff 0%, #0055ff 100%);
+            border: 2px solid #ffffff;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 20px rgba(0, 240, 255, 0.9);
+            pointer-events: none;
+        }
+
+        .shake {
+            animation: shake 0.3s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-2px, 0, 0); }
+            20%, 80% { transform: translate3d(3px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-5px, 0, 0); }
+            40%, 60% { transform: translate3d(5px, 0, 0); }
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen bg-slate-950 p-0 sm:p-4">
+
+    <div id="gameContainer" class="relative rounded-none sm:rounded-[36px]">
+        
+        <!-- Canvas Layer -->
+        <canvas id="gameCanvas"></canvas>
+
+        <!-- Modern Top Level/XP Dynamic Bar -->
+        <div class="absolute top-0 left-0 right-0 h-1.5 bg-slate-900/80 z-20 overflow-hidden backdrop-blur-sm">
+            <div id="levelProgressBar" class="h-full bg-gradient-to-r from-cyan-400 via-yellow-400 to-pink-500 w-0 transition-all duration-300 shadow-[0_0_12px_#00f0ff]"></div>
+        </div>
+
+        <!-- Modern Futuristic In-Game HUD -->
+        <div id="hud" class="absolute top-4 left-3 right-3 flex justify-between items-center z-20 pointer-events-none">
+            <!-- Left Group: Score Ribbon & Level Badge -->
+            <div class="flex items-center gap-2">
+                <!-- Score Glass Ribbon -->
+                <div class="cyber-skew cyber-glass px-3.5 py-1.5 rounded-2xl flex items-center gap-2 border border-cyan-500/40">
+                    <div class="cyber-unskew flex items-center gap-1.5">
+                        <i class="fa-solid fa-bolt text-cyan-400 text-lg animate-pulse"></i>
+                        <span id="scoreDisplay" class="font-black italic text-2xl text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-yellow-300 to-white tracking-wider filter drop-shadow">0</span>
+                    </div>
+                </div>
+                <!-- Level Skewed Badge -->
+                <div class="cyber-skew bg-gradient-to-r from-purple-900/80 to-indigo-900/80 backdrop-blur-md border border-purple-400/50 px-2.5 py-1 rounded-xl shadow-lg">
+                    <div class="cyber-unskew flex items-center gap-1">
+                        <span class="text-[9px] font-black italic text-purple-300 uppercase tracking-widest">LVL</span>
+                        <span id="levelDisplay" class="font-black italic text-white text-base">1</span>
+                    </div>
+                </div>
+                <!-- Dynamic Combo Badge -->
+                <div id="comboBadge" class="hidden cyber-skew bg-gradient-to-r from-pink-600 to-rose-600 border border-white px-2 py-0.5 rounded-lg shadow-lg animate-bounce">
+                    <div class="cyber-unskew flex items-center gap-1 text-[11px] font-black italic text-white">
+                        <span id="comboCount">x2</span> DART
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Group: Ring Counter & Control Buttons -->
+            <div class="flex items-center gap-2 pointer-events-auto">
+                <div class="cyber-skew cyber-glass px-3 py-1 rounded-2xl flex items-center gap-1.5 border border-yellow-400/50">
+                    <div class="cyber-unskew flex items-center gap-1.5">
+                        <i class="fa-solid fa-ring text-yellow-400 text-sm animate-spin" style="animation-duration: 3s;"></i>
+                        <span id="coinsDisplay" class="font-black italic text-sm text-yellow-300">0</span>
+                    </div>
+                </div>
+                <!-- Pause Button -->
+                <button id="pauseBtn" onclick="togglePause()" class="cyber-skew cyber-glass w-9 h-9 rounded-xl flex items-center justify-center text-cyan-400 hover:text-white transition active:scale-90 border border-cyan-400/40 shadow-lg">
+                    <div class="cyber-unskew">
+                        <i class="fa-solid fa-pause text-xs" id="pauseIcon"></i>
+                    </div>
+                </button>
+                <!-- Sound Toggle Button -->
+                <button id="soundBtn" onclick="toggleAudio()" class="cyber-skew cyber-glass w-9 h-9 rounded-xl flex items-center justify-center text-yellow-400 hover:text-white transition active:scale-90 border border-yellow-400/40 shadow-lg">
+                    <div class="cyber-unskew">
+                        <i class="fa-solid fa-volume-high text-xs" id="soundIcon"></i>
+                    </div>
+                </button>
+            </div>
+        </div>
+
+        <!-- Boss Fight Top Health Bar (Hidden by default) -->
+        <div id="bossBarContainer" class="absolute top-16 left-8 right-8 z-20 pointer-events-none hidden flex-col items-center gap-1">
+            <div class="flex justify-between w-full text-[11px] font-black italic text-rose-400 tracking-wider">
+                <span><i class="fa-solid fa-skull-crossbones mr-1"></i> DR. ROBOTNIK BOSS</span>
+                <span id="bossHpText">100 / 100</span>
+            </div>
+            <div class="w-full h-3 bg-slate-900/90 rounded-full border border-rose-500/60 overflow-hidden p-0.5 shadow-[0_0_15px_rgba(255,0,127,0.5)]">
+                <div id="bossHpFill" class="h-full bg-gradient-to-r from-rose-600 via-pink-500 to-yellow-400 rounded-full w-full transition-all duration-200"></div>
+            </div>
+        </div>
+
+        <!-- Active Power-ups HUD Stack -->
+        <div id="powerupBar" class="absolute top-16 right-3 flex flex-col items-end gap-1.5 z-20 pointer-events-none">
+            <!-- Dynamic Active Badges -->
+        </div>
+
+        <!-- Dynamic Hearts HUD -->
+        <div id="livesContainer" class="absolute top-16 left-3 flex gap-1 z-20 pointer-events-none">
+            <!-- Dynamic Hearts -->
+        </div>
+
+        <!-- Start Screen Overlay -->
+        <div id="startScreen" class="absolute inset-0 bg-slate-950/85 backdrop-blur-xl flex flex-col items-center justify-between p-5 z-30 transition-opacity duration-300">
+            <!-- Title Header -->
+            <div class="text-center mt-6 animate-float relative w-full">
+                <div class="relative inline-block">
+                    <div class="cyber-skew bg-gradient-to-r from-cyan-600 via-blue-600 to-purple-600 border-2 border-cyan-400 px-6 py-4 rounded-3xl shadow-[0_0_30px_rgba(0,240,255,0.4)] relative">
+                        <div class="cyber-unskew">
+                            <h1 class="text-4xl sm:text-5xl font-black italic tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-white to-cyan-300 cyber-title-stroke">
+                                FLAPPY DASH
+                            </h1>
+                            <div class="flex items-center justify-center gap-2 mt-1">
+                                <span class="bg-gradient-to-r from-pink-600 to-rose-600 text-white font-black italic text-[10px] px-2.5 py-0.5 rounded-md border border-white transform -skew-x-12 shadow">
+                                    CYBER NEON 3.0
+                                </span>
+                                <span class="bg-gradient-to-r from-yellow-400 to-amber-500 text-slate-950 font-black italic text-[10px] px-2.5 py-0.5 rounded-md border border-slate-900 transform -skew-x-12 shadow">
+                                    45 WASH YOLDAŞ
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats Showcase -->
+            <div class="w-full max-w-xs cyber-glass p-4 rounded-3xl space-y-2 relative overflow-hidden border border-cyan-500/30">
+                <div class="flex justify-between items-center text-xs font-bold text-slate-300">
+                    <span class="flex items-center gap-1.5"><i class="fa-solid fa-trophy text-yellow-400"></i> Rekor Skor:</span>
+                    <span id="menuHighScore" class="font-black italic text-yellow-300 text-base">0</span>
+                </div>
+                <div class="flex justify-between items-center text-xs font-bold text-slate-300">
+                    <span class="flex items-center gap-1.5"><i class="fa-solid fa-kiwi-bird text-cyan-400"></i> Aktif Kuş:</span>
+                    <span id="menuEquippedSkin" class="font-black italic text-cyan-400">Standart</span>
+                </div>
+                <div class="flex justify-between items-center text-xs font-bold text-slate-300">
+                    <span class="flex items-center gap-1.5"><i class="fa-solid fa-shield-cat text-purple-400"></i> WASH Yoldaş:</span>
+                    <span id="menuEquippedWash" class="font-black italic text-purple-300">Yok</span>
+                </div>
+            </div>
+
+            <!-- Menu Actions -->
+            <div class="w-full max-w-xs space-y-3">
+                <button onclick="startGame()" class="w-full py-4 cyber-skew btn-cyber-play font-black italic text-2xl tracking-wider text-slate-950 transition active:scale-95 flex items-center justify-center gap-3 rounded-2xl group relative overflow-hidden">
+                    <div class="cyber-unskew flex items-center justify-center gap-3">
+                        <i class="fa-solid fa-play text-2xl group-hover:scale-125 transition"></i> DOKUN VE BAŞLA!
+                    </div>
+                    <div class="absolute inset-0 bg-white/30 animate-shine pointer-events-none"></div>
+                </button>
+                <div class="grid grid-cols-2 gap-3">
+                    <button onclick="openShop()" class="py-3 cyber-skew btn-cyber-blue font-black italic text-sm text-white flex items-center justify-center gap-2 rounded-xl transition">
+                        <div class="cyber-unskew flex items-center justify-center gap-1.5">
+                            <i class="fa-solid fa-store text-yellow-300"></i> Market
+                        </div>
+                    </button>
+                    <button onclick="openAchievements()" class="py-3 cyber-skew btn-cyber-green font-black italic text-sm text-white flex items-center justify-center gap-2 rounded-xl transition">
+                        <div class="cyber-unskew flex items-center justify-center gap-1.5">
+                            <i class="fa-solid fa-award text-yellow-300"></i> Görevler
+                        </div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Controls Banner -->
+            <div class="text-center text-slate-400 text-[11px] mb-2 font-bold space-y-0.5">
+                <p>Zıplamak için ekrana dokun veya <kbd class="px-2 py-0.5 bg-blue-900/80 border border-cyan-400 text-yellow-300 rounded font-black">BOŞLUK</kbd></p>
+                <p class="text-cyan-300 font-extrabold">Boss Savaşında: Yön Tuşları / WASD / Dokunmatik Joystick</p>
+            </div>
+        </div>
+
+        <!-- Pause Screen Overlay -->
+        <div id="pauseScreen" class="absolute inset-0 bg-slate-950/80 backdrop-blur-xl flex flex-col items-center justify-center p-6 z-30 hidden">
+            <div class="cyber-glass p-6 rounded-3xl w-full max-w-xs text-center space-y-5 shadow-2xl relative border-2 border-cyan-400/50">
+                <div class="cyber-skew bg-gradient-to-r from-cyan-500 to-blue-600 border border-white px-5 py-2 rounded-xl -mt-10 mx-auto shadow-lg inline-block">
+                    <h2 class="cyber-unskew text-2xl font-black italic text-yellow-300 cyber-text-stroke">
+                        DURAKLATILDI
+                    </h2>
+                </div>
+                <p class="text-xs text-slate-300 font-bold">Oyun donduruldu. Hazır olduğunda devam et!</p>
+                <div class="space-y-3 pt-1">
+                    <button onclick="togglePause()" class="w-full py-3.5 cyber-skew btn-cyber-play font-black italic text-slate-950 text-base transition rounded-xl">
+                        <div class="cyber-unskew flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-play"></i> DEVAM ET
+                        </div>
+                    </button>
+                    <button onclick="restartGame()" class="w-full py-2.5 cyber-skew btn-cyber-blue font-black italic text-white text-xs transition rounded-xl">
+                        <div class="cyber-unskew flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-rotate-right"></i> Yeniden Başlat
+                        </div>
+                    </button>
+                    <button onclick="returnToMenu()" class="w-full py-2.5 cyber-skew bg-slate-800 border border-slate-600 font-black italic text-slate-300 text-xs transition rounded-xl">
+                        <div class="cyber-unskew flex items-center justify-center gap-1">
+                            <i class="fa-solid fa-house mr-1"></i> Ana Menü
+                        </div>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game Over Screen Overlay -->
+        <div id="gameOverScreen" class="absolute inset-0 bg-slate-950/90 backdrop-blur-xl flex flex-col items-center justify-center p-6 z-30 hidden">
+            <div class="cyber-glass p-6 rounded-3xl w-full max-w-xs text-center space-y-4 shadow-2xl relative border-2 border-rose-500/70">
+                <div class="cyber-skew bg-gradient-to-r from-rose-600 to-red-700 border border-white px-5 py-2 rounded-xl -mt-10 mx-auto shadow-lg inline-block">
+                    <h2 class="cyber-unskew text-2xl font-black italic text-yellow-300 cyber-text-stroke">
+                        KOŞU BİTTİ!
+                    </h2>
+                </div>
+
+                <div class="bg-slate-900/90 p-4 rounded-2xl space-y-3 border border-cyan-500/30">
+                    <div class="flex justify-between items-center text-xs">
+                        <span class="text-slate-300 font-bold">Toplanan Skor:</span>
+                        <span id="finalScore" class="font-black italic text-3xl text-yellow-300 cyber-text-stroke">0</span>
+                    </div>
+                    <div class="flex justify-between items-center text-xs">
+                        <span class="text-slate-300 font-bold">En Yüksek Rekor:</span>
+                        <span id="highScoreDisplay" class="font-black italic text-xl text-cyan-400">0</span>
+                    </div>
+                    <div class="flex justify-between items-center text-xs border-t border-slate-800 pt-2.5">
+                        <span class="text-slate-300 font-bold">Kazanılan Ring:</span>
+                        <span id="earnedCoins" class="font-black italic text-base text-yellow-400">+0</span>
+                    </div>
+                </div>
+
+                <div class="space-y-2.5 pt-1">
+                    <button onclick="restartGame()" class="w-full py-3.5 cyber-skew btn-cyber-play font-black italic text-slate-950 text-base transition flex items-center justify-center gap-2 rounded-xl">
+                        <div class="cyber-unskew flex items-center gap-2">
+                            <i class="fa-solid fa-rotate-right text-lg"></i> TEKRAR DENE
+                        </div>
+                    </button>
+                    <button onclick="returnToMenu()" class="w-full py-2.5 cyber-skew btn-cyber-blue font-black italic text-white text-xs transition rounded-xl">
+                        <div class="cyber-unskew flex items-center justify-center gap-1">
+                            <i class="fa-solid fa-house mr-1"></i> Ana Menü
+                        </div>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Shop Modal -->
+        <div id="shopModal" class="absolute inset-0 bg-slate-950/95 backdrop-blur-2xl flex flex-col p-5 z-40 hidden">
+            <div class="flex justify-between items-center mb-4 border-b border-cyan-500/40 pb-3">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-r from-cyan-400 to-blue-500 border border-white flex items-center justify-center text-slate-950 font-black text-xl shadow-lg">
+                        <i class="fa-solid fa-store"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-black italic text-cyan-300 tracking-wider">CYBER MARKET</h2>
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Karakter & Yoldaş Geliştir</p>
+                    </div>
+                </div>
+                <button onclick="closeShop()" class="cyber-skew bg-rose-600 border border-white w-9 h-9 rounded-xl flex items-center justify-center text-white font-black hover:bg-rose-500 transition">
+                    <div class="cyber-unskew">
+                        <i class="fa-solid fa-xmark"></i>
+                    </div>
+                </button>
+            </div>
+
+            <!-- Shop Tabs -->
+            <div class="flex bg-slate-900 p-1.5 rounded-2xl mb-4 border border-cyan-500/30 gap-1.5">
+                <button id="tabSkinsBtn" onclick="switchShopTab('skins')" class="flex-1 py-2 rounded-xl font-black italic text-xs transition bg-cyan-400 text-slate-950 border border-white shadow">
+                    <i class="fa-solid fa-kiwi-bird mr-1"></i> Kuşlar
+                </button>
+                <button id="tabWashBtn" onclick="switchShopTab('wash')" class="flex-1 py-2 rounded-xl font-black italic text-xs transition text-slate-400 hover:text-white">
+                    <i class="fa-solid fa-droplet mr-1 text-cyan-400"></i> WASH (45 Yoldaş)
+                </button>
+            </div>
+
+            <div id="shopContent" class="flex-1 overflow-y-auto custom-scroll pr-1 space-y-3">
+                <!-- Dynamically Rendered -->
+            </div>
+        </div>
+
+        <!-- Achievements Modal -->
+        <div id="achievementsModal" class="absolute inset-0 bg-slate-950/95 backdrop-blur-2xl flex flex-col p-5 z-40 hidden">
+            <div class="flex justify-between items-center mb-3 border-b border-emerald-500/40 pb-3">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-r from-emerald-400 to-green-500 border border-white flex items-center justify-center text-slate-950 font-black text-xl shadow-lg">
+                        <i class="fa-solid fa-calendar-check"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-black italic text-emerald-400 tracking-wider">GÜNLÜK GÖREVLER</h2>
+                        <p id="dailyResetCountdown" class="text-[10px] font-bold text-cyan-300 uppercase tracking-wide">HER GÜN 20 YENİ GÖREV • 24 SAATTE YENİLENİR</p>
+                    </div>
+                </div>
+                <button onclick="closeAchievements()" class="cyber-skew bg-rose-600 border border-white w-9 h-9 rounded-xl flex items-center justify-center text-white font-black hover:bg-rose-500 transition">
+                    <div class="cyber-unskew">
+                        <i class="fa-solid fa-xmark"></i>
+                    </div>
+                </button>
+            </div>
+            <div id="achievementsList" class="flex-1 overflow-y-auto custom-scroll space-y-2.5 pr-1">
+                <!-- Dynamically Rendered 20 Daily Quests -->
+            </div>
+        </div>
+
+        <!-- Virtual Joystick -->
+        <div id="joystickContainer">
+            <div id="joystickKnob"></div>
+        </div>
+
+        <!-- Toast Notification -->
+        <div id="toast" class="absolute bottom-6 left-1/2 -translate-x-1/2 cyber-skew cyber-glass border border-cyan-400 px-5 py-2.5 rounded-2xl text-xs font-black italic text-cyan-300 shadow-2xl opacity-0 pointer-events-none transition-all duration-300 z-50 flex items-center gap-2.5 whitespace-nowrap">
+            <div class="cyber-unskew flex items-center gap-2">
+                <i class="fa-solid fa-bolt text-yellow-400 text-sm"></i>
+                <span id="toastMsg">Bildirim</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        function resizeCanvas() {
+            const container = document.getElementById('gameContainer');
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // Audio System
+        let audioMuted = false;
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playSound(type) {
+            if (audioMuted || !audioCtx) return;
+            try {
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                const now = audioCtx.currentTime;
+
+                if (type === 'flap') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(450, now);
+                    osc.frequency.exponentialRampToValueAtTime(950, now + 0.08);
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+                    osc.start(now);
+                    osc.stop(now + 0.08);
+                } else if (type === 'coin') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(1046.50, now);
+                    osc.frequency.setValueAtTime(1567.98, now + 0.08);
+                    gain.gain.setValueAtTime(0.25, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.22);
+                    osc.start(now);
+                    osc.stop(now + 0.22);
+                } else if (type === 'hit') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(280, now);
+                    osc.frequency.linearRampToValueAtTime(70, now + 0.15);
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+                    osc.start(now);
+                    osc.stop(now + 0.15);
+                } else if (type === 'powerup') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(500, now);
+                    osc.frequency.exponentialRampToValueAtTime(1300, now + 0.25);
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+                    osc.start(now);
+                    osc.stop(now + 0.25);
+                }
+            } catch (e) {}
+        }
+
+        function toggleAudio() {
+            audioMuted = !audioMuted;
+            document.getElementById('soundIcon').className = audioMuted ? "fa-solid fa-volume-xmark text-rose-400 text-xs" : "fa-solid fa-volume-high text-yellow-400 text-xs";
+            showToast(audioMuted ? "Ses Kapatıldı" : "Ses Açıldı");
+        }
+
+        let state = { current: 0, menu: 0, game: 1, gameOver: 2, paused: 3 };
+        let isPaused = false;
+        let score = 0;
+        let level = 1;
+        let coins = parseInt(localStorage.getItem('flappyCoins')) || 0;
+        let highScore = parseInt(localStorage.getItem('flappyHighScore')) || 0;
+        let totalPipesPassed = parseInt(localStorage.getItem('flappyTotalPipes')) || 0;
+        let lives = 5;
+        let frames = 0;
+        let washRevivedThisRun = false;
+        let comboCount = 0;
+
+        // Power-ups state
+        let hasShield = false;
+        let magnetTimer = 0;
+        let slowMotionTimer = 0;
+        let items = [];
+
+        function saveCoins() {
+            localStorage.setItem('flappyCoins', coins);
+            document.getElementById('coinsDisplay').innerText = coins;
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMsg').innerText = msg;
+            toast.classList.remove('opacity-0', 'pointer-events-none');
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'pointer-events-none');
+            }, 2400);
+        }
+
+        function triggerScreenShake() {
+            const container = document.getElementById('gameContainer');
+            container.classList.add('shake');
+            setTimeout(() => container.classList.remove('shake'), 300);
+        }
+
+        function togglePause() {
+            if (state.current !== state.game && !isPaused) return;
+
+            isPaused = !isPaused;
+            const pauseModal = document.getElementById('pauseScreen');
+            const pauseIcon = document.getElementById('pauseIcon');
+
+            if (isPaused) {
+                pauseModal.classList.remove('hidden');
+                pauseIcon.className = "fa-solid fa-play text-xs";
+            } else {
+                pauseModal.classList.add('hidden');
+                pauseIcon.className = "fa-solid fa-pause text-xs";
+            }
+        }
+
+        const biomes = [
+            { name: "Neon Cyber City", skyTop: "#020617", skyBottom: "#0f172a", pipeFill: "#00f0ff", pipeStroke: "#0055ff", bgGrid: "#00f0ff" },
+            { name: "Synthwave Sunset", skyTop: "#1e0b2b", skyBottom: "#3b0764", pipeFill: "#ff007f", pipeStroke: "#7000ff", bgGrid: "#ff007f" },
+            { name: "Quantum Matrix", skyTop: "#022c22", skyBottom: "#064e3b", pipeFill: "#00ff88", pipeStroke: "#059669", bgGrid: "#00ff88" },
+            { name: "Solar Plasma", skyTop: "#2a0800", skyBottom: "#451a03", pipeFill: "#ffe600", pipeStroke: "#ff4500", bgGrid: "#ffe600" }
+        ];
+        let currentBiomeIndex = 0;
+
+        // Floating texts system
+        let floatingTexts = [];
+        function addFloatingText(x, y, text, color = '#ffcc00') {
+            floatingTexts.push({ x, y, text, color, alpha: 1, vy: -1.8 });
+        }
+        function updateFloatingTexts() {
+            for (let i = floatingTexts.length - 1; i >= 0; i--) {
+                let ft = floatingTexts[i];
+                ft.y += ft.vy;
+                ft.alpha -= 0.025;
+                if (ft.alpha <= 0) floatingTexts.splice(i, 1);
+            }
+        }
+        function drawFloatingTexts() {
+            floatingTexts.forEach(ft => {
+                ctx.save();
+                ctx.globalAlpha = ft.alpha;
+                ctx.fillStyle = ft.color;
+                ctx.shadowColor = '#000';
+                ctx.shadowBlur = 6;
+                ctx.font = '900 italic 18px "Kanit", sans-serif';
+                ctx.fillText(ft.text, ft.x, ft.y);
+                ctx.restore();
+            });
+        }
+
+        // Particle FX system
+        let particles = [];
+        function createParticles(x, y, color, count = 14) {
+            for (let i = 0; i < count; i++) {
+                particles.push({
+                    x: x, y: y,
+                    vx: (Math.random() - 0.5) * 8,
+                    vy: (Math.random() - 0.5) * 8,
+                    radius: Math.random() * 4 + 2,
+                    color: color,
+                    alpha: 1,
+                    life: 1
+                });
+            }
+        }
+        function updateParticles() {
+            for (let i = particles.length - 1; i >= 0; i--) {
+                let p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.life -= 0.04;
+                p.alpha = Math.max(0, p.life);
+                if (p.life <= 0) particles.splice(i, 1);
+            }
+        }
+        function drawParticles() {
+            particles.forEach(p => {
+                ctx.save();
+                ctx.globalAlpha = p.alpha;
+                ctx.fillStyle = p.color;
+                ctx.shadowColor = p.color;
+                ctx.shadowBlur = 8;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            });
+        }
+
+        const skinsData = {
+            'default': { name: 'Standart', color: '#ffe600', eye: '#ffffff', price: 0 },
+            'cyber': { name: 'Cyber Neon', color: '#00f0ff', eye: '#00ffff', price: 500 },
+            'phoenix': { name: 'Anka Kuşu', color: '#ff007f', eye: '#ffff00', price: 1200 },
+            'ghost': { name: 'Hayalet Kuş', color: '#a855f7', eye: '#000000', price: 2500 },
+            'ninja': { name: 'Gölge Ninja', color: '#1e293b', eye: '#ef4444', price: 3000 },
+            'mecha': { name: 'Mecha Kartal', color: '#38bdf8', eye: '#e0f2fe', price: 3500 },
+            'dragon': { name: 'Ejder Kanat', color: '#dc2626', eye: '#fef08a', price: 4000 },
+            'plasma': { name: 'Plazma Şahin', color: '#06b6d4', eye: '#a5f3fc', price: 4500 },
+            'solar': { name: 'Güneş Güvercini', color: '#f59e0b', eye: '#fef3c7', price: 5000 },
+            'vortex': { name: 'Girdap Karga', color: '#7c3aed', eye: '#ddd6fe', price: 5500 },
+            'quantum': { name: 'Kuantum Martı', color: '#10b981', eye: '#d1fae5', price: 6000 },
+            'hyper': { name: 'Hiper Peçeli', color: '#f97316', eye: '#ffedd5', price: 6500 },
+            'frost': { name: 'Buzul Baykuş', color: '#93c5fd', eye: '#ffffff', price: 7000 },
+            'inferno': { name: 'Cehennem Bülbülü', color: '#b91c1c', eye: '#fde047', price: 7500 },
+            'shadow': { name: 'Gece Pelikanı', color: '#0f172a', eye: '#38bdf8', price: 8000 },
+            'laser': { name: 'Lazer Sinekkuşu', color: '#ec4899', eye: '#fbcfe8', price: 8500 },
+            'titan': { name: 'Titan Doğan', color: '#d97706', eye: '#fef3c7', price: 9000 },
+            'pulsar': { name: 'Pulsar Ağaçkakan', color: '#8b5cf6', eye: '#c4b5fd', price: 9500 },
+            'aurora': { name: 'Kutup Işığı', color: '#14b8a6', eye: '#ccfbf1', price: 10000 },
+            'nebula': { name: 'Bulutsu Albatros', color: '#d946ef', eye: '#fae8ff', price: 11000 },
+            'chronos': { name: 'Kronos Şahini', color: '#eab308', eye: '#ffffff', price: 12000 },
+            'stealth': { name: 'Hayalet Akbaba', color: '#475569', eye: '#00f0ff', price: 13000 },
+            'supernova': { name: 'Süpernova Sülün', color: '#ff4500', eye: '#ffff00', price: 14000 },
+            'emerald': { name: 'Zümrüt Papağan', color: '#059669', eye: '#a7f3d0', price: 15000 },
+            'ruby': { name: 'Yakut Flamingo', color: '#e11d48', eye: '#fecdd3', price: 16000 },
+            'sapphire': { name: 'Safir Turna', color: '#1d4ed8', eye: '#bfdbfe', price: 17000 },
+            'void': { name: 'Boşluk Serçesi', color: '#312e81', eye: '#a5b4fc', price: 18000 },
+            'electric': { name: 'Elektrik Kanat', color: '#84cc16', eye: '#ecfccb', price: 19000 },
+            'cosmic': { name: 'Kozmik Atmaca', color: '#4338ca', eye: '#e0e7ff', price: 20000 },
+            'godlike': { name: 'Efsanevi Zümrüdüanka', color: '#fbbf24', eye: '#ffffff', price: 25000 }
+        };
+
+        function getSkinLevel(skinId) {
+            let levels = JSON.parse(localStorage.getItem('flappySkinLevels')) || {};
+            return levels[skinId] || 1;
+        }
+
+        function getWashLevel(washId) {
+            let levels = JSON.parse(localStorage.getItem('flappyWashLevels')) || {};
+            return levels[washId] || 1;
+        }
+
+        // Skins and WASH Companion Data
+        let unlockedSkins = JSON.parse(localStorage.getItem('flappySkins')) || ['default'];
+        let equippedSkin = localStorage.getItem('flappyEquippedSkin') || 'default';
+
+        let currentShopTab = 'skins';
+
+        function openShop() {
+            renderShop();
+            document.getElementById('shopModal').classList.remove('hidden');
+        }
+
+        function closeShop() {
+            document.getElementById('shopModal').classList.add('hidden');
+            updateMenuStats();
+        }
+
+        function switchShopTab(tab) {
+            currentShopTab = tab;
+            const tabSkins = document.getElementById('tabSkinsBtn');
+            const tabWash = document.getElementById('tabWashBtn');
+            if (tab === 'skins') {
+                tabSkins.className = "flex-1 py-2 rounded-xl font-black italic text-xs transition bg-cyan-400 text-slate-950 border border-white shadow";
+                tabWash.className = "flex-1 py-2 rounded-xl font-black italic text-xs transition text-slate-400 hover:text-white";
+            } else {
+                tabWash.className = "flex-1 py-2 rounded-xl font-black italic text-xs transition bg-cyan-400 text-slate-950 border border-white shadow";
+                tabSkins.className = "flex-1 py-2 rounded-xl font-black italic text-xs transition text-slate-400 hover:text-white";
+            }
+            renderShop();
+        }
+
+        function renderShop() {
+            const container = document.getElementById('shopContent');
+            if (!container) return;
+            container.innerHTML = '';
+
+            if (currentShopTab === 'skins') {
+                Object.keys(skinsData).forEach(id => {
+                    let item = skinsData[id];
+                    let isUnlocked = unlockedSkins.includes(id);
+                    let isEquipped = equippedSkin === id;
+                    let level = getSkinLevel(id);
+
+                    let div = document.createElement('div');
+                    div.className = "cyber-glass p-3 rounded-2xl flex items-center justify-between border border-cyan-500/30";
+                    div.innerHTML = `
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl flex items-center justify-center border border-white" style="background: ${item.color}">
+                                <i class="fa-solid fa-kiwi-bird text-slate-950 text-lg"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-black italic text-white text-sm">${item.name} ${isUnlocked ? `<span class="text-xs text-cyan-400">(Lv. ${level})</span>` : ''}</h4>
+                                <p class="text-[10px] text-slate-400 font-bold">${isUnlocked ? `Bonus: +%${(level - 1) * 10} Ring` : `Fiyat: ${item.price} Ring`}</p>
+                            </div>
+                        </div>
+                        <div>
+                            ${!isUnlocked 
+                                ? `<button onclick="buySkin('${id}')" class="px-3 py-1.5 cyber-skew btn-cyber-play font-black italic text-xs text-slate-950 rounded-lg"><div class="cyber-unskew">${item.price} Ring</div></button>`
+                                : (isEquipped 
+                                    ? `<span class="text-xs font-black italic text-cyan-400 px-3 py-1">Kullanımda</span>`
+                                    : `<button onclick="equipSkin('${id}')" class="px-3 py-1.5 cyber-skew btn-cyber-blue font-black italic text-xs text-white rounded-lg"><div class="cyber-unskew">Seç</div></button>`
+                                )
+                            }
+                        </div>
+                    `;
+                    container.appendChild(div);
+                });
+            } else {
+                washDataList.forEach(item => {
+                    let isUnlocked = unlockedWash.includes(item.id);
+                    let isEquipped = equippedWash === item.id;
+                    let level = getWashLevel(item.id);
+
+                    let div = document.createElement('div');
+                    div.className = "cyber-glass p-3 rounded-2xl flex items-center justify-between border border-cyan-500/30 gap-2";
+                    div.innerHTML = `
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl flex items-center justify-center border border-white text-lg shrink-0" style="background: ${item.color}">
+                                <span>${item.icon}</span>
+                            </div>
+                            <div class="min-w-0">
+                                <h4 class="font-black italic text-white text-xs sm:text-sm truncate flex items-center gap-1.5">
+                                    ${item.name} ${isUnlocked ? `<span class="text-[10px] text-purple-400 font-bold">(Lv. ${level})</span>` : ''}
+                                </h4>
+                                <p class="text-[11px] font-extrabold text-cyan-300 leading-tight mt-0.5">${item.desc}</p>
+                                <p class="text-[10px] text-slate-400 font-bold mt-0.5">${isUnlocked ? `Ring Bonusu: +%${(level - 1) * 15}` : `Fiyat: ${item.price} Ring`}</p>
+                            </div>
+                        </div>
+                        <div class="shrink-0">
+                            ${!isUnlocked 
+                                ? `<button onclick="buyWash('${item.id}')" class="px-3 py-1.5 cyber-skew btn-cyber-play font-black italic text-xs text-slate-950 rounded-lg"><div class="cyber-unskew">${item.price} Ring</div></button>`
+                                : (isEquipped 
+                                    ? `<button onclick="unequipWash()" class="px-3 py-1.5 cyber-skew bg-rose-600 border border-white font-black italic text-xs text-white rounded-lg"><div class="cyber-unskew">Çıkar</div></button>`
+                                    : `<button onclick="equipWash('${item.id}')" class="px-3 py-1.5 cyber-skew btn-cyber-green font-black italic text-xs text-white rounded-lg"><div class="cyber-unskew">Seç</div></button>`
+                                )
+                            }
+                        </div>
+                    `;
+                    container.appendChild(div);
+                });
+            }
+        }
+
+        function buySkin(id) {
+            let item = skinsData[id];
+            if (coins >= item.price) {
+                coins -= item.price;
+                saveCoins();
+                unlockedSkins.push(id);
+                localStorage.setItem('flappySkins', JSON.stringify(unlockedSkins));
+                equippedSkin = id;
+                localStorage.setItem('flappyEquippedSkin', id);
+                showToast(`${item.name} Satın Alındı!`);
+                renderShop();
+            } else {
+                showToast("Yetersiz Ring!");
+            }
+        }
+
+        function equipSkin(id) {
+            equippedSkin = id;
+            localStorage.setItem('flappyEquippedSkin', id);
+            renderShop();
+        }
+
+        function buyWash(id) {
+            let item = washDataList.find(w => w.id === id);
+            if (!item) return;
+            if (coins >= item.price) {
+                coins -= item.price;
+                saveCoins();
+                unlockedWash.push(id);
+                localStorage.setItem('flappyUnlockedWash', JSON.stringify(unlockedWash));
+                equippedWash = id;
+                localStorage.setItem('flappyEquippedWash', id);
+                showToast(`${item.name} Satın Alındı!`);
+                renderShop();
+            } else {
+                showToast("Yetersiz Ring!");
+            }
+        }
+
+        function equipWash(id) {
+            equippedWash = id;
+            localStorage.setItem('flappyEquippedWash', id);
+            renderShop();
+        }
+
+        function unequipWash() {
+            equippedWash = null;
+            localStorage.removeItem('flappyEquippedWash');
+            renderShop();
+        }
+
+        function getTodayDateString() {
+            const now = new Date();
+            return `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
+        }
+
+        function generateSeededRandom(seed) {
+            let s = seed % 2147483647;
+            if (s <= 0) s += 2147483646;
+            return function() {
+                s = (s * 16807) % 2147483647;
+                return (s - 1) / 2147483646;
+            };
+        }
+
+        const dailyQuestTemplates = [
+            { type: 'pipes', title: 'Engel Avcısı', desc: 'Toplam {target} engeli aş', icon: 'fa-cubes', baseTarget: 15, step: 10, rewardBase: 100 },
+            { type: 'score_run', title: 'Skor Rekortmeni', desc: 'Tek koşuda {target} skor yap', icon: 'fa-trophy', baseTarget: 15, step: 5, rewardBase: 150 },
+            { type: 'rings', title: 'Hazine Avcısı', desc: 'Toplam {target} Ring topla', icon: 'fa-ring', baseTarget: 30, step: 20, rewardBase: 120 },
+            { type: 'flaps', title: 'Kanat Çırpıcı', desc: '{target} kez ekrana dokunup zıpla', icon: 'fa-feather', baseTarget: 50, step: 30, rewardBase: 90 },
+            { type: 'hearts', title: 'Can Dostu', desc: '{target} adet kalp topla', icon: 'fa-heart', baseTarget: 3, step: 2, rewardBase: 140 },
+            { type: 'mystery', title: 'Gizem Avcısı', desc: '{target} adet gizemli kutu aç', icon: 'fa-box-open', baseTarget: 4, step: 2, rewardBase: 160 },
+            { type: 'perfect', title: 'Refleks Ustası', desc: '{target} kez Perfect Dash yap', icon: 'fa-bolt', baseTarget: 5, step: 3, rewardBase: 180 },
+            { type: 'runs', title: 'Azimli Pilot', desc: 'Toplam {target} yeni koşu başlat', icon: 'fa-flag-checkered', baseTarget: 5, step: 2, rewardBase: 100 },
+            { type: 'boss', title: 'Boss Avcısı', desc: '{target} kez Boss savaşına katıl', icon: 'fa-skull', baseTarget: 1, step: 1, rewardBase: 250 },
+            { type: 'level', title: 'Seviye Tırmanışı', desc: 'Seviye {target}\'e ulaş', icon: 'fa-layer-group', baseTarget: 2, step: 1, rewardBase: 200 },
+            { type: 'combo', title: 'Kombo Çılgınlığı', desc: 'x{target} komboya ulaş', icon: 'fa-fire', baseTarget: 3, step: 2, rewardBase: 150 },
+            { type: 'shield', title: 'Kalkan Savunması', desc: '{target} kez Kalkan gücü kazan', icon: 'fa-shield-halved', baseTarget: 2, step: 1, rewardBase: 130 },
+            { type: 'magnet', title: 'Çekim Gücü', desc: '{target} kez Mıknatıs gücü kullan', icon: 'fa-magnet', baseTarget: 2, step: 1, rewardBase: 130 },
+            { type: 'slowmo', title: 'Zaman Bükücü', desc: '{target} kez Zaman Yavaşlatma kullan', icon: 'fa-hourglass-half', baseTarget: 2, step: 1, rewardBase: 130 },
+            { type: 'wash_run', title: 'Yoldaş Desteği', desc: 'WASH Yoldaşı ile {target} koşu yap', icon: 'fa-droplet', baseTarget: 3, step: 1, rewardBase: 140 },
+            { type: 'pipes_fast', title: 'Hızlı Geçiş', desc: 'Tek koşuda {target} engeli aş', icon: 'fa-gauge-high', baseTarget: 20, step: 5, rewardBase: 160 },
+            { type: 'ring_run', title: 'Ring Zengini', desc: 'Tek koşuda {target} Ring topla', icon: 'fa-coins', baseTarget: 20, step: 10, rewardBase: 170 },
+            { type: 'high_level', title: 'Yüksek İrtifa', desc: 'Seviye {target}\'e ulaş ve hayatta kal', icon: 'fa-jet-fighter', baseTarget: 3, step: 1, rewardBase: 220 },
+            { type: 'marathon', title: 'Maraton Uçuşu', desc: 'Toplam {target} zıplama gerçekleştir', icon: 'fa-wind', baseTarget: 120, step: 40, rewardBase: 200 },
+            { type: 'boss_fight_pro', title: 'Robotnik Düşmanı', desc: '{target} defa Boss raunduna gir', icon: 'fa-robot', baseTarget: 2, step: 1, rewardBase: 300 }
+        ];
+
+        let dailyQuestsState = JSON.parse(localStorage.getItem('flappyDailyQuestsState')) || null;
+
+        function loadOrCreateDailyQuests() {
+            const today = getTodayDateString();
+            if (dailyQuestsState && dailyQuestsState.date === today && dailyQuestsState.quests && dailyQuestsState.quests.length === 20) {
+                return;
+            }
+
+            // Generate 20 unique quests for today
+            let dateHash = 0;
+            for (let i = 0; i < today.length; i++) {
+                dateHash = ((dateHash << 5) - dateHash) + today.charCodeAt(i);
+                dateHash |= 0;
+            }
+            const rand = generateSeededRandom(Math.abs(dateHash) + 777);
+
+            let newQuests = [];
+            for (let i = 0; i < 20; i++) {
+                let tmpl = dailyQuestTemplates[i % dailyQuestTemplates.length];
+                let varFactor = Math.floor(rand() * 3) + 1;
+                let target = tmpl.baseTarget + (varFactor * tmpl.step);
+                let reward = tmpl.rewardBase + (varFactor * 30);
+
+                newQuests.push({
+                    id: `dq_${today}_${i}`,
+                    type: tmpl.type,
+                    title: tmpl.title,
+                    desc: tmpl.desc.replace('{target}', target),
+                    icon: tmpl.icon,
+                    target: target,
+                    current: 0,
+                    reward: reward,
+                    claimed: false
+                });
+            }
+
+            dailyQuestsState = {
+                date: today,
+                quests: newQuests
+            };
+            saveDailyQuests();
+        }
+
+        function saveDailyQuests() {
+            localStorage.setItem('flappyDailyQuestsState', JSON.stringify(dailyQuestsState));
+        }
+
+        function updateDailyQuestProgress(type, amount = 1, isMaxVal = false) {
+            if (!dailyQuestsState || !dailyQuestsState.quests) return;
+            let updated = false;
+
+            dailyQuestsState.quests.forEach(q => {
+                if (q.type === type && !q.claimed) {
+                    if (isMaxVal) {
+                        if (amount > q.current) {
+                            q.current = Math.min(q.target, amount);
+                            updated = true;
+                        }
+                    } else {
+                        if (q.current < q.target) {
+                            q.current = Math.min(q.target, q.current + amount);
+                            updated = true;
+                        }
+                    }
+                }
+            });
+
+            if (updated) saveDailyQuests();
+        }
+
+        loadOrCreateDailyQuests();
+
+        const birdTrail = [];
+        const bird = {
+            x: 65,
+            y: 250,
+            radius: 16,
+            gravity: 0.28,
+            jump: 4.6,
+            velocity: 0,
+            rotation: 0,
+            invincible: false,
+
+            flap: function() {
+                if (state.current !== state.game || isPaused) return;
+                this.velocity = -this.jump;
+                playSound('flap');
+                createParticles(this.x - 12, this.y, '#00f0ff', 6);
+                updateDailyQuestProgress('flaps', 1);
+                updateDailyQuestProgress('marathon', 1);
+            },
+
+            update: function() {
+                if (state.current === state.game && !isPaused) {
+                    // Record trail history
+                    birdTrail.push({ x: this.x, y: this.y, rotation: this.rotation });
+                    if (birdTrail.length > 8) birdTrail.shift();
+
+                    if (bossSystem.active) {
+                        this.x += joystickVector.x * 4.8;
+                        this.y += joystickVector.y * 4.8;
+                        this.x = Math.max(this.radius, Math.min(canvas.width * 0.45, this.x));
+                        this.y = Math.max(this.radius, Math.min(canvas.height - 120, this.y));
+                        this.rotation = joystickVector.y * 0.25;
+                    } else {
+                        this.velocity += this.gravity;
+                        this.y += this.velocity;
+                        this.rotation = Math.min(Math.PI / 4, Math.max(-Math.PI / 4, this.velocity * 0.08));
+
+                        let groundY = canvas.height - 110;
+                        if (this.y + this.radius >= groundY) {
+                            this.y = groundY - this.radius;
+                            if (equippedSkin !== 'ghost') handleLifeLoss();
+                        }
+                    }
+                }
+            },
+
+            draw: function() {
+                let skin = skinsData[equippedSkin] || skinsData['default'];
+
+                // Render Motion Blur Ghosting Trail
+                for (let i = 0; i < birdTrail.length; i++) {
+                    let pt = birdTrail[i];
+                    let alpha = (i + 1) / birdTrail.length * 0.35;
+                    ctx.save();
+                    ctx.globalAlpha = alpha;
+                    ctx.translate(pt.x, pt.y);
+                    ctx.rotate(pt.rotation);
+                    ctx.fillStyle = skin.color;
+                    ctx.beginPath();
+                    ctx.arc(0, 0, this.radius * 0.85, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.restore();
+                }
+
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.rotation);
+
+                // Shield Glowing Aura
+                if (hasShield) {
+                    ctx.save();
+                    ctx.strokeStyle = '#00f0ff';
+                    ctx.lineWidth = 3;
+                    ctx.shadowColor = '#00f0ff';
+                    ctx.shadowBlur = 18;
+                    ctx.beginPath();
+                    ctx.arc(0, 0, this.radius + 9, 0, Math.PI * 2);
+                    ctx.stroke();
+                    ctx.restore();
+                }
+
+                // Bird Body Glow
+                ctx.shadowColor = skin.color;
+                ctx.shadowBlur = 16;
+                ctx.fillStyle = skin.color;
+                ctx.beginPath();
+                ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.lineWidth = 2.5;
+                ctx.strokeStyle = '#ffffff';
+                ctx.stroke();
+
+                // Eye
+                ctx.fillStyle = skin.eye;
+                ctx.beginPath();
+                ctx.arc(6, -4, 4.5, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#000';
+                ctx.beginPath();
+                ctx.arc(7, -4, 2, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Cyber Beak
+                ctx.fillStyle = '#ff9900';
+                ctx.beginPath();
+                ctx.moveTo(9, -2);
+                ctx.lineTo(20, 3);
+                ctx.lineTo(9, 7);
+                ctx.closePath();
+                ctx.fill();
+
+                ctx.restore();
+            }
+        };
+
+        let unlockedWash = JSON.parse(localStorage.getItem('flappyUnlockedWash')) || [];
+        let equippedWash = localStorage.getItem('flappyEquippedWash') || null;
+
+        const washDataList = [
+            { id: 'wash_1', name: 'WASH-01 Kuantum Muhafız', desc: '✨ Can Yenileme & Diriltme Kalkanı', price: 1000, color: '#00f0ff', icon: '💧' },
+            { id: 'wash_2', name: 'WASH-02 Neon Kıvılcım', desc: '⚡ %15 Ekstra Ring Toplama Hızı', price: 1200, color: '#ff007f', icon: '⚡' },
+            { id: 'wash_3', name: 'WASH-03 Plazma Kalkanı', desc: '🛡️ İlk Darbeyi Hasarsız Emme', price: 1400, color: '#00ff88', icon: '🛡️' },
+            { id: 'wash_4', name: 'WASH-04 Ejder Kanat', desc: '🐉 Boss Savaşında %20 Hasar Koruması', price: 1600, color: '#ff9900', icon: '🐉' },
+            { id: 'wash_5', name: 'WASH-05 Siber Hayalet', desc: '👁️ Darbe Anında Saydamlaşma Modu', price: 1800, color: '#a855f7', icon: '👁️' },
+            { id: 'wash_6', name: 'WASH-06 Yıldırım Çırak', desc: '🌩️ Mıknatıs Süresini +5sn Arttırır', price: 2000, color: '#ffe600', icon: '🌩️' },
+            { id: 'wash_7', name: 'WASH-07 Buzul Kristal', desc: '❄️ Engelleri Yavaşlatma Etkisi', price: 2200, color: '#38bdf8', icon: '❄️' },
+            { id: 'wash_8', name: 'WASH-08 Cehennem Ateşi', desc: '🔥 Perfect Dash İki Kat Puan Verir', price: 2400, color: '#ef4444', icon: '🔥' },
+            { id: 'wash_9', name: 'WASH-09 Fırtına Girdabı', desc: '🌀 Altınları Uzaktan Otomatik Çeker', price: 2600, color: '#10b981', icon: '🌀' },
+            { id: 'wash_10', name: 'WASH-10 Titan Robot', desc: '🤖 Başlangıçta Ekstra +1 Can Verir', price: 2800, color: '#64748b', icon: '🤖' },
+            { id: 'wash_11', name: 'WASH-11 Hiper Işık', desc: '✨ Işık Hızında Dash İvmelenmesi', price: 3000, color: '#eab308', icon: '✨' },
+            { id: 'wash_12', name: 'WASH-12 Siyah Boşluk', desc: '🌌 Hasar Aldığında Zlaşmayı Sıfırlar', price: 3200, color: '#6366f1', icon: '🌌' },
+            { id: 'wash_13', name: 'WASH-13 Zümrüt Tayf', desc: '💎 Her 15 Engelde +50 Ring Bonusu', price: 3400, color: '#059669', icon: '💎' },
+            { id: 'wash_14', name: 'WASH-14 Yakut Ankası', desc: '🦅 Yakın Geçişlerde Ekstra Şok Dalgası', price: 3600, color: '#e11d48', icon: '🦅' },
+            { id: 'wash_15', name: 'WASH-15 Safir Dalgacı', desc: '🌊 Zaman Yavaşlatmayı Otomatik Tetikler', price: 3800, color: '#2563eb', icon: '🌊' },
+            { id: 'wash_16', name: 'WASH-16 Platin Muhafız', desc: '🛡️ Çarpışma Engelinde Can Kurtarma', price: 4000, color: '#94a3b8', icon: '🛡️' },
+            { id: 'wash_17', name: 'WASH-17 Pulsar Yıldızı', desc: '⭐ Skoru Periyodik Olarak Katlar', price: 4200, color: '#d946ef', icon: '⭐' },
+            { id: 'wash_18', name: 'WASH-18 Güneş Patlaması', desc: '☀️ Boss Lazerlerini Etkisiz Kırlar', price: 4400, color: '#f97316', icon: '☀️' },
+            { id: 'wash_19', name: 'WASH-19 Ay Gölgesi', desc: '🌙 Ekran Gece Modunda Katlı Puan', price: 4600, color: '#a7f3d0', icon: '🌙' },
+            { id: 'wash_20', name: 'WASH-20 Kronos Zamanı', desc: '⏳ Oyun Hızını Sabit Yavaşta Tutar', price: 4800, color: '#facc15', icon: '⏳' },
+            { id: 'wash_21', name: 'WASH-21 Magma Çekirdeği', desc: '🌋 Engelleri Görsel Olarak Yakıp Geçer', price: 5000, color: '#dc2626', icon: '🌋' },
+            { id: 'wash_22', name: 'WASH-22 Kuantum Sıçrama', desc: '🚀 Işınlanma Zıplama Desteği', price: 5200, color: '#0284c7', icon: '🚀' },
+            { id: 'wash_23', name: 'WASH-23 Zehir Bıçağı', desc: '☣️ Boss Canını Zamanla Eritir', price: 5400, color: '#84cc16', icon: '☣️' },
+            { id: 'wash_24', name: 'WASH-24 Alev Fırtınası', desc: '💥 Dash Yapınca Kıvılcım Dalgası', price: 5600, color: '#b91c1c', icon: '💥' },
+            { id: 'wash_25', name: 'WASH-25 Elektrik Şoku', desc: '⚡ Çevredeki Kutuları Otomatik Toplar', price: 5800, color: '#f59e0b', icon: '⚡' },
+            { id: 'wash_26', name: 'WASH-26 Asil Prenses', desc: '👑 Her Seviye Atlamada +1 Can', price: 6000, color: '#ec4899', icon: '👑' },
+            { id: 'wash_27', name: 'WASH-27 Hayalet Avcı', desc: '👻 Tehlikeli Bölgelerden Muafiyet', price: 6200, color: '#93c5fd', icon: '👻' },
+            { id: 'wash_28', name: 'WASH-28 Siber Savaşçı', desc: '⚔️ Boss Kurşunlarını Geri Yansıtır', price: 6400, color: '#475569', icon: '⚔️' },
+            { id: 'wash_29', name: 'WASH-29 Galaksi Gözü', desc: '👁️ Görünmeyen Hazine Kutularını Gösterir', price: 6600, color: '#8b5cf6', icon: '👁️' },
+            { id: 'wash_30', name: 'WASH-30 Meteor Çekici', desc: '☄️ Ağır Darbelerde Kalkan Açma', price: 6800, color: '#ea580c', icon: '☄️' },
+            { id: 'wash_31', name: 'WASH-31 Altın Kanat', desc: '🪙 Toplanan Her Ring +2 Değerinde', price: 7000, color: '#eab308', icon: '🪙' },
+            { id: 'wash_32', name: 'WASH-32 Gök Gürültüsü', desc: '⚡ Ekrandaki Tüm Engelleri Bir Kez Temizler', price: 7200, color: '#0ea5e9', icon: '⚡' },
+            { id: 'wash_33', name: 'WASH-33 Siyah Elmas', desc: '💎 Gizli Görev Ödüllerini 2 Katına Çıkarır', price: 7400, color: '#1e293b', icon: '💎' },
+            { id: 'wash_34', name: 'WASH-34 Plazma Topu', desc: '🔮 Boss Savaşında İki Katı Ateş Gücü', price: 7600, color: '#d946ef', icon: '🔮' },
+            { id: 'wash_35', name: 'WASH-35 Sonsuz Akış', desc: '♾️ Güçlendirme Sürelerini İkiyle Çarpar', price: 7800, color: '#06b6d4', icon: '♾️' },
+            { id: 'wash_36', name: 'WASH-36 Volkanik Ejder', desc: '🐲 Yanma Etkisiyle Skoru Katlar', price: 8000, color: '#991b1b', icon: '🐲' },
+            { id: 'wash_37', name: 'WASH-37 Kozmik Nebula', desc: '🌌 Arka Plan Görsellerinde Şans Bonusu', price: 8200, color: '#c084fc', icon: '🌌' },
+            { id: 'wash_38', name: 'WASH-38 Biyo-Siber', desc: '🧬 Can Çalma Yeteneği (Boss Savaşında)', price: 8400, color: '#22c55e', icon: '🧬' },
+            { id: 'wash_39', name: 'WASH-39 Süpernova', desc: '💥 Oyun Bittiğinde Patlama & Dirilme', price: 8600, color: '#ff4500', icon: '💥' },
+            { id: 'wash_40', name: 'WASH-40 Şeffaf Ruh', desc: '👻 Fiziksel Engellerden Süzülerek Geçer', price: 8800, color: '#cbd5e1', icon: '👻' },
+            { id: 'wash_41', name: 'WASH-41 Lazer Göz', desc: '🎯 Engellerin Dar Geçitlerini Genişletir', price: 9000, color: '#f43f5e', icon: '🎯' },
+            { id: 'wash_42', name: 'WASH-42 Titan Şahin', desc: '🦅 Rüzgar Direncini Azaltıp İvmeyi Artırır', price: 9200, color: '#ca8a04', icon: '🦅' },
+            { id: 'wash_43', name: 'WASH-43 Siber Üstat', desc: '🔮 Tüm Güçlendirmeleri Oyuna Girerken Verir', price: 9400, color: '#4338ca', icon: '🔮' },
+            { id: 'wash_44', name: 'WASH-44 Kuantum Kaos', desc: '🎲 Rastgele Süper Güçler Tetikler', price: 9600, color: '#a855f7', icon: '🎲' },
+            { id: 'wash_45', name: 'WASH-45 Efsanevi Zümrüdüanka', desc: '👑 Sınırsız Dirilme Desteği & Maksimum Ring', price: 10000, color: '#fbbf24', icon: '👑' }
+        ];
+
+        const washSystem = {
+            x: 30,
+            y: 250,
+
+            update: function() {
+                if (!equippedWash || isPaused) return;
+                let targetX = bird.x - 36;
+                let targetY = bird.y + Math.sin(frames * 0.12) * 12;
+                this.x += (targetX - this.x) * 0.14;
+                this.y += (targetY - this.y) * 0.14;
+            },
+
+            draw: function() {
+                if (!equippedWash) return;
+                let washItem = washDataList.find(w => w.id === equippedWash) || washDataList[0];
+
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.shadowColor = washItem.color;
+                ctx.shadowBlur = 16;
+                ctx.fillStyle = washItem.color;
+                ctx.beginPath();
+                ctx.arc(0, 0, 11, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+                ctx.restore();
+            },
+
+            getEquippedName: function() {
+                let w = washDataList.find(item => item.id === equippedWash);
+                return w ? w.name : "Yok";
+            }
+        };
+
+        const pipes = {
+            position: [],
+            dx: 2.6,
+            gap: 135,
+
+            update: function() {
+                if (state.current !== state.game || bossSystem.active || isPaused) return;
+
+                let groundY = canvas.height - 110;
+
+                if (frames % 85 === 0) {
+                    let minGapTop = 60;
+                    let maxGapTop = groundY - this.gap - 60;
+                    let gapTop = minGapTop + Math.random() * (maxGapTop - minGapTop);
+
+                    this.position.push({
+                        x: canvas.width,
+                        gapTop: gapTop,
+                        passed: false,
+                        nearMissChecked: false
+                    });
+
+                    let gapCenterY = gapTop + this.gap / 2;
+
+                    // Spawn Items
+                    if (Math.random() < 0.45) {
+                        items.push({ x: canvas.width + 28, y: gapCenterY, type: 'coin10', radius: 13 });
+                    }
+                    if (Math.random() < 0.28) {
+                        items.push({ x: canvas.width + 28, y: gapCenterY + (Math.random() - 0.5) * 50, type: 'heart', radius: 13 });
+                    }
+                    if (Math.random() < 0.30) {
+                        items.push({ x: canvas.width + 28, y: gapCenterY + (Math.random() - 0.5) * 60, type: 'mystery', radius: 14 });
+                    }
+                }
+
+                let currentDx = slowMotionTimer > 0 ? this.dx * 0.5 : this.dx;
+
+                for (let i = 0; i < this.position.length; i++) {
+                    let p = this.position[i];
+                    p.x -= currentDx;
+
+                    let topPipeBottom = p.gapTop;
+                    let bottomPipeTop = p.gapTop + this.gap;
+
+                    // Near miss detection (Perfect Dash bonus)
+                    if (!p.nearMissChecked && Math.abs(bird.x - (p.x + 28)) < 15) {
+                        let distToTop = Math.abs(bird.y - topPipeBottom);
+                        let distToBottom = Math.abs(bird.y - bottomPipeTop);
+
+                        if (distToTop < 20 || distToBottom < 20) {
+                            p.nearMissChecked = true;
+                            comboCount++;
+                            addFloatingText(bird.x, bird.y - 25, `PERFECT DASH! x${comboCount}`, '#ff007f');
+                            playSound('coin');
+                            updateDailyQuestProgress('perfect', 1);
+                            updateDailyQuestProgress('combo', comboCount, true);
+                        }
+                    }
+
+                    // Collision Check
+                    if (bird.x + bird.radius > p.x && bird.x - bird.radius < p.x + 56) {
+                        if (bird.y - bird.radius < topPipeBottom || bird.y + bird.radius > bottomPipeTop) {
+                            if (!bird.invincible && equippedSkin !== 'ghost') {
+                                handleLifeLoss();
+                            }
+                        }
+                    }
+
+                    // Score Increment
+                    if (p.x + 56 < bird.x && !p.passed) {
+                        p.passed = true;
+                        score++;
+                        totalPipesPassed++;
+                        localStorage.setItem('flappyTotalPipes', totalPipesPassed);
+                        
+                        let skinBonus = (getSkinLevel(equippedSkin) - 1) * 0.10;
+                        let washBonus = equippedWash ? (getWashLevel(equippedWash) - 1) * 0.15 : 0;
+                        let ringEarned = Math.max(1, Math.round(1 + skinBonus + washBonus));
+
+                        coins += ringEarned;
+                        saveCoins();
+                        playSound('coin');
+                        addFloatingText(bird.x, bird.y - 15, `+${ringEarned} Ring`, '#ffe600');
+                        
+                        document.getElementById('scoreDisplay').innerText = score;
+                        checkLevelAndScore();
+
+                        updateDailyQuestProgress('pipes', 1);
+                        updateDailyQuestProgress('pipes_fast', score, true);
+                        updateDailyQuestProgress('score_run', score, true);
+                        updateDailyQuestProgress('rings', ringEarned);
+                        updateDailyQuestProgress('ring_run', score, true);
+                    }
+                }
+
+                if (this.position.length > 0 && this.position[0].x < -65) {
+                    this.position.shift();
+                }
+            },
+
+            draw: function() {
+                let biome = biomes[currentBiomeIndex];
+                let groundY = canvas.height - 110;
+
+                for (let i = 0; i < this.position.length; i++) {
+                    let p = this.position[i];
+                    let topHeight = p.gapTop;
+                    let bottomTop = p.gapTop + this.gap;
+                    let bottomHeight = groundY - bottomTop;
+                    let pipeWidth = 56;
+
+                    // Modern Neon Gradient Fill
+                    let grad = ctx.createLinearGradient(p.x, 0, p.x + pipeWidth, 0);
+                    grad.addColorStop(0, biome.pipeStroke);
+                    grad.addColorStop(0.35, biome.pipeFill);
+                    grad.addColorStop(0.65, '#ffffff');
+                    grad.addColorStop(1, biome.pipeStroke);
+
+                    ctx.save();
+                    ctx.shadowColor = biome.pipeFill;
+                    ctx.shadowBlur = 14;
+                    ctx.fillStyle = grad;
+
+                    // Top Pipe Cap & Body
+                    ctx.fillRect(p.x, 0, pipeWidth, topHeight);
+                    ctx.fillRect(p.x - 3, topHeight - 16, pipeWidth + 6, 16);
+
+                    // Bottom Pipe Cap & Body
+                    ctx.fillRect(p.x, bottomTop, pipeWidth, bottomHeight);
+                    ctx.fillRect(p.x - 3, bottomTop, pipeWidth + 6, 16);
+
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.lineWidth = 1.5;
+                    ctx.strokeRect(p.x - 3, topHeight - 16, pipeWidth + 6, 16);
+                    ctx.strokeRect(p.x - 3, bottomTop, pipeWidth + 6, 16);
+
+                    ctx.restore();
+                }
+            }
+        };
+
+        const bossSystem = {
+            active: false,
+            hp: 100,
+            maxHp: 100,
+            x: 0,
+            y: 0,
+            vy: 2.2,
+            shootTimer: 0,
+            lasers: [],
+
+            start: function() {
+                this.active = true;
+                this.hp = 100 + (level * 25);
+                this.maxHp = this.hp;
+                this.x = canvas.width - 80;
+                this.y = canvas.height / 3;
+                this.lasers = [];
+                document.getElementById('joystickContainer').style.display = 'block';
+                document.getElementById('bossBarContainer').classList.remove('hidden');
+                document.getElementById('bossBarContainer').classList.add('flex');
+                showToast("⚠️ BOSS DR. ROBOTNIK PİSTTE!");
+                updateDailyQuestProgress('boss', 1);
+                updateDailyQuestProgress('boss_fight_pro', 1);
+            },
+
+            stop: function() {
+                this.active = false;
+                this.lasers = [];
+                document.getElementById('joystickContainer').style.display = 'none';
+                document.getElementById('bossBarContainer').classList.add('hidden');
+                document.getElementById('bossBarContainer').classList.remove('flex');
+            },
+
+            update: function() {
+                if (!this.active || isPaused) return;
+
+                this.y += this.vy;
+                if (this.y < 80 || this.y > canvas.height - 180) {
+                    this.vy *= -1;
+                }
+
+                this.shootTimer++;
+                if (this.shootTimer % 65 === 0) {
+                    this.lasers.push({
+                        x: this.x - 25,
+                        y: this.y,
+                        vx: -5.5,
+                        vy: (bird.y - this.y) * 0.012
+                    });
+                }
+
+                for (let i = this.lasers.length - 1; i >= 0; i--) {
+                    let l = this.lasers[i];
+                    l.x += l.vx;
+                    l.y += l.vy;
+
+                    let dist = Math.hypot(bird.x - l.x, bird.y - l.y);
+                    if (dist < bird.radius + 8) {
+                        this.lasers.splice(i, 1);
+                        handleLifeLoss();
+                        continue;
+                    }
+
+                    if (l.x < -20) {
+                        this.lasers.splice(i, 1);
+                    }
+                }
+
+                // Update UI
+                document.getElementById('bossHpText').innerText = `${Math.max(0, this.hp)} / ${this.maxHp}`;
+                let pct = (Math.max(0, this.hp) / this.maxHp) * 100;
+                document.getElementById('bossHpFill').style.width = pct + '%';
+            },
+
+            draw: function() {
+                if (!this.active) return;
+
+                ctx.save();
+                ctx.translate(this.x, this.y);
+
+                ctx.shadowColor = '#ff007f';
+                ctx.shadowBlur = 22;
+
+                ctx.fillStyle = '#cc0033';
+                ctx.beginPath();
+                ctx.arc(0, 0, 32, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.fillStyle = '#ffe600';
+                ctx.beginPath();
+                ctx.arc(-10, -6, 6, 0, Math.PI * 2);
+                ctx.arc(10, -6, 6, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.restore();
+
+                // Draw Lasers
+                this.lasers.forEach(l => {
+                    ctx.save();
+                    ctx.fillStyle = '#ff007f';
+                    ctx.shadowColor = '#ff007f';
+                    ctx.shadowBlur = 14;
+                    ctx.beginPath();
+                    ctx.arc(l.x, l.y, 7, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.restore();
+                });
+            }
+        };
+
+        function updateItems() {
+            if (state.current !== state.game || bossSystem.active || isPaused) return;
+
+            let currentDx = slowMotionTimer > 0 ? pipes.dx * 0.5 : pipes.dx;
+
+            for (let i = items.length - 1; i >= 0; i--) {
+                let item = items[i];
+
+                if (magnetTimer > 0 && item.type === 'coin10') {
+                    let dx = bird.x - item.x;
+                    let dy = bird.y - item.y;
+                    let dist = Math.hypot(dx, dy);
+                    if (dist < 260 && dist > 0) {
+                        item.x += (dx / dist) * 8;
+                        item.y += (dy / dist) * 8;
+                    } else {
+                        item.x -= currentDx;
+                    }
+                } else {
+                    item.x -= currentDx;
+                }
+
+                // Check collision with bird
+                let distToBird = Math.hypot(bird.x - item.x, bird.y - item.y);
+                if (distToBird < bird.radius + item.radius) {
+                    if (item.type === 'coin10') {
+                        coins += 10;
+                        saveCoins();
+                        playSound('coin');
+                        addFloatingText(item.x, item.y, '+10 Ring', '#ffe600');
+                        updateDailyQuestProgress('rings', 10);
+                    } else if (item.type === 'heart') {
+                        if (lives < 5) lives++;
+                        updateLivesUI();
+                        playSound('powerup');
+                        addFloatingText(item.x, item.y, '+1 CAN', '#ff007f');
+                        updateDailyQuestProgress('hearts', 1);
+                    } else if (item.type === 'mystery') {
+                        let rand = Math.random();
+                        if (rand < 0.33) {
+                            hasShield = true;
+                            showToast("🛡️ Kalkan Aktif!");
+                            updateDailyQuestProgress('shield', 1);
+                        } else if (rand < 0.66) {
+                            magnetTimer = 360;
+                            showToast("🧲 Mıknatıs Aktif!");
+                            updateDailyQuestProgress('magnet', 1);
+                        } else {
+                            slowMotionTimer = 300;
+                            showToast("⏳ Zaman Yavaşlatıldı!");
+                            updateDailyQuestProgress('slowmo', 1);
+                        }
+                        playSound('powerup');
+                        updatePowerupUI();
+                        updateDailyQuestProgress('mystery', 1);
+                    }
+                    items.splice(i, 1);
+                    continue;
+                }
+
+                if (item.x < -30) {
+                    items.splice(i, 1);
+                }
+            }
+
+            if (magnetTimer > 0) {
+                magnetTimer--;
+                if (magnetTimer === 0) updatePowerupUI();
+            }
+            if (slowMotionTimer > 0) {
+                slowMotionTimer--;
+            }
+        }
+
+        function drawItems() {
+            items.forEach(item => {
+                ctx.save();
+                ctx.translate(item.x, item.y);
+
+                if (item.type === 'coin10') {
+                    ctx.shadowColor = '#ffe600';
+                    ctx.shadowBlur = 14;
+
+                    ctx.fillStyle = '#ffe600';
+                    ctx.beginPath();
+                    ctx.arc(0, 0, 13, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    ctx.fillStyle = '#000';
+                    ctx.font = '900 italic 11px "Kanit", sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText('10', 0, 1);
+                } else if (item.type === 'heart') {
+                    ctx.shadowColor = '#ff007f';
+                    ctx.shadowBlur = 14;
+                    ctx.fillStyle = '#ff007f';
+                    ctx.font = '15px sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText('❤️', 0, 1);
+                } else if (item.type === 'mystery') {
+                    let floatY = Math.sin(frames * 0.14) * 4;
+                    ctx.translate(0, floatY);
+
+                    ctx.shadowColor = '#00f0ff';
+                    ctx.shadowBlur = 18;
+                    ctx.fillStyle = '#00f0ff';
+                    ctx.beginPath();
+                    ctx.arc(0, 0, 14, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    ctx.fillStyle = '#030712';
+                    ctx.font = '900 italic 14px "Kanit", sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText('?', 0, 1);
+                }
+
+                ctx.restore();
+            });
+        }
+
+        function updatePowerupUI() {
+            const container = document.getElementById('powerupBar');
+            if (!container) return;
+            container.innerHTML = '';
+
+            if (hasShield) {
+                let badge = document.createElement('div');
+                badge.className = "cyber-skew cyber-glass border border-cyan-400 px-2.5 py-1 rounded-xl text-[10px] font-black italic text-cyan-300 shadow-lg";
+                badge.innerHTML = `<div class="cyber-unskew flex items-center gap-1"><i class="fa-solid fa-shield-halved text-cyan-400"></i> Kalkan</div>`;
+                container.appendChild(badge);
+            }
+
+            if (magnetTimer > 0) {
+                let secs = Math.ceil(magnetTimer / 60);
+                let badge = document.createElement('div');
+                badge.className = "cyber-skew cyber-glass border border-yellow-400 px-2.5 py-1 rounded-xl text-[10px] font-black italic text-yellow-300 shadow-lg animate-pulse";
+                badge.innerHTML = `<div class="cyber-unskew flex items-center gap-1"><i class="fa-solid fa-magnet text-yellow-400"></i> Mıknatıs ${secs}s</div>`;
+                container.appendChild(badge);
+            }
+        }
+
+        function handleLifeLoss() {
+            if (bird.invincible) return;
+
+            if (hasShield) {
+                hasShield = false;
+                bird.invincible = true;
+                setTimeout(() => { bird.invincible = false; }, 1200);
+                createParticles(bird.x, bird.y, '#00f0ff', 25);
+                playSound('hit');
+                showToast("🛡️ Kalkan Darbeyi Engelledi!");
+                updatePowerupUI();
+                return;
+            }
+
+            lives--;
+            playSound('hit');
+            triggerScreenShake();
+
+            if (lives <= 0) {
+                if (equippedWash && !washRevivedThisRun) {
+                    washRevivedThisRun = true;
+                    lives = 5;
+                    createParticles(bird.x, bird.y, '#ffe600', 45);
+                    playSound('powerup');
+                    showToast(`✨ ${washSystem.getEquippedName()} Seni Kurtardı!`);
+                    updateLivesUI();
+                    return;
+                }
+
+                state.current = state.gameOver;
+                if (score > highScore) {
+                    highScore = score;
+                    localStorage.setItem('flappyHighScore', highScore);
+                }
+                document.getElementById('finalScore').innerText = score;
+                document.getElementById('highScoreDisplay').innerText = highScore;
+                document.getElementById('earnedCoins').innerText = `+${score}`;
+                document.getElementById('gameOverScreen').classList.remove('hidden');
+                document.getElementById('joystickContainer').style.display = 'none';
+            } else {
+                bird.invincible = true;
+                setTimeout(() => { bird.invincible = false; }, 1200);
+                updateLivesUI();
+            }
+        }
+
+        function updateLivesUI() {
+            const container = document.getElementById('livesContainer');
+            container.innerHTML = '';
+            for (let i = 0; i < 5; i++) {
+                let heart = document.createElement('i');
+                heart.className = i < lives ? "fa-solid fa-heart text-rose-500 text-xs filter drop-shadow(0 0 6px rgba(255,0,127,0.8))" : "fa-regular fa-heart text-slate-700 text-xs";
+                container.appendChild(heart);
+            }
+        }
+
+        function checkLevelAndScore() {
+            let targetLevel = Math.floor(score / 100) + 1;
+            let levelProgress = (score % 100) / 100 * 100;
+            document.getElementById('levelProgressBar').style.width = levelProgress + '%';
+
+            if (targetLevel > level) {
+                level = targetLevel;
+                document.getElementById('levelDisplay').innerText = level;
+                currentBiomeIndex = (level - 1) % biomes.length;
+                showToast(`🎉 SEVİYE ${level}! ${biomes[currentBiomeIndex].name}`);
+                updateDailyQuestProgress('level', level, true);
+                updateDailyQuestProgress('high_level', level, true);
+
+                if (level % 3 === 0) {
+                    bossSystem.start();
+                }
+            }
+        }
+
+        function openAchievements() {
+            loadOrCreateDailyQuests();
+            const list = document.getElementById('achievementsList');
+            if (!list) return;
+            list.innerHTML = '';
+
+            let completedCount = 0;
+
+            dailyQuestsState.quests.forEach((q, index) => {
+                let isCompleted = q.current >= q.target;
+                if (q.claimed) completedCount++;
+
+                let pct = Math.min(100, Math.floor((q.current / q.target) * 100));
+
+                let div = document.createElement('div');
+                div.className = "cyber-glass p-2.5 rounded-2xl flex items-center justify-between border border-cyan-500/30 gap-2";
+                div.innerHTML = `
+                    <div class="flex items-center gap-2.5 flex-1 min-w-0">
+                        <div class="w-9 h-9 rounded-xl flex items-center justify-center text-sm shrink-0 ${q.claimed ? 'bg-slate-800 text-slate-500 border border-slate-700' : (isCompleted ? 'bg-gradient-to-r from-yellow-400 to-amber-500 text-slate-950 font-black border border-white' : 'bg-cyan-950/80 text-cyan-400 border border-cyan-500/40')}">
+                            <i class="fa-solid ${q.claimed ? 'fa-check' : q.icon}"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex justify-between items-center pr-2">
+                                <h4 class="font-black italic text-white text-xs truncate">${index + 1}. ${q.title}</h4>
+                                <span class="text-[9px] font-black text-cyan-300 ml-1">${q.current}/${q.target}</span>
+                            </div>
+                            <p class="text-[10px] font-bold text-slate-400 truncate">${q.desc}</p>
+                            <!-- Progress Bar -->
+                            <div class="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden mt-1 border border-slate-800">
+                                <div class="h-full bg-gradient-to-r from-cyan-400 to-yellow-400 transition-all duration-300" style="width: ${pct}%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="shrink-0">
+                        ${q.claimed 
+                            ? '<span class="text-[10px] font-black text-slate-500 px-2">Tamamlandı</span>' 
+                            : (isCompleted 
+                                ? `<button onclick="claimDailyQuest('${q.id}')" class="px-2.5 py-1 cyber-skew btn-cyber-play font-black italic text-xs text-slate-950 shadow-lg"><div class="cyber-unskew flex items-center gap-1"><i class="fa-solid fa-gift"></i> +${q.reward} Ring</div></button>`
+                                : `<div class="px-2 py-1 bg-slate-900/80 rounded-lg border border-slate-800 text-[10px] font-black text-yellow-300 flex items-center gap-1"><i class="fa-solid fa-ring text-[9px]"></i> +${q.reward}</div>`
+                            )
+                        }
+                    </div>
+                `;
+                list.appendChild(div);
+            });
+
+            document.getElementById('achievementsModal').classList.remove('hidden');
+        }
+
+        function claimDailyQuest(id) {
+            if (!dailyQuestsState || !dailyQuestsState.quests) return;
+            let q = dailyQuestsState.quests.find(item => item.id === id);
+            if (!q || q.claimed || q.current < q.target) return;
+
+            q.claimed = true;
+            saveDailyQuests();
+            coins += q.reward;
+            saveCoins();
+            playSound('coin');
+            showToast(`🎉 +${q.reward} Ring Görev Ödülü Alındı!`);
+            openAchievements();
+        }
+
+        function closeAchievements() { document.getElementById('achievementsModal').classList.add('hidden'); }
+
+        function updateMenuStats() {
+            document.getElementById('menuHighScore').innerText = highScore;
+            let currentSkinObj = skinsData[equippedSkin];
+            document.getElementById('menuEquippedSkin').innerText = currentSkinObj ? currentSkinObj.name : "Standart";
+            document.getElementById('menuEquippedWash').innerText = washSystem.getEquippedName();
+        }
+
+        let joystickVector = { x: 0, y: 0 };
+        let keysPressed = {};
+
+        window.addEventListener('keydown', (e) => {
+            keysPressed[e.code] = true;
+            if (e.code === 'Space') {
+                if (state.current === state.game && !bossSystem.active) bird.flap();
+            }
+            if (e.code === 'KeyP' || e.code === 'Escape') {
+                togglePause();
+            }
+        });
+
+        window.addEventListener('keyup', (e) => { keysPressed[e.code] = false; });
+
+        function handleKeyboardJoystick() {
+            if (!bossSystem.active) return;
+            joystickVector.x = 0; joystickVector.y = 0;
+            if (keysPressed['ArrowUp'] || keysPressed['KeyW']) joystickVector.y = -1;
+            if (keysPressed['ArrowDown'] || keysPressed['KeyS']) joystickVector.y = 1;
+            if (keysPressed['ArrowLeft'] || keysPressed['KeyA']) joystickVector.x = -1;
+            if (keysPressed['ArrowRight'] || keysPressed['KeyD']) joystickVector.x = 1;
+        }
+
+        const joystickContainer = document.getElementById('joystickContainer');
+        const joystickKnob = document.getElementById('joystickKnob');
+        let joystickActive = false;
+        let joystickCenter = { x: 0, y: 0 };
+
+        joystickContainer.addEventListener('touchstart', (e) => {
+            joystickActive = true;
+            let rect = joystickContainer.getBoundingClientRect();
+            joystickCenter = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+        });
+
+        window.addEventListener('touchmove', (e) => {
+            if (!joystickActive || !bossSystem.active) return;
+            let touch = e.touches[0];
+            let dx = touch.clientX - joystickCenter.x;
+            let dy = touch.clientY - joystickCenter.y;
+            let dist = Math.hypot(dx, dy);
+            let maxDist = 40;
+
+            if (dist > maxDist) {
+                dx = (dx / dist) * maxDist;
+                dy = (dy / dist) * maxDist;
+            }
+
+            joystickKnob.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
+            joystickVector.x = dx / maxDist;
+            joystickVector.y = dy / maxDist;
+        });
+
+        window.addEventListener('touchend', () => {
+            joystickActive = false;
+            joystickKnob.style.transform = 'translate(-50%, -50%)';
+            joystickVector.x = 0; joystickVector.y = 0;
+        });
+
+        function startGame() {
+            score = 0;
+            level = 1;
+            lives = 5;
+            frames = 0;
+            isPaused = false;
+            washRevivedThisRun = false;
+            pipes.position = [];
+            bossSystem.stop();
+            floatingTexts = [];
+            currentBiomeIndex = 0;
+            comboCount = 0;
+
+            hasShield = false;
+            magnetTimer = 0;
+            slowMotionTimer = 0;
+            items = [];
+            updatePowerupUI();
+
+            bird.x = 65;
+            bird.y = canvas.height / 2;
+            bird.velocity = 0;
+
+            document.getElementById('scoreDisplay').innerText = '0';
+            document.getElementById('levelDisplay').innerText = '1';
+            document.getElementById('levelProgressBar').style.width = '0%';
+            updateLivesUI();
+
+            updateDailyQuestProgress('runs', 1);
+            if (equippedWash) updateDailyQuestProgress('wash_run', 1);
+
+            state.current = state.game;
+            document.getElementById('startScreen').classList.add('hidden');
+            document.getElementById('pauseScreen').classList.add('hidden');
+            document.getElementById('gameOverScreen').classList.add('hidden');
+        }
+
+        function restartGame() { startGame(); }
+
+        function returnToMenu() {
+            state.current = state.menu;
+            isPaused = false;
+            updateMenuStats();
+            document.getElementById('startScreen').classList.remove('hidden');
+            document.getElementById('pauseScreen').classList.add('hidden');
+            document.getElementById('gameOverScreen').classList.add('hidden');
+            document.getElementById('joystickContainer').style.display = 'none';
+        }
+
+        canvas.addEventListener('click', () => {
+            if (state.current === state.game && !bossSystem.active && !isPaused) {
+                bird.flap();
+            }
+        });
+
+        // Parallax Modern Canvas Background Renderer
+        function drawBackground() {
+            let biome = biomes[currentBiomeIndex];
+
+            // Sky Gradient Background
+            let grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            grad.addColorStop(0, biome.skyTop);
+            grad.addColorStop(1, biome.skyBottom);
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Dynamic Moving Speed Stars/Particles
+            ctx.save();
+            ctx.fillStyle = biome.bgGrid;
+            ctx.shadowColor = biome.bgGrid;
+            ctx.shadowBlur = 8;
+            let offset = (frames * 3) % canvas.width;
+            for (let i = 0; i < 24; i++) {
+                let x = ((i * 45) - offset + canvas.width) % canvas.width;
+                let y = (i * 35) % (canvas.height - 150);
+                ctx.beginPath();
+                ctx.arc(x, y, (i % 3) + 1, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.restore();
+
+            // Cyber Grid Floor Ground
+            let groundY = canvas.height - 110;
+            ctx.fillStyle = '#030712';
+            ctx.fillRect(0, groundY, canvas.width, 110);
+            
+            ctx.save();
+            ctx.strokeStyle = biome.bgGrid;
+            ctx.lineWidth = 2;
+            ctx.shadowColor = biome.bgGrid;
+            ctx.shadowBlur = 10;
+            ctx.beginPath();
+            ctx.moveTo(0, groundY);
+            ctx.lineTo(canvas.width, groundY);
+            ctx.stroke();
+
+            // Scrolling Neon Grid Lines on Floor
+            let gridOffset = (frames * 4) % 30;
+            ctx.strokeStyle = 'rgba(0, 240, 255, 0.25)';
+            ctx.lineWidth = 1;
+            for (let x = -30 + gridOffset; x < canvas.width; x += 30) {
+                ctx.beginPath();
+                ctx.moveTo(x, groundY);
+                ctx.lineTo(x - 20, canvas.height);
+                ctx.stroke();
+            }
+            ctx.restore();
+        }
+
+        function loop() {
+            if (!isPaused) {
+                frames++;
+
+                drawBackground();
+
+                if (state.current === state.game) {
+                    handleKeyboardJoystick();
+                    pipes.update();
+                    updateItems();
+                    bossSystem.update();
+                    bird.update();
+                    washSystem.update();
+                    updateParticles();
+                    updateFloatingTexts();
+                }
+
+                pipes.draw();
+                drawItems();
+                bossSystem.draw();
+                washSystem.draw();
+                bird.draw();
+                drawParticles();
+                drawFloatingTexts();
+            }
+
+            requestAnimationFrame(loop);
+        }
+
+        document.getElementById('coinsDisplay').innerText = coins;
+        updateMenuStats();
+        updateLivesUI();
+        loop();
+    </script>
+</body>
+</html>
