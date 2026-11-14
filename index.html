@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Cyber Flappy Ultimate - 108 Kuş, 45 Wash, Çark, Görevler, 100 Bölge & Boss</title>
+    <title>Cyber Flappy Ultimate - 110 Kuş, 45 Wash, Çark, Görevler, 100 Bölge & Boss</title>
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -349,7 +349,7 @@
         .hud-pill.zone-pill { border-color: #facc15; color: #facc15; background: rgba(113, 63, 18, 0.45); }
         .hud-pill.boss-pill { border-color: #ff007f; color: #ff007f; background: rgba(131, 24, 67, 0.55); font-family: 'Orbitron', sans-serif; }
 
-        /* Oyun Bitti Ekranı */
+        /* Oyun Bitti & Duraklatma Kartı */
         .score-card {
             background: linear-gradient(145deg, rgba(16, 12, 42, 0.95) 0%, rgba(8, 8, 24, 0.98) 100%);
             border: 2px solid #00f3ff;
@@ -521,13 +521,26 @@
         .item-card.selected { border-color: #00f3ff; box-shadow: 0 0 14px rgba(0, 243, 255, 0.6); }
         .item-card.selected-wash { border-color: #ff00ff; box-shadow: 0 0 14px rgba(255, 0, 255, 0.6); }
 
+        .bird-avatar-circle {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 4px 0;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            position: relative;
+            border: 2px solid #ffffff;
+        }
+
         .rarity-tag {
             font-family: 'Orbitron', sans-serif;
             font-size: 0.58rem;
             font-weight: 800;
             padding: 2px 6px;
             border-radius: 999px;
-            margin-bottom: 4px;
+            margin-bottom: 2px;
         }
 
         .item-name { font-family: 'Orbitron', sans-serif; font-size: 0.74rem; font-weight: 800; color: #ffffff; margin-bottom: 3px; }
@@ -651,6 +664,44 @@
         #laser-btn:active {
             transform: scale(0.9);
         }
+
+        /* Lazer Şarj Çubuğu (Altta) */
+        #laser-charge-bar-container {
+            position: absolute;
+            bottom: 12px;
+            left: 20px;
+            right: 90px;
+            height: 12px;
+            background: rgba(10, 10, 30, 0.85);
+            border: 1.5px solid #00f3ff;
+            border-radius: 999px;
+            overflow: hidden;
+            z-index: 15;
+            box-shadow: 0 0 10px rgba(0, 243, 255, 0.4);
+            display: flex;
+            align-items: center;
+            padding: 1px;
+        }
+
+        #laser-charge-fill {
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(90deg, #00f3ff, #ff00ff, #facc15);
+            border-radius: 999px;
+            transition: width 0.1s linear;
+        }
+
+        #laser-charge-text {
+            position: absolute;
+            width: 100%;
+            text-align: center;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.6rem;
+            font-weight: 900;
+            color: #ffffff;
+            text-shadow: 0 0 4px #000000;
+            pointer-events: none;
+        }
     </style>
 </head>
 <body>
@@ -662,6 +713,7 @@
     <div id="hud">
         <div id="score-display" class="hidden">0</div>
         <div class="hud-actions">
+            <button id="pause-btn" class="hud-btn hidden" title="Oyunu Durdur (P / Esc)">⏸️</button>
             <button id="sound-btn" class="hud-btn" title="Sesi Aç / Kapat">🔊</button>
         </div>
     </div>
@@ -672,8 +724,39 @@
     <!-- Aktif Oyun İçi Yetenek HUD -->
     <div id="active-hud-bar" class="hidden"></div>
 
+    <!-- Altta Lazer Şarj Göstergesi -->
+    <div id="laser-charge-bar-container" class="hidden">
+        <div id="laser-charge-fill" style="width: 100%;"></div>
+        <div id="laser-charge-text">LAZER: %100 (L / F / ENTER)</div>
+    </div>
+
     <!-- Lazer Ateşleme Butonu -->
-    <button id="laser-btn" class="hidden" title="Süper Lazer Ateşle (F / Enter)">⚡</button>
+    <button id="laser-btn" class="hidden" title="Süper Lazer Ateşle (L / F / Enter)">⚡</button>
+
+    <!-- Duraklatma (Pause) Ekranı -->
+    <div id="pause-screen" class="overlay hidden">
+        <div class="score-card" style="border-color: #facc15; box-shadow: 0 0 25px rgba(250, 204, 21, 0.4);">
+            <div class="card-title" style="color: #facc15; text-shadow: 0 0 12px #facc15;">OYUN DURDURULDU</div>
+            <div class="stats-row" style="margin-bottom: 16px;">
+                <div class="stat-box">
+                    <span class="stat-label">SKOR</span>
+                    <span id="pause-score" class="stat-value">0</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">MESAFE</span>
+                    <span id="pause-distance" class="stat-value" style="font-size: 1.3rem; color: #facc15;">0m</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">KREDİ</span>
+                    <span id="pause-credits" class="stat-value" style="color: #eab308;">0</span>
+                </div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 12px; width: 100%;">
+                <button id="resume-btn" class="btn-primary" style="width: 100%; font-size: 1.15rem; padding: 12px;">▶️ DEVAM ET</button>
+                <button id="home-btn" class="btn-primary" style="width: 100%; font-size: 1.05rem; padding: 12px; border-color: #ff007f; background: rgba(255, 0, 127, 0.18); text-shadow: 0 0 8px #ff007f; box-shadow: 0 0 16px rgba(255, 0, 127, 0.45);">🏠 ANA SAYFAYA DÖN</button>
+            </div>
+        </div>
+    </div>
 
     <!-- Başlangıç / Ana Menü Ekranı -->
     <div id="start-screen" class="overlay">
@@ -682,7 +765,7 @@
 
         <div class="loadout-row">
             <button id="open-birds-btn" class="menu-btn">
-                <span>🦅 108 KUŞ</span>
+                <span>🦅 110 KUŞ</span>
                 <span id="selected-bird-label" class="btn-sub-tag">Alfa Siber Serçe</span>
             </button>
             <button id="open-wash-btn" class="menu-btn wash-style">
@@ -742,7 +825,7 @@
         </div>
 
         <div class="loadout-row" style="margin-bottom: 14px;">
-            <button id="go-birds-btn" class="menu-btn">🦅 108 Kuş</button>
+            <button id="go-birds-btn" class="menu-btn">🦅 110 Kuş</button>
             <button id="go-wash-btn" class="menu-btn wash-style">🫧 45 Wash</button>
             <button id="go-zones-btn" class="menu-btn zone-style">🗺️ Bölgeler</button>
         </div>
@@ -750,14 +833,14 @@
         <button id="restart-btn" class="btn-primary" style="border-color:#ff007f; background:rgba(255,0,127,0.15);">TEKRAR OYNA</button>
     </div>
 
-    <!-- 108 Kuş Hangarı & Mağazası -->
+    <!-- 110 Kuş Hangarı & Mağazası -->
     <div id="birds-modal" class="modal-overlay hidden">
         <div class="modal-header">
-            <div class="modal-title">🦅 SİBER KUŞ MARKETİ (108 KUŞ)</div>
+            <div class="modal-title">🦅 SİBER KUŞ MARKETİ (110 KUŞ)</div>
             <button id="close-birds-modal" class="modal-close">✕</button>
         </div>
         <div class="tab-bar">
-            <button id="tab-birds-all" class="tab-btn active">TÜM KUŞLAR (108)</button>
+            <button id="tab-birds-all" class="tab-btn active">TÜM KUŞLAR (110)</button>
             <button id="tab-birds-owned" class="tab-btn">SATIN ALINANLAR (<span id="owned-birds-count">1</span>)</button>
         </div>
         <div class="modal-controls">
@@ -832,7 +915,7 @@
 
 <script>
 /**
- * Cyber Flappy Ultimate - Önceki Kararlı Sürüm
+ * Cyber Flappy Ultimate - 110 Kuş, Kalıcı Borular & Duraklatma Menüsü
  */
 
 const container = document.getElementById('game-container');
@@ -843,11 +926,18 @@ const scoreDisplay = document.getElementById('score-display');
 const activeHudBar = document.getElementById('active-hud-bar');
 const toastBanner = document.getElementById('toast-banner');
 const startScreen = document.getElementById('start-screen');
+const pauseScreen = document.getElementById('pause-screen');
 const gameOverScreen = document.getElementById('game-over-screen');
 const playBtn = document.getElementById('play-btn');
 const restartBtn = document.getElementById('restart-btn');
+const pauseBtn = document.getElementById('pause-btn');
+const resumeBtn = document.getElementById('resume-btn');
+const homeBtn = document.getElementById('home-btn');
 const soundBtn = document.getElementById('sound-btn');
 const laserBtn = document.getElementById('laser-btn');
+const laserChargeFill = document.getElementById('laser-charge-fill');
+const laserChargeContainer = document.getElementById('laser-charge-bar-container');
+const laserChargeText = document.getElementById('laser-charge-text');
 
 const finalScoreEl = document.getElementById('final-score');
 const finalDistanceEl = document.getElementById('final-distance');
@@ -927,7 +1017,7 @@ class SoundController {
 
 const sound = new SoundController();
 
-// --- 108 Benzersiz Siber Kuş Verisi ---
+// --- 110 Benzersiz Siber Kuş Verisi ---
 const BIRD_PREFIXES = ['Alfa', 'Kuantum', 'Plazma', 'Neon', 'Siber', 'Gölge', 'Kozmik', 'Lazer', 'Vortex', 'Krom', 'Hiper', 'Omega'];
 const BIRD_NAMES = ['Serçe', 'Şahin', 'Kartal', 'Anka', 'Kuzgun', 'Atmaca', 'Baykuş', 'Doğan', 'Kırlangıç'];
 const BIRD_ABILITIES = [
@@ -963,6 +1053,28 @@ for (let i = 0; i < 108; i++) {
         ability
     });
 }
+
+// 2 Yeni Mitik Kuş (Toplam 110 Kuş)
+BIRDS_DATA.push(
+    {
+        id: 108,
+        name: 'Nova Zümrüt Zümrüdüanka #109',
+        rarity: 'Mitik',
+        color: '#10b981',
+        accent: '#facc15',
+        price: 95000,
+        ability: { id: 'double_score', label: '+100% Çift Skor Gücü', mult: 2.0 }
+    },
+    {
+        id: 109,
+        name: 'Kozmik Galaksi Ejderi #110',
+        rarity: 'Mitik',
+        color: '#ec4899',
+        accent: '#00f3ff',
+        price: 120000,
+        ability: { id: 'mega_shield', label: '+2 Başlangıç Kalkanı', shield: 2 }
+    }
+);
 
 // --- 45 Cyber Wash Modülü Verisi ---
 const WASH_TYPES = [
@@ -1060,8 +1172,9 @@ function updateMissionProgress(type, amount = 1) {
 }
 
 // --- Oyun Durumları & Değişkenler ---
-const GAME_STATE = { START: 'START', PLAYING: 'PLAYING', GAMEOVER: 'GAMEOVER', BOSS: 'BOSS' };
+const GAME_STATE = { START: 'START', PLAYING: 'PLAYING', GAMEOVER: 'GAMEOVER', BOSS: 'BOSS', PAUSED: 'PAUSED' };
 let currentState = GAME_STATE.START;
+let stateBeforePause = GAME_STATE.PLAYING;
 
 let score = 0;
 let sessionCredits = 0;
@@ -1166,7 +1279,7 @@ function updateActiveHudBar() {
     activeHudBar.innerHTML = html;
 }
 
-// --- Oyun Başlatma ---
+// --- Oyun Başlatma, Duraklatma ve Ana Sayfaya Dönme ---
 function startGame() {
     sound.init();
     const b = BIRDS_DATA[selectedBirdId] || BIRDS_DATA[0];
@@ -1204,13 +1317,56 @@ function startGame() {
 
     scoreDisplay.textContent = '0';
     scoreDisplay.classList.remove('hidden');
+    pauseBtn.classList.remove('hidden');
     laserBtn.classList.remove('hidden');
+    laserChargeContainer.classList.remove('hidden');
     activeHudBar.classList.remove('hidden');
     startScreen.classList.add('hidden');
+    pauseScreen.classList.add('hidden');
     gameOverScreen.classList.add('hidden');
 
     updateActiveHudBar();
     showToast(`🚀 Bölge ${currentZone.id}: ${currentZone.name}`, '#00f3ff');
+}
+
+function pauseGame() {
+    if (currentState !== GAME_STATE.PLAYING && currentState !== GAME_STATE.BOSS) return;
+    stateBeforePause = currentState;
+    currentState = GAME_STATE.PAUSED;
+    document.getElementById('pause-score').textContent = score;
+    document.getElementById('pause-distance').textContent = `${formatNumber(Math.floor(distance))}m`;
+    document.getElementById('pause-credits').textContent = `+${formatNumber(sessionCredits)}`;
+    pauseScreen.classList.remove('hidden');
+}
+
+function resumeGame() {
+    if (currentState !== GAME_STATE.PAUSED) return;
+    currentState = stateBeforePause;
+    lastTimestamp = performance.now();
+    pauseScreen.classList.add('hidden');
+}
+
+function returnToHome() {
+    credits += sessionCredits;
+    sessionCredits = 0;
+    saveGameData();
+
+    boss = null;
+    bossProjectiles = [];
+    pipes = [];
+    collectibles = [];
+    currentState = GAME_STATE.START;
+
+    scoreDisplay.classList.add('hidden');
+    pauseBtn.classList.add('hidden');
+    laserBtn.classList.add('hidden');
+    activeHudBar.classList.add('hidden');
+    pauseScreen.classList.add('hidden');
+    gameOverScreen.classList.add('hidden');
+
+    updateLoadoutUI();
+    startScreen.classList.remove('hidden');
+    showToast('🏠 Ana sayfaya dönüldü, kredilerin kaydedildi!', '#00f3ff');
 }
 
 function flapBird() {
@@ -1219,6 +1375,10 @@ function flapBird() {
     const jumpMult = w.effect.jumpBoost || 1.0;
     bird.vy = -370 * jumpMult;
     bird.wingPhase = 1.0;
+    
+    // Her zıplamada lazer %5 dolar
+    laserCharge = Math.min(100, laserCharge + 5);
+
     sound.playJump();
     spawnParticles(bird.x - 10, bird.y + 6, '#00f3ff', 6);
 }
@@ -1338,7 +1498,9 @@ function triggerGameOver() {
     saveGameData();
 
     scoreDisplay.classList.add('hidden');
+    pauseBtn.classList.add('hidden');
     laserBtn.classList.add('hidden');
+    laserChargeContainer.classList.add('hidden');
     activeHudBar.classList.add('hidden');
 
     finalScoreEl.textContent = score;
@@ -1461,6 +1623,15 @@ function update(dt) {
         if (playerLasers[i].life <= 0) playerLasers.splice(i, 1);
     }
 
+    laserChargeFill.style.width = `${laserCharge}%`;
+    if (laserCharge >= 100) {
+        laserChargeText.textContent = 'LAZER HAZIR! (L / F / ENTER)';
+        laserChargeContainer.style.borderColor = '#ff007f';
+    } else {
+        laserChargeText.textContent = `LAZER: %${Math.floor(laserCharge)}`;
+        laserChargeContainer.style.borderColor = '#00f3ff';
+    }
+
     if (currentState !== GAME_STATE.PLAYING && currentState !== GAME_STATE.BOSS) {
         bird.wingPhase += dt * 5;
         return;
@@ -1468,9 +1639,6 @@ function update(dt) {
 
     const activeBird = BIRDS_DATA[selectedBirdId] || BIRDS_DATA[0];
     const activeWash = WASH_DATA[selectedWashId] || WASH_DATA[0];
-
-    const chargeRate = activeBird.ability.laserBoost ? 16 : 9;
-    laserCharge = Math.min(100, laserCharge + chargeRate * dt);
 
     const gravMult = activeBird.ability.grav || 1.0;
     bird.vy += 1080 * gravMult * dt;
@@ -1563,7 +1731,7 @@ function update(dt) {
             const inX = bird.x + hitRadius > p.x && bird.x - hitRadius < p.x + p.w;
             const inGap = bird.y - hitRadius > p.gapY - p.gapSize / 2 && bird.y + hitRadius < p.gapY + p.gapSize / 2;
             if (inX && !inGap) {
-                p.destroyed = true;
+                // Boru kaybolmuyor, sadece çarpışma tetikleniyor
                 spawnParticles(p.x + p.w / 2, bird.y, currentZone.pipeColor, 16);
                 handlePlayerHit(false);
             }
@@ -1912,8 +2080,10 @@ let lastTimestamp = performance.now();
 function gameLoop(now) {
     const dt = Math.min(0.05, (now - lastTimestamp) / 1000);
     lastTimestamp = now;
-    update(dt);
-    draw();
+    if (currentState !== GAME_STATE.PAUSED) {
+        update(dt);
+        draw();
+    }
     requestAnimationFrame(gameLoop);
 }
 
@@ -1939,7 +2109,9 @@ function renderBirdsMarket() {
         card.innerHTML = `
             ${isOwned ? `<div class="status-ribbon">${selectedBirdId === b.id ? 'SEÇİLİ' : 'SAHİP'}</div>` : ''}
             <span class="rarity-tag" style="background:${b.color}22; color:${b.color}; border:1px solid ${b.color};">${b.rarity}</span>
-            <div style="font-size:1.7rem; margin:2px 0;">🦅</div>
+            <div class="bird-avatar-circle" style="background: radial-gradient(circle at 35% 35%, ${b.color}, #070714); border-color: ${b.accent};">
+                <div style="width: 14px; height: 10px; background: ${b.accent}; border-radius: 50%; transform: rotate(-15deg);"></div>
+            </div>
             <div class="item-name">${b.name}</div>
             <div class="item-ability">${b.ability.label}</div>
             <div class="price-tag">${isOwned ? 'AÇIK' : `🟡 ${formatNumber(b.price)}`}</div>
@@ -2248,7 +2420,18 @@ canvas.addEventListener('pointerdown', (e) => {
 });
 
 window.addEventListener('keydown', (e) => {
-    if (e.code === 'KeyF' || e.code === 'Enter') {
+    if (e.code === 'KeyP' || e.code === 'Escape') {
+        if (currentState === GAME_STATE.PLAYING || currentState === GAME_STATE.BOSS) {
+            e.preventDefault();
+            pauseGame();
+            return;
+        } else if (currentState === GAME_STATE.PAUSED) {
+            e.preventDefault();
+            resumeGame();
+            return;
+        }
+    }
+    if (e.code === 'KeyL' || e.code === 'KeyF' || e.code === 'Enter') {
         if (currentState === GAME_STATE.PLAYING || currentState === GAME_STATE.BOSS) {
             e.preventDefault();
             fireSuperLaser();
@@ -2265,6 +2448,9 @@ window.addEventListener('keydown', (e) => {
 
 playBtn.addEventListener('click', startGame);
 restartBtn.addEventListener('click', startGame);
+pauseBtn.addEventListener('click', (e) => { e.stopPropagation(); pauseGame(); });
+resumeBtn.addEventListener('click', resumeGame);
+homeBtn.addEventListener('click', returnToHome);
 soundBtn.addEventListener('click', () => sound.toggleMute());
 laserBtn.addEventListener('click', (e) => { e.stopPropagation(); fireSuperLaser(); });
 
@@ -2273,4 +2459,3 @@ requestAnimationFrame(gameLoop);
 </script>
 </body>
 </html>
-```eof
