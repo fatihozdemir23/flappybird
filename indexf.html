@@ -1,0 +1,2276 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Cyber Flappy Ultimate - 108 Kuş, 45 Wash, Çark, Görevler, 100 Bölge & Boss</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;900&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background: radial-gradient(circle at center, #14082e 0%, #05050d 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+            touch-action: manipulation;
+        }
+
+        #game-container {
+            position: relative;
+            width: 100%;
+            max-width: 480px;
+            height: 100vh;
+            max-height: 820px;
+            background-color: #070714;
+            box-shadow: 0 0 40px rgba(0, 243, 255, 0.25), 0 0 80px rgba(255, 0, 127, 0.15), 0 0 0 2px #00f3ff;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        @media (min-width: 500px) {
+            #game-container {
+                height: 90vh;
+                border-radius: 20px;
+            }
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        #hud {
+            position: absolute;
+            top: 16px;
+            left: 0;
+            width: 100%;
+            padding: 0 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        #score-display {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            top: 4px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 3rem;
+            font-weight: 900;
+            color: #ffffff;
+            text-shadow: 0 0 10px #00f3ff, 0 0 25px #00f3ff, 0 0 45px #ff00ff;
+            transition: transform 0.1s ease-out;
+        }
+
+        .score-pop {
+            transform: translateX(-50%) scale(1.25) !important;
+        }
+
+        .hud-actions {
+            display: flex;
+            gap: 8px;
+            pointer-events: auto;
+            margin-left: auto;
+        }
+
+        .hud-btn {
+            background: rgba(10, 10, 28, 0.85);
+            border: 2px solid #00f3ff;
+            border-radius: 50%;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 0 0 12px rgba(0, 243, 255, 0.4);
+            transition: transform 0.1s, box-shadow 0.2s, border-color 0.2s;
+            color: #00f3ff;
+            font-size: 1.1rem;
+        }
+
+        .hud-btn:hover {
+            border-color: #ff00ff;
+            box-shadow: 0 0 16px rgba(255, 0, 255, 0.7);
+        }
+
+        .hud-btn:active {
+            transform: scale(0.92);
+        }
+
+        /* Bildirim Toast Mesajı */
+        #toast-banner {
+            position: absolute;
+            top: 115px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(10, 14, 38, 0.95);
+            border: 2px solid #facc15;
+            color: #facc15;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 800;
+            padding: 8px 18px;
+            border-radius: 999px;
+            box-shadow: 0 0 20px rgba(250, 204, 21, 0.5);
+            z-index: 60;
+            pointer-events: none;
+            text-align: center;
+            white-space: nowrap;
+            transition: opacity 0.3s;
+        }
+
+        /* Ekranlar */
+        .overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            background: rgba(7, 7, 20, 0.75);
+            backdrop-filter: blur(5px);
+            z-index: 20;
+            transition: opacity 0.25s ease;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .game-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.7rem;
+            font-weight: 900;
+            color: #ffffff;
+            text-align: center;
+            line-height: 1.1;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+            text-shadow: 0 0 8px #00f3ff, 0 0 20px #00f3ff, 0 0 40px #ff00ff;
+            animation: floatTitle 2.4s ease-in-out infinite;
+        }
+
+        .game-title span {
+            color: #00f3ff;
+            display: block;
+            font-size: 2rem;
+            letter-spacing: 4px;
+        }
+
+        @keyframes floatTitle {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-8px); }
+        }
+
+        .currency-badge {
+            background: rgba(15, 10, 38, 0.92);
+            color: #eab308;
+            padding: 6px 18px;
+            border-radius: 999px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.92rem;
+            font-weight: 800;
+            border: 2px solid #eab308;
+            box-shadow: 0 0 12px rgba(234, 179, 8, 0.4);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .loadout-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+            width: 100%;
+            max-width: 370px;
+            justify-content: center;
+        }
+
+        .menu-btn {
+            flex: 1;
+            background: rgba(12, 14, 38, 0.92);
+            color: #00f3ff;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.74rem;
+            font-weight: 800;
+            padding: 10px 6px;
+            border: 2px solid #00f3ff;
+            border-radius: 12px;
+            cursor: pointer;
+            box-shadow: 0 0 12px rgba(0, 243, 255, 0.3);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+            transition: all 0.15s;
+        }
+
+        .menu-btn:hover {
+            transform: translateY(-2px);
+            background: rgba(0, 243, 255, 0.2);
+        }
+
+        .menu-btn.wash-style {
+            border-color: #ff00ff;
+            color: #ff00ff;
+            box-shadow: 0 0 12px rgba(255, 0, 255, 0.3);
+        }
+
+        .menu-btn.zone-style {
+            border-color: #facc15;
+            color: #facc15;
+            box-shadow: 0 0 12px rgba(250, 204, 21, 0.3);
+        }
+
+        .menu-btn.mission-style {
+            border-color: #22c55e;
+            color: #22c55e;
+            box-shadow: 0 0 12px rgba(34, 197, 94, 0.3);
+        }
+
+        .menu-btn.wheel-style {
+            border-color: #ec4899;
+            color: #ec4899;
+            box-shadow: 0 0 12px rgba(236, 72, 153, 0.3);
+        }
+
+        .btn-sub-tag {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.72rem;
+            color: #ffffff;
+            opacity: 0.92;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 115px;
+        }
+
+        .active-combo-box {
+            background: rgba(8, 8, 26, 0.88);
+            border: 1.5px solid rgba(0, 243, 255, 0.5);
+            border-radius: 12px;
+            padding: 8px 12px;
+            width: 100%;
+            max-width: 370px;
+            margin-bottom: 16px;
+            font-size: 0.82rem;
+            color: #e2e8f0;
+        }
+
+        .combo-line {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 3px;
+        }
+
+        .btn-primary {
+            background: rgba(0, 243, 255, 0.15);
+            color: #ffffff;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.35rem;
+            font-weight: 900;
+            letter-spacing: 2px;
+            padding: 14px 40px;
+            border: 2.5px solid #00f3ff;
+            border-radius: 999px;
+            cursor: pointer;
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.6);
+            text-shadow: 0 0 10px #00f3ff;
+            transition: all 0.15s ease;
+        }
+
+        .btn-primary:hover {
+            background: rgba(0, 243, 255, 0.3);
+            transform: translateY(-2px) scale(1.03);
+            box-shadow: 0 0 30px rgba(0, 243, 255, 0.9);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Oyun İçi HUD Bilgi Çubuğu */
+        #active-hud-bar {
+            position: absolute;
+            top: 66px;
+            left: 10px;
+            right: 10px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            justify-content: center;
+            pointer-events: none;
+            z-index: 9;
+        }
+
+        .hud-pill {
+            background: rgba(7, 7, 22, 0.85);
+            border: 1px solid rgba(0, 243, 255, 0.6);
+            color: #ffffff;
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 999px;
+            box-shadow: 0 0 6px rgba(0, 243, 255, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .hud-pill.lives-pill { border-color: #ef4444; color: #ef4444; background: rgba(127, 29, 29, 0.45); }
+        .hud-pill.shield-pill { border-color: #38bdf8; color: #38bdf8; background: rgba(14, 116, 144, 0.45); }
+        .hud-pill.credits-pill { border-color: #eab308; color: #eab308; background: rgba(113, 63, 18, 0.45); }
+        .hud-pill.zone-pill { border-color: #facc15; color: #facc15; background: rgba(113, 63, 18, 0.45); }
+        .hud-pill.boss-pill { border-color: #ff007f; color: #ff007f; background: rgba(131, 24, 67, 0.55); font-family: 'Orbitron', sans-serif; }
+
+        /* Oyun Bitti Ekranı */
+        .score-card {
+            background: linear-gradient(145deg, rgba(16, 12, 42, 0.95) 0%, rgba(8, 8, 24, 0.98) 100%);
+            border: 2px solid #00f3ff;
+            border-radius: 18px;
+            padding: 20px 22px;
+            width: 100%;
+            max-width: 340px;
+            box-shadow: 0 0 25px rgba(0, 243, 255, 0.4);
+            margin-bottom: 18px;
+            text-align: center;
+            position: relative;
+        }
+
+        .card-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.65rem;
+            font-weight: 900;
+            color: #ff007f;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px #ff007f;
+            margin-bottom: 14px;
+        }
+
+        .stats-row {
+            display: flex;
+            justify-content: space-around;
+            background: rgba(5, 5, 18, 0.85);
+            border: 1.5px solid rgba(255, 0, 255, 0.5);
+            border-radius: 12px;
+            padding: 10px;
+            margin-bottom: 12px;
+        }
+
+        .stat-box { display: flex; flex-direction: column; align-items: center; }
+        .stat-label { font-family: 'Orbitron', sans-serif; font-size: 0.7rem; color: #ff00ff; }
+        .stat-value { font-family: 'Orbitron', sans-serif; font-size: 1.65rem; font-weight: 900; color: #00f3ff; }
+
+        /* Modaller */
+        .modal-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(4, 4, 15, 0.96);
+            backdrop-filter: blur(8px);
+            z-index: 40;
+            display: flex;
+            flex-direction: column;
+            padding: 14px;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 10px;
+            border-bottom: 1.5px solid rgba(0, 243, 255, 0.35);
+            margin-bottom: 10px;
+        }
+
+        .modal-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.05rem;
+            font-weight: 900;
+            color: #00f3ff;
+        }
+
+        .modal-close {
+            background: rgba(255, 0, 127, 0.2);
+            border: 1.5px solid #ff007f;
+            color: #ffffff;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 900;
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        /* Market Sekmeleri (Tümü / Satın Alınanlar) */
+        .tab-bar {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            background: rgba(15, 15, 38, 0.9);
+            border: 1.5px solid rgba(0, 243, 255, 0.4);
+            color: #94a3b8;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.74rem;
+            font-weight: 800;
+            padding: 8px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .tab-btn.active {
+            background: rgba(0, 243, 255, 0.2);
+            border-color: #00f3ff;
+            color: #00f3ff;
+            box-shadow: 0 0 10px rgba(0, 243, 255, 0.4);
+        }
+
+        .tab-btn.active-wash {
+            background: rgba(255, 0, 255, 0.2);
+            border-color: #ff00ff;
+            color: #ff00ff;
+            box-shadow: 0 0 10px rgba(255, 0, 255, 0.4);
+        }
+
+        .modal-controls {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .search-input {
+            flex: 1;
+            background: rgba(15, 15, 38, 0.9);
+            border: 1.5px solid #00f3ff;
+            border-radius: 10px;
+            padding: 8px 12px;
+            color: #ffffff;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.9rem;
+            outline: none;
+        }
+
+        .filter-select {
+            background: rgba(15, 15, 38, 0.9);
+            border: 1.5px solid #ff00ff;
+            border-radius: 10px;
+            padding: 8px;
+            color: #ffffff;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.85rem;
+            outline: none;
+        }
+
+        .cards-grid {
+            flex: 1;
+            overflow-y: auto;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            padding-bottom: 12px;
+        }
+
+        .cards-grid::-webkit-scrollbar { width: 5px; }
+        .cards-grid::-webkit-scrollbar-thumb { background: #00f3ff; border-radius: 999px; }
+
+        .item-card {
+            background: linear-gradient(160deg, rgba(16, 16, 44, 0.95) 0%, rgba(8, 8, 22, 0.98) 100%);
+            border: 1.5px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            cursor: pointer;
+            position: relative;
+            transition: transform 0.1s;
+        }
+
+        .item-card:hover { transform: translateY(-2px); }
+        .item-card.selected { border-color: #00f3ff; box-shadow: 0 0 14px rgba(0, 243, 255, 0.6); }
+        .item-card.selected-wash { border-color: #ff00ff; box-shadow: 0 0 14px rgba(255, 0, 255, 0.6); }
+
+        .rarity-tag {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.58rem;
+            font-weight: 800;
+            padding: 2px 6px;
+            border-radius: 999px;
+            margin-bottom: 4px;
+        }
+
+        .item-name { font-family: 'Orbitron', sans-serif; font-size: 0.74rem; font-weight: 800; color: #ffffff; margin-bottom: 3px; }
+        .item-ability { font-size: 0.72rem; font-weight: 700; color: #38bdf8; }
+        .wash-ability { color: #f472b6; }
+
+        .price-tag {
+            margin-top: 6px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.72rem;
+            font-weight: 800;
+            color: #eab308;
+            background: rgba(113, 63, 18, 0.4);
+            border: 1px solid #eab308;
+            padding: 2px 8px;
+            border-radius: 999px;
+        }
+
+        .status-ribbon {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            background: #00f3ff;
+            color: #050510;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.54rem;
+            font-weight: 900;
+            padding: 2px 5px;
+            border-radius: 4px;
+        }
+
+        /* Görevler ve Bölgeler Listesi */
+        .missions-list, .zones-list {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding-bottom: 14px;
+        }
+
+        .mission-item, .zone-item {
+            background: rgba(12, 14, 38, 0.9);
+            border: 1.5px solid rgba(0, 243, 255, 0.4);
+            border-radius: 12px;
+            padding: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .mission-info h4 { font-family: 'Orbitron', sans-serif; font-size: 0.84rem; color: #ffffff; margin-bottom: 3px; }
+        .mission-info p { font-size: 0.8rem; color: #94a3b8; }
+
+        .btn-claim {
+            background: rgba(34, 197, 94, 0.2);
+            color: #22c55e;
+            border: 1.5px solid #22c55e;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.72rem;
+            font-weight: 800;
+            padding: 6px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .btn-claim:disabled { opacity: 0.4; cursor: not-allowed; border-color: #64748b; color: #64748b; background: rgba(100,116,139,0.1); }
+
+        /* Çark (Spin Wheel) */
+        .wheel-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex: 1;
+            gap: 14px;
+        }
+
+        #wheel-canvas {
+            width: 260px;
+            height: 260px;
+            border-radius: 50%;
+            box-shadow: 0 0 25px rgba(236, 72, 153, 0.6);
+            border: 4px solid #ec4899;
+        }
+
+        .wheel-pointer {
+            width: 0;
+            height: 0;
+            border-left: 13px solid transparent;
+            border-right: 13px solid transparent;
+            border-top: 24px solid #facc15;
+            margin-bottom: -14px;
+            z-index: 5;
+            filter: drop-shadow(0 0 8px #facc15);
+        }
+
+        /* Lazer Butonu */
+        #laser-btn {
+            position: absolute;
+            bottom: 24px;
+            right: 20px;
+            width: 58px;
+            height: 58px;
+            border-radius: 50%;
+            background: rgba(255, 0, 127, 0.25);
+            border: 2.5px solid #ff007f;
+            color: #ffffff;
+            font-size: 1.5rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 0 0 18px rgba(255, 0, 127, 0.7);
+            z-index: 15;
+            transition: transform 0.1s;
+        }
+
+        #laser-btn:active {
+            transform: scale(0.9);
+        }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <canvas id="gameCanvas"></canvas>
+
+    <!-- Üst Bilgi Çubuğu -->
+    <div id="hud">
+        <div id="score-display" class="hidden">0</div>
+        <div class="hud-actions">
+            <button id="sound-btn" class="hud-btn" title="Sesi Aç / Kapat">🔊</button>
+        </div>
+    </div>
+
+    <!-- Bildirim Mesajı -->
+    <div id="toast-banner" class="hidden"></div>
+
+    <!-- Aktif Oyun İçi Yetenek HUD -->
+    <div id="active-hud-bar" class="hidden"></div>
+
+    <!-- Lazer Ateşleme Butonu -->
+    <button id="laser-btn" class="hidden" title="Süper Lazer Ateşle (F / Enter)">⚡</button>
+
+    <!-- Başlangıç / Ana Menü Ekranı -->
+    <div id="start-screen" class="overlay">
+        <h1 class="game-title">CYBER<span>FLAPPY</span></h1>
+        <div class="currency-badge">🟡 Kredi: <span id="top-credits-val">0</span></div>
+
+        <div class="loadout-row">
+            <button id="open-birds-btn" class="menu-btn">
+                <span>🦅 108 KUŞ</span>
+                <span id="selected-bird-label" class="btn-sub-tag">Alfa Siber Serçe</span>
+            </button>
+            <button id="open-wash-btn" class="menu-btn wash-style">
+                <span>🫧 45 WASH</span>
+                <span id="selected-wash-label" class="btn-sub-tag">Neon Köpük Wash</span>
+            </button>
+        </div>
+
+        <div class="loadout-row">
+            <button id="open-zones-btn" class="menu-btn zone-style">
+                <span>🗺️ 100 BÖLGE</span>
+                <span id="selected-zone-label" class="btn-sub-tag">Bölge 1</span>
+            </button>
+            <button id="open-missions-btn" class="menu-btn mission-style">
+                <span>📋 GÖREVLER</span>
+                <span class="btn-sub-tag">10 Günlük Görev</span>
+            </button>
+            <button id="open-wheel-btn" class="menu-btn wheel-style">
+                <span>🎡 GÜNLÜK ÇARK</span>
+                <span id="wheel-status-tag" class="btn-sub-tag">1 Hak Mevcut</span>
+            </button>
+        </div>
+
+        <div class="active-combo-box">
+            <div class="combo-line">
+                <span style="color:#00f3ff; font-weight:700;">🦅 Kuş Yeteneği:</span>
+                <span id="combo-bird-desc" style="color:#ffffff; font-weight:700;">+50% Skor Çarpanı</span>
+            </div>
+            <div class="combo-line">
+                <span style="color:#ff00ff; font-weight:700;">🫧 Wash Etkisi:</span>
+                <span id="combo-wash-desc" style="color:#ffffff; font-weight:700;">Başlangıçta +1 Kalkan</span>
+            </div>
+        </div>
+
+        <button id="play-btn" class="btn-primary">BAŞLA</button>
+    </div>
+
+    <!-- Oyun Bitti Ekranı -->
+    <div id="game-over-screen" class="overlay hidden">
+        <div class="score-card">
+            <div class="card-title">SİSTEM ÇÖKTÜ</div>
+            <div class="stats-row">
+                <div class="stat-box">
+                    <span class="stat-label">SKOR</span>
+                    <span id="final-score" class="stat-value">0</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">MESAFE</span>
+                    <span id="final-distance" class="stat-value" style="font-size:1.35rem; color:#facc15;">0m</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">KREDİ</span>
+                    <span id="final-credits" class="stat-value" style="color:#eab308;">0</span>
+                </div>
+            </div>
+            <div id="medal-display" style="font-family:'Orbitron'; font-weight:700; color:#e2e8f0; font-size:0.88rem;"></div>
+        </div>
+
+        <div class="loadout-row" style="margin-bottom: 14px;">
+            <button id="go-birds-btn" class="menu-btn">🦅 108 Kuş</button>
+            <button id="go-wash-btn" class="menu-btn wash-style">🫧 45 Wash</button>
+            <button id="go-zones-btn" class="menu-btn zone-style">🗺️ Bölgeler</button>
+        </div>
+
+        <button id="restart-btn" class="btn-primary" style="border-color:#ff007f; background:rgba(255,0,127,0.15);">TEKRAR OYNA</button>
+    </div>
+
+    <!-- 108 Kuş Hangarı & Mağazası -->
+    <div id="birds-modal" class="modal-overlay hidden">
+        <div class="modal-header">
+            <div class="modal-title">🦅 SİBER KUŞ MARKETİ (108 KUŞ)</div>
+            <button id="close-birds-modal" class="modal-close">✕</button>
+        </div>
+        <div class="tab-bar">
+            <button id="tab-birds-all" class="tab-btn active">TÜM KUŞLAR (108)</button>
+            <button id="tab-birds-owned" class="tab-btn">SATIN ALINANLAR (<span id="owned-birds-count">1</span>)</button>
+        </div>
+        <div class="modal-controls">
+            <input type="text" id="bird-search" class="search-input" placeholder="Kuş ara...">
+            <select id="bird-filter" class="filter-select">
+                <option value="ALL">Tüm Nadirlikler</option>
+                <option value="Sıradan">Sıradan</option>
+                <option value="Nadir">Nadir</option>
+                <option value="Epik">Epik</option>
+                <option value="Efsanevi">Efsanevi</option>
+                <option value="Mitik">Mitik</option>
+            </select>
+        </div>
+        <div id="birds-grid" class="cards-grid"></div>
+    </div>
+
+    <!-- 45 Wash Mağazası -->
+    <div id="wash-modal" class="modal-overlay hidden">
+        <div class="modal-header">
+            <div class="modal-title" style="color:#ff00ff;">🫧 CYBER WASH MARKETİ (45 MODÜL)</div>
+            <button id="close-wash-modal" class="modal-close">✕</button>
+        </div>
+        <div class="tab-bar">
+            <button id="tab-wash-all" class="tab-btn active-wash">TÜM WASH (45)</button>
+            <button id="tab-wash-owned" class="tab-btn">SATIN ALINANLAR (<span id="owned-wash-count">1</span>)</button>
+        </div>
+        <div class="modal-controls">
+            <input type="text" id="wash-search" class="search-input" placeholder="Wash ara...">
+            <select id="wash-filter" class="filter-select">
+                <option value="ALL">Tüm Türler</option>
+                <option value="shield">Kalkan</option>
+                <option value="score">Skor</option>
+                <option value="physics">Fizik</option>
+                <option value="pipe">Boru</option>
+            </select>
+        </div>
+        <div id="wash-grid" class="cards-grid"></div>
+    </div>
+
+    <!-- 100 Bölge Seçim Haritası -->
+    <div id="zones-modal" class="modal-overlay hidden">
+        <div class="modal-header">
+            <div class="modal-title" style="color:#facc15;">🗺️ 100 İSİMLİ SİBER BÖLGE</div>
+            <button id="close-zones-modal" class="modal-close">✕</button>
+        </div>
+        <div id="zones-list" class="zones-list"></div>
+    </div>
+
+    <!-- 10 Günlük Görevler Modalı -->
+    <div id="missions-modal" class="modal-overlay hidden">
+        <div class="modal-header">
+            <div class="modal-title" style="color:#22c55e;">📋 10 GÜNLÜK SİBER GÖREV</div>
+            <button id="close-missions-modal" class="modal-close">✕</button>
+        </div>
+        <div id="missions-list" class="missions-list"></div>
+    </div>
+
+    <!-- Günlük Çark (Spin Wheel - Tek Seferlik) Modalı -->
+    <div id="wheel-modal" class="modal-overlay hidden">
+        <div class="modal-header">
+            <div class="modal-title" style="color:#ec4899;">🎡 GÜNLÜK ŞANS ÇARKI (1 HAK)</div>
+            <button id="close-wheel-modal" class="modal-close">✕</button>
+        </div>
+        <div class="wheel-container">
+            <div class="wheel-pointer"></div>
+            <canvas id="wheel-canvas" width="300" height="300"></canvas>
+            <button id="spin-btn" class="btn-primary" style="border-color:#ec4899; background:rgba(236,72,153,0.2);">ÇARKINI ÇEVİR! ⚡</button>
+            <div id="spin-result" style="font-family:'Orbitron'; font-weight:800; color:#facc15; font-size:0.95rem; text-align:center; min-height:42px; padding:0 12px;"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+/**
+ * Cyber Flappy Ultimate - Önceki Kararlı Sürüm
+ */
+
+const container = document.getElementById('game-container');
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+const scoreDisplay = document.getElementById('score-display');
+const activeHudBar = document.getElementById('active-hud-bar');
+const toastBanner = document.getElementById('toast-banner');
+const startScreen = document.getElementById('start-screen');
+const gameOverScreen = document.getElementById('game-over-screen');
+const playBtn = document.getElementById('play-btn');
+const restartBtn = document.getElementById('restart-btn');
+const soundBtn = document.getElementById('sound-btn');
+const laserBtn = document.getElementById('laser-btn');
+
+const finalScoreEl = document.getElementById('final-score');
+const finalDistanceEl = document.getElementById('final-distance');
+const finalCreditsEl = document.getElementById('final-credits');
+const medalDisplay = document.getElementById('medal-display');
+
+// --- Yardımcı Fonksiyonlar ---
+function formatNumber(num) {
+    return Math.floor(num).toLocaleString('tr-TR');
+}
+
+let toastTimeout = null;
+function showToast(msg, color = '#facc15') {
+    toastBanner.textContent = msg;
+    toastBanner.style.borderColor = color;
+    toastBanner.style.color = color;
+    toastBanner.classList.remove('hidden');
+    if (toastTimeout) clearTimeout(toastTimeout);
+    toastTimeout = setTimeout(() => {
+        toastBanner.classList.add('hidden');
+    }, 3000);
+}
+
+// --- Web Audio API Synth Ses Sistemi ---
+class SoundController {
+    constructor() {
+        this.ctx = null;
+        this.muted = false;
+    }
+
+    init() {
+        if (!this.ctx) {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            if (AudioContext) this.ctx = new AudioContext();
+        }
+        if (this.ctx && this.ctx.state === 'suspended') {
+            this.ctx.resume();
+        }
+    }
+
+    toggleMute() {
+        this.muted = !this.muted;
+        soundBtn.textContent = this.muted ? '🔇' : '🔊';
+    }
+
+    playTone(freq, endFreq, duration, type = 'sawtooth', vol = 0.14) {
+        if (this.muted) return;
+        this.init();
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, now);
+        if (endFreq) osc.frequency.exponentialRampToValueAtTime(endFreq, now + duration);
+        gain.gain.setValueAtTime(vol, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + duration);
+    }
+
+    playJump() { this.playTone(280, 720, 0.13, 'sawtooth', 0.12); }
+    playScore() { this.playTone(660, 1100, 0.15, 'triangle', 0.16); }
+    playCoin() { this.playTone(980, 1480, 0.12, 'sine', 0.15); }
+    playHeart() { this.playTone(520, 1040, 0.25, 'sine', 0.18); }
+    playLaser() { this.playTone(1200, 220, 0.18, 'sawtooth', 0.18); }
+    playWarp() { this.playTone(300, 1800, 0.45, 'sine', 0.2); }
+    playShieldHit() { this.playTone(380, 140, 0.24, 'square', 0.22); }
+    playRevive() {
+        this.playTone(330, 660, 0.3, 'triangle', 0.2);
+        setTimeout(() => this.playTone(660, 1320, 0.4, 'triangle', 0.2), 180);
+    }
+    playCrash() { this.playTone(150, 35, 0.42, 'sawtooth', 0.28); }
+}
+
+const sound = new SoundController();
+
+// --- 108 Benzersiz Siber Kuş Verisi ---
+const BIRD_PREFIXES = ['Alfa', 'Kuantum', 'Plazma', 'Neon', 'Siber', 'Gölge', 'Kozmik', 'Lazer', 'Vortex', 'Krom', 'Hiper', 'Omega'];
+const BIRD_NAMES = ['Serçe', 'Şahin', 'Kartal', 'Anka', 'Kuzgun', 'Atmaca', 'Baykuş', 'Doğan', 'Kırlangıç'];
+const BIRD_ABILITIES = [
+    { id: 'score', label: '+50% Skor Çarpanı', mult: 1.5 },
+    { id: 'small', label: 'Küçük Gövde (-%20 Boyut)', scale: 0.8 },
+    { id: 'magnet', label: 'Kredi & Kalp Mıknatısı', magnet: 140 },
+    { id: 'shield', label: '+1 Başlangıç Kalkanı', shield: 1 },
+    { id: 'feather', label: 'Hafif Yerçekimi (-%15)', grav: 0.85 },
+    { id: 'laser', label: 'Hızlı Lazer Şarjı', laserBoost: true }
+];
+
+const BIRDS_DATA = [];
+for (let i = 0; i < 108; i++) {
+    const prefix = BIRD_PREFIXES[i % BIRD_PREFIXES.length];
+    const base = BIRD_NAMES[Math.floor(i / BIRD_PREFIXES.length) % BIRD_NAMES.length];
+    const ability = BIRD_ABILITIES[i % BIRD_ABILITIES.length];
+    let rarity = 'Sıradan';
+    let color = '#00f3ff';
+    let price = i === 0 ? 0 : 150 + i * 75;
+
+    if (i >= 95) { rarity = 'Mitik'; color = '#facc15'; price = 25000 + (i - 95) * 5000; }
+    else if (i >= 75) { rarity = 'Efsanevi'; color = '#ff007f'; price = 8000 + (i - 75) * 600; }
+    else if (i >= 50) { rarity = 'Epik'; color = '#a855f7'; price = 3000 + (i - 50) * 200; }
+    else if (i >= 25) { rarity = 'Nadir'; color = '#22c55e'; price = 900 + (i - 25) * 80; }
+
+    BIRDS_DATA.push({
+        id: i,
+        name: `${prefix} ${base} #${i + 1}`,
+        rarity,
+        color,
+        accent: i % 2 === 0 ? '#ff00ff' : '#facc15',
+        price,
+        ability
+    });
+}
+
+// --- 45 Cyber Wash Modülü Verisi ---
+const WASH_TYPES = [
+    { type: 'shield', label: 'Başlangıçta +1 Kalkan', shield: 1 },
+    { type: 'score', label: 'Tüm Skorlara +1 Bonus', scoreBonus: 1 },
+    { type: 'pipe', label: 'Boru Aralığı +%12 Geniş', gapBoost: 18 },
+    { type: 'physics', label: 'Yumuşak Kanat Kontrolü', jumpBoost: 0.94 },
+    { type: 'shield', label: 'Kalkan + Kredi Bonusu', shield: 1, creditBonus: 1 }
+];
+
+const WASH_DATA = [];
+for (let i = 0; i < 45; i++) {
+    const wt = WASH_TYPES[i % WASH_TYPES.length];
+    const hues = ['#ff00ff', '#00f3ff', '#22c55e', '#facc15', '#f97316', '#a855f7'];
+    WASH_DATA.push({
+        id: i,
+        name: `Siber Wash MK-${i + 1}`,
+        type: wt.type,
+        color: hues[i % hues.length],
+        price: i === 0 ? 0 : 200 + i * 180,
+        effect: wt
+    });
+}
+
+// --- 100 Özel İsimli Bölge & Dinamik Çevre Temaları ---
+const ZONE_PREFIXES = ['Neo-Ankara', 'Kuantum', 'Siber-İstanbul', 'Plazma', 'Yıldız', 'Karanlık', 'Kristal', 'Hiper', 'Omega', 'Sonsuzluk'];
+const ZONE_SUFFIXES = ['Çatısı', 'Çekirdeği', 'Limanı', 'Vadisi', 'Kulesi', 'Kanyonu', 'Ağı', 'Matrisi', 'Tapınağı', 'Horizonu'];
+const WEATHER_TYPES = ['matrix', 'rain', 'snow', 'sparks', 'stars'];
+
+const ZONES_DATA = [];
+for (let i = 0; i < 100; i++) {
+    const p = ZONE_PREFIXES[i % ZONE_PREFIXES.length];
+    const s = ZONE_SUFFIXES[Math.floor(i / 10) % ZONE_SUFFIXES.length];
+    const hue = (i * 37) % 360;
+    ZONES_DATA.push({
+        id: i + 1,
+        name: `${p} ${s}`,
+        skyTop: `hsl(${hue}, 65%, 7%)`,
+        skyBottom: `hsl(${(hue + 45) % 360}, 70%, 16%)`,
+        sunColor: `hsl(${(hue + 140) % 360}, 95%, 60%)`,
+        pipeColor: `hsl(${(hue + 200) % 360}, 90%, 55%)`,
+        gridColor: `hsla(${(hue + 180) % 360}, 95%, 55%, 0.45)`,
+        weather: WEATHER_TYPES[i % WEATHER_TYPES.length],
+        bossName: i === 99 ? '👑 OMEGA EVREN İMPARATORU' : `Siber Muhafız v${i + 1}.0`,
+        bossMaxHp: i === 99 ? 500 : 40 + i * 8
+    });
+}
+
+// --- 10 Günlük Görev ---
+const DEFAULT_MISSIONS = [
+    { id: 0, title: 'İlk Uçuş', desc: '10 Skor yap', target: 10, progress: 0, reward: 250, claimed: false, type: 'score' },
+    { id: 1, title: 'Kredi Avcısı', desc: '15 Kredi topla', target: 15, progress: 0, reward: 400, claimed: false, type: 'credit' },
+    { id: 2, title: 'Mesafe Katili', desc: '1.000m uç', target: 1000, progress: 0, reward: 500, claimed: false, type: 'distance' },
+    { id: 3, title: 'Sürpriz Meraklısı', desc: '1 Adet ? Kutusu aç', target: 1, progress: 0, reward: 600, claimed: false, type: 'mystery' },
+    { id: 4, title: 'Boru Ustası', desc: '35 Skor yap', target: 35, progress: 0, reward: 850, claimed: false, type: 'score' },
+    { id: 5, title: 'Lazer Nişancısı', desc: '3 Kez Süper Lazer ateşle', target: 3, progress: 0, reward: 750, claimed: false, type: 'laser' },
+    { id: 6, title: 'Can Kurtaran', desc: '3 Kalp paketi topla', target: 3, progress: 0, reward: 700, claimed: false, type: 'heart' },
+    { id: 7, title: 'Maraton Uçuşu', desc: '5.000m mesafe katet', target: 5000, progress: 0, reward: 1500, claimed: false, type: 'distance' },
+    { id: 8, title: 'Boss Avcısı', desc: '1 Bölge Bossu yen', target: 1, progress: 0, reward: 3000, claimed: false, type: 'boss' },
+    { id: 9, title: 'Siber Milyoner Adayı', desc: '100 Kredi topla', target: 100, progress: 0, reward: 2500, claimed: false, type: 'credit' }
+];
+
+// --- Kayıtlı Veriler (LocalStorage) ---
+let credits = parseInt(localStorage.getItem('cf_credits') || '500', 10);
+let ownedBirds = JSON.parse(localStorage.getItem('cf_owned_birds') || '[0]');
+let ownedWash = JSON.parse(localStorage.getItem('cf_owned_wash') || '[0]');
+let selectedBirdId = parseInt(localStorage.getItem('cf_sel_bird') || '0', 10);
+let selectedWashId = parseInt(localStorage.getItem('cf_sel_wash') || '0', 10);
+let unlockedZone = parseInt(localStorage.getItem('cf_unlocked_zone') || '1', 10);
+let selectedZoneId = parseInt(localStorage.getItem('cf_sel_zone') || '1', 10);
+let missions = JSON.parse(localStorage.getItem('cf_missions') || JSON.stringify(DEFAULT_MISSIONS));
+let lastSpinDate = localStorage.getItem('cf_last_spin') || '';
+
+function saveGameData() {
+    localStorage.setItem('cf_credits', credits.toString());
+    localStorage.setItem('cf_owned_birds', JSON.stringify(ownedBirds));
+    localStorage.setItem('cf_owned_wash', JSON.stringify(ownedWash));
+    localStorage.setItem('cf_sel_bird', selectedBirdId.toString());
+    localStorage.setItem('cf_sel_wash', selectedWashId.toString());
+    localStorage.setItem('cf_unlocked_zone', unlockedZone.toString());
+    localStorage.setItem('cf_sel_zone', selectedZoneId.toString());
+    localStorage.setItem('cf_missions', JSON.stringify(missions));
+    localStorage.setItem('cf_last_spin', lastSpinDate);
+}
+
+function updateMissionProgress(type, amount = 1) {
+    let changed = false;
+    missions.forEach(m => {
+        if (m.type === type && !m.claimed && m.progress < m.target) {
+            m.progress = Math.min(m.target, m.progress + amount);
+            changed = true;
+        }
+    });
+    if (changed) saveGameData();
+}
+
+// --- Oyun Durumları & Değişkenler ---
+const GAME_STATE = { START: 'START', PLAYING: 'PLAYING', GAMEOVER: 'GAMEOVER', BOSS: 'BOSS' };
+let currentState = GAME_STATE.START;
+
+let score = 0;
+let sessionCredits = 0;
+let distance = 0;
+let zoneDistance = 0;
+const ZONE_TARGET_DISTANCE = 10000;
+
+let lives = 5;
+let washReviveUsed = false;
+let shieldCount = 0;
+let invulnerableTimer = 0;
+let warpTimer = 0;
+let laserCharge = 100;
+let comboCount = 0;
+let screenShake = 0;
+
+let currentZone = ZONES_DATA[selectedZoneId - 1] || ZONES_DATA[0];
+
+// Fizik & Nesneler
+const bird = { x: 90, y: 300, vy: 0, radius: 16, rotation: 0, wingPhase: 0, trail: [] };
+const petDrone = { x: 55, y: 270, shootTimer: 0 };
+
+let pipes = [];
+let collectibles = [];
+let playerLasers = [];
+let particles = [];
+let weatherParticles = [];
+let bgBuildings = [];
+let pipeSpawnTimer = 0;
+let gridOffset = 0;
+
+// Boss Nesnesi
+let boss = null;
+let bossProjectiles = [];
+
+// --- Canvas Boyutlandırma ---
+function resizeCanvas() {
+    canvas.width = container.clientWidth;
+    canvas.height = container.clientHeight;
+    initEnvironment();
+}
+
+function initEnvironment() {
+    bgBuildings = [];
+    for (let x = 0; x < canvas.width + 120; x += 48) {
+        bgBuildings.push({
+            x,
+            w: 36 + Math.random() * 24,
+            h: 90 + Math.random() * 170
+        });
+    }
+    weatherParticles = [];
+    for (let i = 0; i < 45; i++) {
+        weatherParticles.push({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height,
+            speed: 80 + Math.random() * 180,
+            size: 1.5 + Math.random() * 2.5,
+            char: Math.random() > 0.5 ? '1' : '0'
+        });
+    }
+}
+
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
+// --- Arayüz Güncelleme ---
+function updateLoadoutUI() {
+    const b = BIRDS_DATA[selectedBirdId] || BIRDS_DATA[0];
+    const w = WASH_DATA[selectedWashId] || WASH_DATA[0];
+    currentZone = ZONES_DATA[selectedZoneId - 1] || ZONES_DATA[0];
+
+    document.getElementById('top-credits-val').textContent = formatNumber(credits);
+    document.getElementById('selected-bird-label').textContent = b.name;
+    document.getElementById('selected-wash-label').textContent = w.name;
+    document.getElementById('selected-zone-label').textContent = `Bölge ${currentZone.id}: ${currentZone.name}`;
+    document.getElementById('combo-bird-desc').textContent = b.ability.label;
+    document.getElementById('combo-wash-desc').textContent = w.effect.label;
+
+    const today = new Date().toDateString();
+    const spinTag = document.getElementById('wheel-status-tag');
+    const spinBtn = document.getElementById('spin-btn');
+    if (lastSpinDate === today) {
+        spinTag.textContent = 'Bugün Kullanıldı';
+        spinBtn.disabled = true;
+        spinBtn.textContent = 'YARIN TEKRAR GEL';
+    } else {
+        spinTag.textContent = '1 Hak Mevcut!';
+        spinBtn.disabled = false;
+        spinBtn.textContent = 'ÇARKINI ÇEVİR! ⚡';
+    }
+}
+
+function updateActiveHudBar() {
+    let html = `<div class="hud-pill lives-pill">❤️ ${lives}/5</div>`;
+    if (shieldCount > 0) html += `<div class="hud-pill shield-pill">🛡️ ${shieldCount}</div>`;
+    html += `<div class="hud-pill credits-pill">🟡 +${formatNumber(sessionCredits)}</div>`;
+    html += `<div class="hud-pill zone-pill">🗺️ B${currentZone.id}: ${Math.floor(zoneDistance)}/${ZONE_TARGET_DISTANCE}m</div>`;
+    if (comboCount >= 3) html += `<div class="hud-pill" style="border-color:#f97316; color:#f97316;">🔥 ${comboCount}x</div>`;
+    if (warpTimer > 0) html += `<div class="hud-pill" style="border-color:#a855f7; color:#e879f9;">🌀 WARP!</div>`;
+    if (boss) html += `<div class="hud-pill boss-pill">👾 BOSS HP: ${Math.max(0, boss.hp)}/${boss.maxHp}</div>`;
+    activeHudBar.innerHTML = html;
+}
+
+// --- Oyun Başlatma ---
+function startGame() {
+    sound.init();
+    const b = BIRDS_DATA[selectedBirdId] || BIRDS_DATA[0];
+    const w = WASH_DATA[selectedWashId] || WASH_DATA[0];
+    currentZone = ZONES_DATA[selectedZoneId - 1] || ZONES_DATA[0];
+
+    currentState = GAME_STATE.PLAYING;
+    score = 0;
+    sessionCredits = 0;
+    distance = 0;
+    zoneDistance = 0;
+    lives = 5;
+    washReviveUsed = false;
+    shieldCount = (b.ability.shield || 0) + (w.effect.shield || 0);
+    invulnerableTimer = 1.0;
+    warpTimer = 0;
+    laserCharge = 100;
+    comboCount = 0;
+
+    bird.x = Math.min(100, canvas.width * 0.24);
+    bird.y = canvas.height * 0.45;
+    bird.vy = 0;
+    bird.rotation = 0;
+    bird.trail = [];
+    petDrone.x = bird.x - 36;
+    petDrone.y = bird.y - 26;
+
+    pipes = [];
+    collectibles = [];
+    playerLasers = [];
+    particles = [];
+    boss = null;
+    bossProjectiles = [];
+    pipeSpawnTimer = 0;
+
+    scoreDisplay.textContent = '0';
+    scoreDisplay.classList.remove('hidden');
+    laserBtn.classList.remove('hidden');
+    activeHudBar.classList.remove('hidden');
+    startScreen.classList.add('hidden');
+    gameOverScreen.classList.add('hidden');
+
+    updateActiveHudBar();
+    showToast(`🚀 Bölge ${currentZone.id}: ${currentZone.name}`, '#00f3ff');
+}
+
+function flapBird() {
+    if (currentState !== GAME_STATE.PLAYING && currentState !== GAME_STATE.BOSS) return;
+    const w = WASH_DATA[selectedWashId] || WASH_DATA[0];
+    const jumpMult = w.effect.jumpBoost || 1.0;
+    bird.vy = -370 * jumpMult;
+    bird.wingPhase = 1.0;
+    sound.playJump();
+    spawnParticles(bird.x - 10, bird.y + 6, '#00f3ff', 6);
+}
+
+function fireSuperLaser() {
+    if (currentState !== GAME_STATE.PLAYING && currentState !== GAME_STATE.BOSS) return;
+    if (laserCharge < 100) {
+        showToast(`⚡ Lazer Şarj Oluyor: %${Math.floor(laserCharge)}`, '#ff00ff');
+        return;
+    }
+    laserCharge = 0;
+    sound.playLaser();
+    screenShake = 8;
+    playerLasers.push({ x: bird.x + 20, y: bird.y, w: canvas.width, h: 14, life: 0.28, color: '#00f3ff' });
+    updateMissionProgress('laser', 1);
+
+    pipes.forEach(p => {
+        if (!p.destroyed && p.x > bird.x) {
+            p.destroyed = true;
+            spawnParticles(p.x + 25, p.gapY, '#ff007f', 18);
+            addScore(1);
+        }
+    });
+
+    if (boss) {
+        damageBoss(25);
+    }
+}
+
+function addScore(basePoints = 1) {
+    const b = BIRDS_DATA[selectedBirdId] || BIRDS_DATA[0];
+    const w = WASH_DATA[selectedWashId] || WASH_DATA[0];
+    const mult = b.ability.mult || 1;
+    const bonus = w.effect.scoreBonus || 0;
+    comboCount++;
+    const comboMult = comboCount >= 10 ? 2 : 1;
+    const totalAdd = Math.max(1, Math.round((basePoints + bonus) * mult * comboMult));
+    score += totalAdd;
+    scoreDisplay.textContent = score;
+    scoreDisplay.classList.add('score-pop');
+    setTimeout(() => scoreDisplay.classList.remove('score-pop'), 110);
+    updateMissionProgress('score', totalAdd);
+}
+
+function spawnParticles(x, y, color, count = 12) {
+    for (let i = 0; i < count; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 50 + Math.random() * 190;
+        particles.push({
+            x, y,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed,
+            life: 0.4 + Math.random() * 0.35,
+            maxLife: 0.75,
+            color,
+            size: 2 + Math.random() * 3.5
+        });
+    }
+}
+
+// --- Hasar ve Wash 5 Can Diriltme Sistemi ---
+function handlePlayerHit(fromGround = false) {
+    if (invulnerableTimer > 0 || warpTimer > 0) return;
+
+    if (fromGround) {
+        bird.y = canvas.height - 95;
+        bird.vy = -340;
+    }
+
+    if (shieldCount > 0) {
+        shieldCount--;
+        invulnerableTimer = 1.4;
+        screenShake = 10;
+        sound.playShieldHit();
+        spawnParticles(bird.x, bird.y, '#38bdf8', 22);
+        showToast('🛡️ Kalkan Darbeyi Engelledi!', '#38bdf8');
+        updateActiveHudBar();
+        return;
+    }
+
+    lives--;
+    comboCount = 0;
+    screenShake = 14;
+
+    if (lives > 0) {
+        invulnerableTimer = 1.6;
+        sound.playShieldHit();
+        spawnParticles(bird.x, bird.y, '#ef4444', 22);
+        showToast(`💔 1 Can Gitti! Kalan Can: ${lives}/5`, '#ef4444');
+        updateActiveHudBar();
+        return;
+    }
+
+    if (!washReviveUsed) {
+        washReviveUsed = true;
+        lives = 5;
+        invulnerableTimer = 2.6;
+        bird.y = canvas.height * 0.45;
+        bird.vy = -260;
+        sound.playRevive();
+        const activeWash = WASH_DATA[selectedWashId] || WASH_DATA[0];
+        spawnParticles(bird.x, bird.y, activeWash.color, 40);
+        showToast(`🫧 ${activeWash.name} DEVREDE! +5 CAN VERİLDİ!`, '#ff00ff');
+        updateActiveHudBar();
+        return;
+    }
+
+    triggerGameOver();
+}
+
+function triggerGameOver() {
+    if (currentState === GAME_STATE.GAMEOVER) return;
+    currentState = GAME_STATE.GAMEOVER;
+    sound.playCrash();
+
+    credits += sessionCredits;
+    saveGameData();
+
+    scoreDisplay.classList.add('hidden');
+    laserBtn.classList.add('hidden');
+    activeHudBar.classList.add('hidden');
+
+    finalScoreEl.textContent = score;
+    finalDistanceEl.textContent = `${formatNumber(Math.floor(distance))}m`;
+    finalCreditsEl.textContent = `+${formatNumber(sessionCredits)}`;
+    medalDisplay.textContent = `Ulaşılan Bölge: ${currentZone.id} - ${currentZone.name}`;
+    gameOverScreen.classList.remove('hidden');
+    updateLoadoutUI();
+}
+
+// --- Bölge Sonu Boss Savaş Sistemi ---
+function spawnZoneBoss() {
+    currentState = GAME_STATE.BOSS;
+    pipes = [];
+    boss = {
+        x: canvas.width - 85,
+        y: canvas.height * 0.42,
+        targetY: canvas.height * 0.42,
+        radius: 46,
+        hp: currentZone.bossMaxHp,
+        maxHp: currentZone.bossMaxHp,
+        attackTimer: 1.4,
+        phase: 0
+    };
+    bossProjectiles = [];
+    showToast(`⚠️ BÖLGE ${currentZone.id} BOSSU: ${currentZone.bossName}!`, '#ff007f');
+    updateActiveHudBar();
+}
+
+function damageBoss(dmg) {
+    if (!boss) return;
+    boss.hp -= dmg;
+    spawnParticles(boss.x, boss.y, '#ff007f', 12);
+    updateActiveHudBar();
+
+    if (boss.hp <= 0) {
+        const defeatedZoneId = currentZone.id;
+        spawnParticles(boss.x, boss.y, '#facc15', 55);
+        sound.playRevive();
+        updateMissionProgress('boss', 1);
+
+        if (defeatedZoneId === 100) {
+            credits += 1000000000;
+            saveGameData();
+            showToast('👑 100. BÖLGE ANA BOSS YENİLDİ! +1.000.000.000 KREDİ!', '#facc15');
+        } else {
+            const bonusCred = defeatedZoneId * 250;
+            sessionCredits += bonusCred;
+            if (defeatedZoneId + 1 > unlockedZone) {
+                unlockedZone = Math.min(100, defeatedZoneId + 1);
+            }
+            selectedZoneId = Math.min(100, defeatedZoneId + 1);
+            currentZone = ZONES_DATA[selectedZoneId - 1];
+            zoneDistance = 0;
+            saveGameData();
+            showToast(`🎉 BOSS YENİLDİ! Yeni Bölge ${currentZone.id}: ${currentZone.name}`, '#22c55e');
+        }
+
+        boss = null;
+        bossProjectiles = [];
+        currentState = GAME_STATE.PLAYING;
+        updateActiveHudBar();
+    }
+}
+
+// --- Sürpriz ? Kutusu Ödülleri (%3 İhtimalle Çıkan) ---
+function openMysteryBox() {
+    updateMissionProgress('mystery', 1);
+    const roll = Math.random();
+    if (roll < 0.25) {
+        shieldCount += 2;
+        showToast('🎁 ? KUTUSU: +2 SİBER KALKAN!', '#38bdf8');
+    } else if (roll < 0.50) {
+        lives = Math.min(5, lives + 2);
+        showToast('🎁 ? KUTUSU: +2 CAN YENİLENDİ!', '#ef4444');
+    } else if (roll < 0.72) {
+        sessionCredits += 350;
+        showToast('🎁 ? KUTUSU: +350 NEON KREDİ!', '#eab308');
+    } else if (roll < 0.90) {
+        warpTimer = 4.5;
+        showToast('🎁 ? KUTUSU: HİPER WARP HIZI!', '#a855f7');
+    } else {
+        const locked = BIRDS_DATA.filter(b => !ownedBirds.includes(b.id));
+        if (locked.length > 0) {
+            const won = locked[Math.floor(Math.random() * locked.length)];
+            ownedBirds.push(won.id);
+            saveGameData();
+            showToast(`🎁 ? KUTUSU EFSANESİ: ${won.name} KAZANDIN!`, '#facc15');
+        } else {
+            sessionCredits += 1000;
+            showToast('🎁 ? KUTUSU: +1.000 KREDİ!', '#facc15');
+        }
+    }
+    updateActiveHudBar();
+}
+
+// --- Güncelleme Döngüsü ---
+function update(dt) {
+    if (screenShake > 0) screenShake = Math.max(0, screenShake - dt * 35);
+    if (invulnerableTimer > 0) invulnerableTimer = Math.max(0, invulnerableTimer - dt);
+    if (warpTimer > 0) warpTimer = Math.max(0, warpTimer - dt);
+
+    weatherParticles.forEach(wp => {
+        wp.y += wp.speed * dt;
+        wp.x -= 35 * dt;
+        if (wp.y > canvas.height) { wp.y = -10; wp.x = Math.random() * canvas.width; }
+        if (wp.x < 0) wp.x = canvas.width;
+    });
+
+    for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
+        p.life -= dt;
+        if (p.life <= 0) particles.splice(i, 1);
+    }
+
+    for (let i = playerLasers.length - 1; i >= 0; i--) {
+        playerLasers[i].life -= dt;
+        if (playerLasers[i].life <= 0) playerLasers.splice(i, 1);
+    }
+
+    if (currentState !== GAME_STATE.PLAYING && currentState !== GAME_STATE.BOSS) {
+        bird.wingPhase += dt * 5;
+        return;
+    }
+
+    const activeBird = BIRDS_DATA[selectedBirdId] || BIRDS_DATA[0];
+    const activeWash = WASH_DATA[selectedWashId] || WASH_DATA[0];
+
+    const chargeRate = activeBird.ability.laserBoost ? 16 : 9;
+    laserCharge = Math.min(100, laserCharge + chargeRate * dt);
+
+    const gravMult = activeBird.ability.grav || 1.0;
+    bird.vy += 1080 * gravMult * dt;
+    bird.y += bird.vy * dt;
+    bird.rotation = Math.max(-0.5, Math.min(1.1, bird.vy / 520));
+    bird.wingPhase += dt * 14;
+
+    bird.trail.push({ x: bird.x, y: bird.y });
+    if (bird.trail.length > 14) bird.trail.shift();
+
+    petDrone.x += (bird.x - 36 - petDrone.x) * 8 * dt;
+    petDrone.y += (bird.y - 28 + Math.sin(performance.now() * 0.006) * 8 - petDrone.y) * 8 * dt;
+    if (boss) {
+        petDrone.shootTimer -= dt;
+        if (petDrone.shootTimer <= 0) {
+            petDrone.shootTimer = 0.7;
+            damageBoss(3);
+            playerLasers.push({ x: petDrone.x + 10, y: petDrone.y, w: boss.x - petDrone.x, h: 4, life: 0.12, color: '#22c55e' });
+        }
+    }
+
+    const groundY = canvas.height - 64;
+    if (bird.y - bird.radius < 0) {
+        bird.y = bird.radius;
+        bird.vy = 0;
+    }
+    if (bird.y + bird.radius >= groundY) {
+        handlePlayerHit(true);
+    }
+
+    const speedMult = warpTimer > 0 ? 2.6 : 1.0;
+    const forwardSpeed = 195 * speedMult;
+    gridOffset = (gridOffset + forwardSpeed * dt) % 40;
+
+    if (currentState === GAME_STATE.PLAYING) {
+        const distStep = 140 * speedMult * dt;
+        distance += distStep;
+        zoneDistance += distStep;
+        updateMissionProgress('distance', distStep);
+
+        if (zoneDistance >= ZONE_TARGET_DISTANCE) {
+            zoneDistance = ZONE_TARGET_DISTANCE;
+            spawnZoneBoss();
+        }
+    }
+
+    if (currentState === GAME_STATE.PLAYING) {
+        pipeSpawnTimer -= dt * speedMult;
+        if (pipeSpawnTimer <= 0) {
+            pipeSpawnTimer = 1.65;
+            const gapSize = 148 + (activeWash.effect.gapBoost || 0);
+            const minGapY = 120;
+            const maxGapY = groundY - 120;
+            const gapY = minGapY + Math.random() * (maxGapY - minGapY);
+
+            pipes.push({
+                x: canvas.width + 30,
+                w: 54,
+                gapY,
+                gapSize,
+                passed: false,
+                destroyed: false
+            });
+
+            const itemRoll = Math.random();
+            if (itemRoll < 0.03) {
+                collectibles.push({ x: canvas.width + 57, y: gapY, type: 'mystery', radius: 16 });
+            } else if (itemRoll < 0.12) {
+                collectibles.push({ x: canvas.width + 57, y: gapY, type: 'portal', radius: 18 });
+            } else if (itemRoll < 0.30 && lives < 5) {
+                collectibles.push({ x: canvas.width + 57, y: gapY, type: 'heart', radius: 14 });
+            } else {
+                collectibles.push({ x: canvas.width + 57, y: gapY, type: 'credit', radius: 13 });
+            }
+        }
+    }
+
+    const hitRadius = bird.radius * (activeBird.ability.scale || 1.0) * 0.85;
+    for (let i = pipes.length - 1; i >= 0; i--) {
+        const p = pipes[i];
+        p.x -= forwardSpeed * dt;
+
+        if (!p.passed && !p.destroyed && p.x + p.w < bird.x) {
+            p.passed = true;
+            sound.playScore();
+            addScore(1);
+        }
+
+        if (!p.destroyed && invulnerableTimer <= 0 && warpTimer <= 0) {
+            const inX = bird.x + hitRadius > p.x && bird.x - hitRadius < p.x + p.w;
+            const inGap = bird.y - hitRadius > p.gapY - p.gapSize / 2 && bird.y + hitRadius < p.gapY + p.gapSize / 2;
+            if (inX && !inGap) {
+                p.destroyed = true;
+                spawnParticles(p.x + p.w / 2, bird.y, currentZone.pipeColor, 16);
+                handlePlayerHit(false);
+            }
+        }
+
+        if (p.x + p.w < -60) pipes.splice(i, 1);
+    }
+
+    const magnetRange = (activeBird.ability.magnet || 45) + 35;
+    for (let i = collectibles.length - 1; i >= 0; i--) {
+        const c = collectibles[i];
+        c.x -= forwardSpeed * dt;
+
+        const dx = bird.x - c.x;
+        const dy = bird.y - c.y;
+        const dist = Math.hypot(dx, dy);
+
+        if (dist < magnetRange) {
+            c.x += (dx / (dist || 1)) * 280 * dt;
+            c.y += (dy / (dist || 1)) * 280 * dt;
+        }
+
+        if (dist < bird.radius + c.radius + 6) {
+            if (c.type === 'credit') {
+                const bonus = (activeWash.effect.creditBonus || 0) + Math.ceil(currentZone.id * 0.5);
+                sessionCredits += bonus;
+                sound.playCoin();
+                spawnParticles(c.x, c.y, '#eab308', 8);
+                updateMissionProgress('credit', 1);
+            } else if (c.type === 'heart') {
+                lives = Math.min(5, lives + 1);
+                sound.playHeart();
+                spawnParticles(c.x, c.y, '#ef4444', 12);
+                showToast('❤️ +1 Can Yenilendi!', '#ef4444');
+                updateMissionProgress('heart', 1);
+            } else if (c.type === 'mystery') {
+                sound.playRevive();
+                spawnParticles(c.x, c.y, '#facc15', 22);
+                openMysteryBox();
+            } else if (c.type === 'portal') {
+                warpTimer = 3.5;
+                sound.playWarp();
+                spawnParticles(c.x, c.y, '#a855f7', 24);
+                showToast('🌀 KUANTUM SOLUCAN DELİĞİ: WARP HIZI!', '#e879f9');
+            }
+            collectibles.splice(i, 1);
+            updateActiveHudBar();
+            continue;
+        }
+
+        if (c.x < -50) collectibles.splice(i, 1);
+    }
+
+    if (boss) {
+        boss.phase += dt * 2.5;
+        boss.y = canvas.height * 0.4 + Math.sin(boss.phase) * (canvas.height * 0.24);
+        boss.attackTimer -= dt;
+
+        if (boss.attackTimer <= 0) {
+            boss.attackTimer = Math.max(0.85, 1.8 - currentZone.id * 0.008);
+            const angle = Math.atan2(bird.y - boss.y, bird.x - boss.x);
+            bossProjectiles.push({
+                x: boss.x - 30,
+                y: boss.y,
+                vx: Math.cos(angle) * 260,
+                vy: Math.sin(angle) * 260,
+                radius: 9
+            });
+            sound.playLaser();
+        }
+
+        if (Math.hypot(bird.x - boss.x, bird.y - boss.y) < bird.radius + boss.radius) {
+            handlePlayerHit(false);
+        }
+    }
+
+    for (let i = bossProjectiles.length - 1; i >= 0; i--) {
+        const bp = bossProjectiles[i];
+        bp.x += bp.vx * dt;
+        bp.y += bp.vy * dt;
+
+        if (Math.hypot(bird.x - bp.x, bird.y - bp.y) < hitRadius + bp.radius) {
+            bossProjectiles.splice(i, 1);
+            handlePlayerHit(false);
+            continue;
+        }
+
+        if (bp.x < -30 || bp.y < -30 || bp.y > canvas.height + 30) {
+            bossProjectiles.splice(i, 1);
+        }
+    }
+
+    updateActiveHudBar();
+}
+
+// --- Çizim Döngüsü ---
+function draw() {
+    ctx.save();
+    if (screenShake > 0) {
+        ctx.translate((Math.random() - 0.5) * screenShake, (Math.random() - 0.5) * screenShake);
+    }
+
+    const skyGrad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+    skyGrad.addColorStop(0, currentZone.skyTop);
+    skyGrad.addColorStop(1, currentZone.skyBottom);
+    ctx.fillStyle = skyGrad;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    const sunY = canvas.height * 0.44;
+    ctx.fillStyle = currentZone.sunColor;
+    ctx.beginPath();
+    ctx.arc(canvas.width * 0.5, sunY, 78, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = currentZone.skyBottom;
+    for (let sy = sunY + 10; sy < sunY + 80; sy += 14) {
+        ctx.fillRect(canvas.width * 0.5 - 85, sy, 170, 4);
+    }
+
+    ctx.fillStyle = 'rgba(8, 10, 26, 0.82)';
+    const groundY = canvas.height - 64;
+    bgBuildings.forEach(b => {
+        ctx.fillRect(b.x, groundY - b.h, b.w, b.h);
+        ctx.strokeStyle = currentZone.gridColor;
+        ctx.lineWidth = 1;
+        ctx.strokeRect(b.x, groundY - b.h, b.w, b.h);
+    });
+
+    weatherParticles.forEach(wp => {
+        ctx.fillStyle = currentZone.sunColor;
+        ctx.globalAlpha = 0.45;
+        if (currentZone.weather === 'matrix') {
+            ctx.font = '11px Orbitron';
+            ctx.fillText(wp.char, wp.x, wp.y);
+        } else if (currentZone.weather === 'rain') {
+            ctx.fillRect(wp.x, wp.y, 1.5, 10);
+        } else {
+            ctx.beginPath();
+            ctx.arc(wp.x, wp.y, wp.size, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+    });
+
+    pipes.forEach(p => {
+        if (p.destroyed) return;
+        const topH = p.gapY - p.gapSize / 2;
+        const botY = p.gapY + p.gapSize / 2;
+        const botH = groundY - botY;
+
+        ctx.fillStyle = 'rgba(10, 12, 32, 0.92)';
+        ctx.strokeStyle = currentZone.pipeColor;
+        ctx.lineWidth = 3;
+
+        ctx.fillRect(p.x, 0, p.w, topH);
+        ctx.strokeRect(p.x, 0, p.w, topH);
+        ctx.fillRect(p.x - 4, topH - 18, p.w + 8, 18);
+        ctx.strokeRect(p.x - 4, topH - 18, p.w + 8, 18);
+
+        ctx.fillRect(p.x, botY, p.w, botH);
+        ctx.strokeRect(p.x, botY, p.w, botH);
+        ctx.fillRect(p.x - 4, botY, p.w + 8, 18);
+        ctx.strokeRect(p.x - 4, botY, p.w + 8, 18);
+    });
+
+    collectibles.forEach(c => {
+        ctx.save();
+        ctx.translate(c.x, c.y);
+        if (c.type === 'credit') {
+            ctx.fillStyle = '#eab308';
+            ctx.beginPath();
+            ctx.arc(0, 0, c.radius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#050510';
+            ctx.font = 'bold 13px Orbitron';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('₵', 0, 1);
+        } else if (c.type === 'heart') {
+            ctx.font = '22px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('❤️', 0, 0);
+        } else if (c.type === 'mystery') {
+            ctx.fillStyle = '#a855f7';
+            ctx.strokeStyle = '#facc15';
+            ctx.lineWidth = 2.5;
+            ctx.fillRect(-14, -14, 28, 28);
+            ctx.strokeRect(-14, -14, 28, 28);
+            ctx.fillStyle = '#facc15';
+            ctx.font = 'bold 18px Orbitron';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('?', 0, 1);
+        } else if (c.type === 'portal') {
+            ctx.strokeStyle = '#e879f9';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.arc(0, 0, c.radius, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.fillStyle = 'rgba(168, 85, 247, 0.45)';
+            ctx.fill();
+        }
+        ctx.restore();
+    });
+
+    ctx.fillStyle = '#060614';
+    ctx.fillRect(0, groundY, canvas.width, 64);
+    ctx.strokeStyle = '#00f3ff';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(0, groundY);
+    ctx.lineTo(canvas.width, groundY);
+    ctx.stroke();
+
+    ctx.strokeStyle = currentZone.gridColor;
+    ctx.lineWidth = 1.5;
+    for (let gx = -gridOffset; gx < canvas.width + 40; gx += 40) {
+        ctx.beginPath();
+        ctx.moveTo(gx, groundY);
+        ctx.lineTo(gx - 24, canvas.height);
+        ctx.stroke();
+    }
+
+    if (boss) {
+        ctx.save();
+        ctx.translate(boss.x, boss.y);
+
+        ctx.rotate(performance.now() * 0.003);
+        ctx.strokeStyle = '#ff007f';
+        ctx.lineWidth = 4;
+        ctx.strokeRect(-boss.radius, -boss.radius, boss.radius * 2, boss.radius * 2);
+        ctx.rotate(-performance.now() * 0.006);
+        ctx.strokeStyle = '#00f3ff';
+        ctx.strokeRect(-boss.radius * 0.78, -boss.radius * 0.78, boss.radius * 1.56, boss.radius * 1.56);
+
+        ctx.fillStyle = '#14082e';
+        ctx.beginPath();
+        ctx.arc(0, 0, boss.radius * 0.65, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#facc15';
+        ctx.beginPath();
+        ctx.arc(-8, 0, 10, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+    }
+
+    bossProjectiles.forEach(bp => {
+        ctx.fillStyle = '#ff007f';
+        ctx.beginPath();
+        ctx.arc(bp.x, bp.y, bp.radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(bp.x, bp.y, bp.radius * 0.45, 0, Math.PI * 2);
+        ctx.fill();
+    });
+
+    playerLasers.forEach(l => {
+        ctx.fillStyle = l.color;
+        ctx.fillRect(l.x, l.y - l.h / 2, l.w, l.h);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(l.x, l.y - l.h / 4, l.w, l.h / 2);
+    });
+
+    ctx.save();
+    ctx.translate(petDrone.x, petDrone.y);
+    ctx.fillStyle = '#22c55e';
+    ctx.beginPath();
+    ctx.arc(0, 0, 8, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.restore();
+
+    const activeBird = BIRDS_DATA[selectedBirdId] || BIRDS_DATA[0];
+    bird.trail.forEach((t, idx) => {
+        ctx.fillStyle = activeBird.color;
+        ctx.globalAlpha = (idx / bird.trail.length) * 0.35;
+        ctx.beginPath();
+        ctx.arc(t.x, t.y, bird.radius * 0.6, 0, Math.PI * 2);
+        ctx.fill();
+    });
+    ctx.globalAlpha = 1;
+
+    ctx.save();
+    ctx.translate(bird.x, bird.y);
+    ctx.rotate(bird.rotation);
+
+    if (invulnerableTimer > 0 && Math.floor(performance.now() / 80) % 2 === 0) {
+        ctx.globalAlpha = 0.45;
+    }
+
+    const scale = activeBird.ability.scale || 1.0;
+    ctx.scale(scale, scale);
+
+    ctx.fillStyle = activeBird.color;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 19, 14, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    const wingY = Math.sin(bird.wingPhase) * 6;
+    ctx.fillStyle = activeBird.accent;
+    ctx.beginPath();
+    ctx.ellipse(-4, wingY, 10, 6, -0.3, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#facc15';
+    ctx.beginPath();
+    ctx.moveTo(16, -4);
+    ctx.lineTo(26, 1);
+    ctx.lineTo(16, 6);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.fillStyle = '#050510';
+    ctx.fillRect(5, -7, 9, 5);
+    ctx.fillStyle = '#00f3ff';
+    ctx.fillRect(8, -6, 5, 3);
+
+    if (shieldCount > 0 || warpTimer > 0) {
+        ctx.strokeStyle = warpTimer > 0 ? '#e879f9' : '#38bdf8';
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.arc(0, 0, 24, 0, Math.PI * 2);
+        ctx.stroke();
+    }
+
+    ctx.restore();
+
+    particles.forEach(p => {
+        ctx.fillStyle = p.color;
+        ctx.globalAlpha = Math.max(0, p.life / p.maxLife);
+        ctx.fillRect(p.x, p.y, p.size, p.size);
+    });
+    ctx.globalAlpha = 1;
+
+    ctx.restore();
+}
+
+let lastTimestamp = performance.now();
+function gameLoop(now) {
+    const dt = Math.min(0.05, (now - lastTimestamp) / 1000);
+    lastTimestamp = now;
+    update(dt);
+    draw();
+    requestAnimationFrame(gameLoop);
+}
+
+// --- Mağazalar ve Modal Kontrolleri ---
+let birdTabMode = 'ALL';
+let washTabMode = 'ALL';
+
+function renderBirdsMarket() {
+    const grid = document.getElementById('birds-grid');
+    const search = document.getElementById('bird-search').value.toLowerCase();
+    const rarity = document.getElementById('bird-filter').value;
+    document.getElementById('owned-birds-count').textContent = ownedBirds.length;
+
+    grid.innerHTML = '';
+    BIRDS_DATA.forEach(b => {
+        const isOwned = ownedBirds.includes(b.id);
+        if (birdTabMode === 'OWNED' && !isOwned) return;
+        if (rarity !== 'ALL' && b.rarity !== rarity) return;
+        if (search && !b.name.toLowerCase().includes(search)) return;
+
+        const card = document.createElement('div');
+        card.className = `item-card ${selectedBirdId === b.id ? 'selected' : ''}`;
+        card.innerHTML = `
+            ${isOwned ? `<div class="status-ribbon">${selectedBirdId === b.id ? 'SEÇİLİ' : 'SAHİP'}</div>` : ''}
+            <span class="rarity-tag" style="background:${b.color}22; color:${b.color}; border:1px solid ${b.color};">${b.rarity}</span>
+            <div style="font-size:1.7rem; margin:2px 0;">🦅</div>
+            <div class="item-name">${b.name}</div>
+            <div class="item-ability">${b.ability.label}</div>
+            <div class="price-tag">${isOwned ? 'AÇIK' : `🟡 ${formatNumber(b.price)}`}</div>
+        `;
+
+        card.addEventListener('click', () => {
+            if (isOwned) {
+                selectedBirdId = b.id;
+                saveGameData();
+                updateLoadoutUI();
+                renderBirdsMarket();
+                showToast(`🦅 ${b.name} seçildi!`, '#00f3ff');
+            } else if (credits >= b.price) {
+                credits -= b.price;
+                ownedBirds.push(b.id);
+                selectedBirdId = b.id;
+                saveGameData();
+                updateLoadoutUI();
+                renderBirdsMarket();
+                sound.playRevive();
+                showToast(`🎉 ${b.name} satın alındı!`, '#22c55e');
+            } else {
+                showToast('❌ Yetersiz Neon Kredi!', '#ef4444');
+            }
+        });
+
+        grid.appendChild(card);
+    });
+}
+
+function renderWashMarket() {
+    const grid = document.getElementById('wash-grid');
+    const search = document.getElementById('wash-search').value.toLowerCase();
+    const type = document.getElementById('wash-filter').value;
+    document.getElementById('owned-wash-count').textContent = ownedWash.length;
+
+    grid.innerHTML = '';
+    WASH_DATA.forEach(w => {
+        const isOwned = ownedWash.includes(w.id);
+        if (washTabMode === 'OWNED' && !isOwned) return;
+        if (type !== 'ALL' && w.type !== type) return;
+        if (search && !w.name.toLowerCase().includes(search)) return;
+
+        const card = document.createElement('div');
+        card.className = `item-card ${selectedWashId === w.id ? 'selected-wash' : ''}`;
+        card.innerHTML = `
+            ${isOwned ? `<div class="status-ribbon" style="background:#ff00ff;">${selectedWashId === w.id ? 'SEÇİLİ' : 'SAHİP'}</div>` : ''}
+            <div style="font-size:1.7rem; margin:2px 0;">🫧</div>
+            <div class="item-name">${w.name}</div>
+            <div class="item-ability wash-ability">${w.effect.label}</div>
+            <div style="font-size:0.65rem; color:#94a3b8; margin-top:2px;">+5 Can Yenileme Aktif</div>
+            <div class="price-tag">${isOwned ? 'AÇIK' : `🟡 ${formatNumber(w.price)}`}</div>
+        `;
+
+        card.addEventListener('click', () => {
+            if (isOwned) {
+                selectedWashId = w.id;
+                saveGameData();
+                updateLoadoutUI();
+                renderWashMarket();
+                showToast(`🫧 ${w.name} seçildi!`, '#ff00ff');
+            } else if (credits >= w.price) {
+                credits -= w.price;
+                ownedWash.push(w.id);
+                selectedWashId = w.id;
+                saveGameData();
+                updateLoadoutUI();
+                renderWashMarket();
+                sound.playRevive();
+                showToast(`🎉 ${w.name} satın alındı!`, '#22c55e');
+            } else {
+                showToast('❌ Yetersiz Neon Kredi!', '#ef4444');
+            }
+        });
+
+        grid.appendChild(card);
+    });
+}
+
+function renderZonesList() {
+    const list = document.getElementById('zones-list');
+    list.innerHTML = '';
+    ZONES_DATA.forEach(z => {
+        const isUnlocked = z.id <= unlockedZone;
+        const isSelected = z.id === selectedZoneId;
+        const item = document.createElement('div');
+        item.className = 'zone-item';
+        item.style.borderColor = isSelected ? '#facc15' : (isUnlocked ? 'rgba(0,243,255,0.4)' : 'rgba(100,116,139,0.3)');
+        item.innerHTML = `
+            <div class="mission-info">
+                <h4 style="color:${isUnlocked ? '#ffffff' : '#64748b'};">Bölge ${z.id}: ${z.name}</h4>
+                <p>Boss: ${z.bossName} ${z.id === 100 ? '(Ödül: 1.000.000.000 Kredi)' : ''}</p>
+            </div>
+            <button class="btn-claim" ${!isUnlocked ? 'disabled' : ''}>
+                ${isSelected ? 'SEÇİLİ' : (isUnlocked ? 'SEÇ' : '🔒 KİLİTLİ')}
+            </button>
+        `;
+        if (isUnlocked) {
+            item.querySelector('button').addEventListener('click', () => {
+                selectedZoneId = z.id;
+                saveGameData();
+                updateLoadoutUI();
+                renderZonesList();
+                showToast(`🗺️ Bölge ${z.id}: ${z.name} seçildi!`, '#facc15');
+            });
+        }
+        list.appendChild(item);
+    });
+}
+
+function renderMissionsList() {
+    const list = document.getElementById('missions-list');
+    list.innerHTML = '';
+    missions.forEach(m => {
+        const isDone = m.progress >= m.target;
+        const item = document.createElement('div');
+        item.className = 'mission-item';
+        item.innerHTML = `
+            <div class="mission-info">
+                <h4>${m.title} (${Math.floor(m.progress)}/${m.target})</h4>
+                <p>${m.desc} — Ödül: 🟡 ${formatNumber(m.reward)}</p>
+            </div>
+            <button class="btn-claim" ${(!isDone || m.claimed) ? 'disabled' : ''}>
+                ${m.claimed ? 'ALINDI' : (isDone ? 'ÖDÜLÜ AL' : 'DEVAM EDİYOR')}
+            </button>
+        `;
+        if (isDone && !m.claimed) {
+            item.querySelector('button').addEventListener('click', () => {
+                m.claimed = true;
+                credits += m.reward;
+                saveGameData();
+                updateLoadoutUI();
+                renderMissionsList();
+                sound.playRevive();
+                showToast(`🎉 +${formatNumber(m.reward)} Kredi kazanıldı!`, '#22c55e');
+            });
+        }
+        list.appendChild(item);
+    });
+}
+
+// --- Günlük Çark ---
+const WHEEL_SEGMENTS = [
+    { label: '500 Kredi', type: 'credit', val: 500, color: '#0ea5e9' },
+    { label: 'YENİ KUŞ!', type: 'bird', val: 0, color: '#ec4899' },
+    { label: '1.500 Kredi', type: 'credit', val: 1500, color: '#8b5cf6' },
+    { label: '3.000 Kredi', type: 'credit', val: 3000, color: '#eab308' },
+    { label: 'YENİ KUŞ!', type: 'bird', val: 0, color: '#22c55e' },
+    { label: '10.000 Kredi', type: 'credit', val: 10000, color: '#f97316' }
+];
+let wheelAngle = 0;
+let isSpinning = false;
+
+function drawWheel() {
+    const wc = document.getElementById('wheel-canvas');
+    const wctx = wc.getContext('2d');
+    const cx = wc.width / 2;
+    const cy = wc.height / 2;
+    const r = cx - 8;
+    const arc = (Math.PI * 2) / WHEEL_SEGMENTS.length;
+
+    wctx.clearRect(0, 0, wc.width, wc.height);
+    WHEEL_SEGMENTS.forEach((seg, i) => {
+        const angle = wheelAngle + i * arc;
+        wctx.fillStyle = seg.color;
+        wctx.beginPath();
+        wctx.moveTo(cx, cy);
+        wctx.arc(cx, cy, r, angle, angle + arc);
+        wctx.closePath();
+        wctx.fill();
+        wctx.strokeStyle = '#ffffff';
+        wctx.lineWidth = 2;
+        wctx.stroke();
+
+        wctx.save();
+        wctx.translate(cx, cy);
+        wctx.rotate(angle + arc / 2);
+        wctx.fillStyle = '#ffffff';
+        wctx.font = 'bold 13px Orbitron';
+        wctx.textAlign = 'right';
+        wctx.fillText(seg.label, r - 14, 4);
+        wctx.restore();
+    });
+}
+
+function spinDailyWheel() {
+    const today = new Date().toDateString();
+    if (isSpinning || lastSpinDate === today) return;
+
+    isSpinning = true;
+    const spinBtn = document.getElementById('spin-btn');
+    const resultEl = document.getElementById('spin-result');
+    spinBtn.disabled = true;
+    resultEl.textContent = 'Çark dönüyor...';
+
+    const totalRot = Math.PI * 10 + Math.random() * Math.PI * 2;
+    const startAngle = wheelAngle;
+    const duration = 3200;
+    const startTime = performance.now();
+
+    function animateSpin(now) {
+        const t = Math.min(1, (now - startTime) / duration);
+        const easeOut = 1 - Math.pow(1 - t, 3);
+        wheelAngle = startAngle + totalRot * easeOut;
+        drawWheel();
+
+        if (t < 1) {
+            requestAnimationFrame(animateSpin);
+        } else {
+            isSpinning = false;
+            lastSpinDate = today;
+
+            const arc = (Math.PI * 2) / WHEEL_SEGMENTS.length;
+            const norm = ((-Math.PI / 2 - wheelAngle) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
+            const winIdx = Math.floor(norm / arc);
+            const prize = WHEEL_SEGMENTS[winIdx];
+
+            if (prize.type === 'credit') {
+                credits += prize.val;
+                resultEl.textContent = `🎉 TEBRİKLER! +${formatNumber(prize.val)} NEON KREDİ KAZANDIN!`;
+            } else {
+                const locked = BIRDS_DATA.filter(b => !ownedBirds.includes(b.id));
+                if (locked.length > 0) {
+                    const wonBird = locked[Math.floor(Math.random() * locked.length)];
+                    ownedBirds.push(wonBird.id);
+                    resultEl.textContent = `🦅 MUHTEŞEM! "${wonBird.name}" KUŞUNU KAZANDIN!`;
+                } else {
+                    credits += 25000;
+                    resultEl.textContent = `🎉 TÜM KUŞLAR AÇIK! YERİNE +25.000 KREDİ VERİLDİ!`;
+                }
+            }
+
+            sound.playRevive();
+            saveGameData();
+            updateLoadoutUI();
+        }
+    }
+    requestAnimationFrame(animateSpin);
+}
+
+// --- Etkinlikler ---
+const birdsModal = document.getElementById('birds-modal');
+const washModal = document.getElementById('wash-modal');
+const zonesModal = document.getElementById('zones-modal');
+const missionsModal = document.getElementById('missions-modal');
+const wheelModal = document.getElementById('wheel-modal');
+
+document.getElementById('open-birds-btn').addEventListener('click', () => { renderBirdsMarket(); birdsModal.classList.remove('hidden'); });
+document.getElementById('go-birds-btn').addEventListener('click', () => { renderBirdsMarket(); birdsModal.classList.remove('hidden'); });
+document.getElementById('close-birds-modal').addEventListener('click', () => birdsModal.classList.add('hidden'));
+
+document.getElementById('tab-birds-all').addEventListener('click', (e) => {
+    birdTabMode = 'ALL';
+    e.target.classList.add('active');
+    document.getElementById('tab-birds-owned').classList.remove('active');
+    renderBirdsMarket();
+});
+document.getElementById('tab-birds-owned').addEventListener('click', (e) => {
+    birdTabMode = 'OWNED';
+    e.target.classList.add('active');
+    document.getElementById('tab-birds-all').classList.remove('active');
+    renderBirdsMarket();
+});
+document.getElementById('bird-search').addEventListener('input', renderBirdsMarket);
+document.getElementById('bird-filter').addEventListener('change', renderBirdsMarket);
+
+document.getElementById('open-wash-btn').addEventListener('click', () => { renderWashMarket(); washModal.classList.remove('hidden'); });
+document.getElementById('go-wash-btn').addEventListener('click', () => { renderWashMarket(); washModal.classList.remove('hidden'); });
+document.getElementById('close-wash-modal').addEventListener('click', () => washModal.classList.add('hidden'));
+
+document.getElementById('tab-wash-all').addEventListener('click', (e) => {
+    washTabMode = 'ALL';
+    e.target.classList.add('active-wash');
+    document.getElementById('tab-wash-owned').classList.remove('active-wash');
+    renderWashMarket();
+});
+document.getElementById('tab-wash-owned').addEventListener('click', (e) => {
+    washTabMode = 'OWNED';
+    e.target.classList.add('active-wash');
+    document.getElementById('tab-wash-all').classList.remove('active-wash');
+    renderWashMarket();
+});
+document.getElementById('wash-search').addEventListener('input', renderWashMarket);
+document.getElementById('wash-filter').addEventListener('change', renderWashMarket);
+
+document.getElementById('open-zones-btn').addEventListener('click', () => { renderZonesList(); zonesModal.classList.remove('hidden'); });
+document.getElementById('go-zones-btn').addEventListener('click', () => { renderZonesList(); zonesModal.classList.remove('hidden'); });
+document.getElementById('close-zones-modal').addEventListener('click', () => zonesModal.classList.add('hidden'));
+
+document.getElementById('open-missions-btn').addEventListener('click', () => { renderMissionsList(); missionsModal.classList.remove('hidden'); });
+document.getElementById('close-missions-modal').addEventListener('click', () => missionsModal.classList.add('hidden'));
+
+document.getElementById('open-wheel-btn').addEventListener('click', () => {
+    updateLoadoutUI();
+    drawWheel();
+    wheelModal.classList.remove('hidden');
+});
+document.getElementById('close-wheel-modal').addEventListener('click', () => wheelModal.classList.add('hidden'));
+document.getElementById('spin-btn').addEventListener('click', spinDailyWheel);
+
+canvas.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    if (currentState === GAME_STATE.PLAYING || currentState === GAME_STATE.BOSS) {
+        flapBird();
+    }
+});
+
+window.addEventListener('keydown', (e) => {
+    if (e.code === 'KeyF' || e.code === 'Enter') {
+        if (currentState === GAME_STATE.PLAYING || currentState === GAME_STATE.BOSS) {
+            e.preventDefault();
+            fireSuperLaser();
+            return;
+        }
+    }
+    if (e.code === 'Space' || e.code === 'ArrowUp') {
+        e.preventDefault();
+        if (currentState === GAME_STATE.START) startGame();
+        else if (currentState === GAME_STATE.PLAYING || currentState === GAME_STATE.BOSS) flapBird();
+        else if (currentState === GAME_STATE.GAMEOVER && !gameOverScreen.classList.contains('hidden')) startGame();
+    }
+});
+
+playBtn.addEventListener('click', startGame);
+restartBtn.addEventListener('click', startGame);
+soundBtn.addEventListener('click', () => sound.toggleMute());
+laserBtn.addEventListener('click', (e) => { e.stopPropagation(); fireSuperLaser(); });
+
+updateLoadoutUI();
+requestAnimationFrame(gameLoop);
+</script>
+</body>
+</html>
+```eof
