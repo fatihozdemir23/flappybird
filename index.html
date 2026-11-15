@@ -685,7 +685,7 @@
 
         #laser-charge-fill {
             height: 100%;
-            width: 100%;
+            width: 0%;
             background: linear-gradient(90deg, #00f3ff, #ff00ff, #facc15);
             border-radius: 999px;
             transition: width 0.1s linear;
@@ -830,12 +830,112 @@
             border-color: #64748b;
             color: #94a3b8;
         }
+
+        @keyframes badgePulse {
+            0%, 100% { transform: scale(1); filter: drop-shadow(0 0 8px rgba(234, 179, 8, 0.4)); }
+            50% { transform: scale(1.04); filter: drop-shadow(0 0 16px rgba(234, 179, 8, 0.8)); }
+        }
+        .currency-badge {
+            animation: badgePulse 3s infinite ease-in-out;
+        }
+
+        .sound-toast-pill {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(12, 16, 40, 0.92);
+            border: 1.5px solid #00f3ff;
+            color: #00f3ff;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.72rem;
+            padding: 4px 12px;
+            border-radius: 999px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 70;
+        }
+
+        .combo-float-text {
+            position: absolute;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: #facc15;
+            text-shadow: 0 0 12px #facc15, 0 0 25px #ff007f;
+            pointer-events: none;
+            z-index: 80;
+            animation: floatUpFade 1s ease-out forwards;
+        }
+        @keyframes floatUpFade {
+            0% { opacity: 1; transform: translate(-50%, 0) scale(0.8); }
+            50% { transform: translate(-50%, -30px) scale(1.2); }
+            100% { opacity: 0; transform: translate(-50%, -60px) scale(1); }
+        }
+
+        #fps-counter {
+            position: absolute;
+            top: 4px;
+            left: 12px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.65rem;
+            color: rgba(0, 243, 255, 0.7);
+            pointer-events: none;
+            z-index: 12;
+        }
+
+        /* 10 Yeni Eklenen Özellik için Stiller */
+        .profile-stats-card {
+            background: rgba(12, 14, 38, 0.92);
+            border: 1.5px solid #00f3ff;
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .profile-row {
+            display: flex;
+            justify-content: space-between;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.9rem;
+            color: #cbd5e1;
+        }
+        .laser-aim-line {
+            position: absolute;
+            height: 2px;
+            background: rgba(255, 0, 127, 0.6);
+            pointer-events: none;
+            z-index: 8;
+            box-shadow: 0 0 8px #ff007f;
+        }
+        .warp-timer-ring {
+            position: absolute;
+            top: 20px;
+            right: 80px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 3px solid rgba(168, 85, 247, 0.3);
+            border-top-color: #a855f7;
+            animation: spinRing 1s linear infinite;
+            z-index: 12;
+        }
+        @keyframes spinRing {
+            to { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
 
 <div id="game-container">
     <canvas id="gameCanvas"></canvas>
+
+    <div id="fps-counter">FPS: 60</div>
+    <div id="sound-status-pill" class="sound-toast-pill">SES: AÇIK</div>
+    <div id="warp-timer-indicator" class="hidden warp-timer-ring"></div>
 
     <!-- Üst Bilgi Çubuğu -->
     <div id="hud">
@@ -855,8 +955,8 @@
 
     <!-- Altta Lazer Şarj Göstergesi -->
     <div id="laser-charge-bar-container" class="hidden">
-        <div id="laser-charge-fill" style="width: 100%;"></div>
-        <div id="laser-charge-text">LAZER: %100 (L / F / ENTER)</div>
+        <div id="laser-charge-fill"></div>
+        <div id="laser-charge-text">LAZER: %0 / %500 (L / F / ENTER)</div>
     </div>
 
     <!-- Lazer Ateşleme Butonu -->
@@ -918,6 +1018,23 @@
             </button>
         </div>
 
+        <!-- Yeni Eklenen 4 Büyük Özellik İçin Menü Kısayol Tuşları -->
+        <div class="loadout-row" style="margin-top: 4px;">
+            <button id="open-achievements-btn" class="menu-btn" style="border-color:#38bdf8; color:#38bdf8;">
+                <span>🏆 BAŞARIMLAR</span>
+                <span class="btn-sub-tag">Kupa Sistemi</span>
+            </button>
+            <button id="open-skilltree-btn" class="menu-btn" style="border-color:#10b981; color:#10b981;">
+                <span>⚡ YETENEK AĞACI</span>
+                <span class="btn-sub-tag">Kalıcı Geliştirme</span>
+            </button>
+            <!-- Yeni Özellik 7: Profil & İstatistikler Düğmesi -->
+            <button id="open-profile-btn" class="menu-btn" style="border-color:#a855f7; color:#a855f7;">
+                <span>📊 İSTATİSTİK</span>
+                <span class="btn-sub-tag">Oyuncu Profili</span>
+            </button>
+        </div>
+
         <div class="active-combo-box">
             <div class="combo-line">
                 <span style="color:#00f3ff; font-weight:700;">🦅 Kuş Yeteneği:</span>
@@ -929,10 +1046,9 @@
             </div>
         </div>
 
-        <div style="display:flex; gap:10px; align-items:center;">
-            <button id="open-story-btn" class="menu-btn" style="padding:12px 14px; border-color:#facc15; color:#facc15;" title="Giriş Hikayesini İzle">📖 HİKAYE</button>
-            <button id="play-btn" class="btn-primary">BAŞLA</button>
-            <button id="menu-settings-btn" class="menu-btn" style="padding:12px 14px; border-color:#00f3ff; color:#00f3ff;" title="Oyun Ayarları">⚙️ AYARLAR</button>
+        <div style="display:flex; gap:8px; align-items:center; width:100%; max-width:370px; justify-content:center;">
+            <button id="play-btn" class="btn-primary" style="flex:1.4; padding:12px 10px; font-size:1.25rem;">BAŞLA</button>
+            <button id="menu-settings-btn" class="menu-btn" style="padding:10px 12px; border-color:#00f3ff; color:#00f3ff;" title="Oyun Ayarları">⚙️ AYARLAR</button>
         </div>
     </div>
 
@@ -940,6 +1056,8 @@
     <div id="game-over-screen" class="overlay hidden">
         <div class="score-card">
             <div class="card-title">OYUN BİTTİ</div>
+            <!-- Yeni Özellik 10: Son Skor Karşılaştırma Rozeti -->
+            <div id="score-compare-badge" style="font-family:'Orbitron'; font-size:0.75rem; color:#22c55e; margin-bottom:6px; font-weight:800;">EN İYİ SKORA +14 YAKLAŞTUN!</div>
             <div id="medal-display" style="font-size:0.82rem; color:#facc15; margin-bottom:10px; font-weight:700;">Bölge 1</div>
             <div class="stats-row">
                 <div class="stat-box">
@@ -960,7 +1078,8 @@
                 <button id="go-wash-btn" class="menu-btn wash-style">🫧 WASH</button>
                 <button id="go-zones-btn" class="menu-btn zone-style">🗺️ BÖLGE</button>
             </div>
-            <button id="restart-btn" class="btn-primary" style="width:100%;">TEKRAR OYNA</button>
+            <button id="restart-btn" class="btn-primary" style="width:100%; margin-bottom: 8px;">TEKRAR OYNA</button>
+            <button id="quick-restart-btn" class="menu-btn" style="width:100%; border-color:#22c55e; color:#22c55e; padding:8px;">⚡ HIZLI YENİDEN BAŞLA (R)</button>
         </div>
     </div>
 
@@ -1043,6 +1162,42 @@
         </div>
     </div>
 
+    <!-- 🏆 Başarımlar (Achievements) Modalı -->
+    <div id="achievements-modal" class="modal-overlay hidden">
+        <div class="modal-header">
+            <div class="modal-title" style="color:#38bdf8;">🏆 KUPA & BAŞARIM SİSTEMİ</div>
+            <button id="close-achievements-modal" class="modal-close">✕</button>
+        </div>
+        <div id="achievements-list" class="missions-list"></div>
+    </div>
+
+    <!-- ⚡ Yetenek Ağacı (Skill Tree) Modalı -->
+    <div id="skilltree-modal" class="modal-overlay hidden">
+        <div class="modal-header">
+            <div class="modal-title" style="color:#10b981;">⚡ KUŞ YETENEK AĞACI & GELİŞTİRME</div>
+            <button id="close-skilltree-modal" class="modal-close">✕</button>
+        </div>
+        <div id="skilltree-list" class="missions-list"></div>
+    </div>
+
+    <!-- Yeni Özellik 7: İstatistikler & Profil Modalı -->
+    <div id="profile-modal" class="modal-overlay hidden">
+        <div class="modal-header">
+            <div class="modal-title" style="color:#a855f7;">📊 OYUNCU İSTATİSTİKLERİ & PROFİLİ</div>
+            <button id="close-profile-modal" class="modal-close">✕</button>
+        </div>
+        <div class="settings-list" style="padding: 12px;">
+            <div class="profile-stats-card">
+                <div class="profile-row"><span style="color:#00f3ff;">🚀 Toplam Kat Edilen Mesafe:</span> <span id="stat-tot-dist" style="font-family:'Orbitron'; color:#ffffff;">0m</span></div>
+                <div class="profile-row"><span style="color:#ff00ff;">💥 Toplam Patlatılan Boru:</span> <span id="stat-tot-pipes" style="font-family:'Orbitron'; color:#ffffff;">0</span></div>
+                <div class="profile-row"><span style="color:#facc15;">⚡ Toplam Atılan Süper Lazer:</span> <span id="stat-tot-lasers" style="font-family:'Orbitron'; color:#ffffff;">0</span></div>
+                <div class="profile-row"><span style="color:#eab308;">🟡 Toplam Kazanılan Kredi:</span> <span id="stat-tot-credits" style="font-family:'Orbitron'; color:#ffffff;">0</span></div>
+                <div class="profile-row"><span style="color:#22c55e;">👾 Yenilen Toplam Boss:</span> <span id="stat-tot-boss" style="font-family:'Orbitron'; color:#ffffff;">0</span></div>
+            </div>
+            <div style="text-align:center; font-size:0.75rem; color:#94a3b8;">Cyber Flappy Ultimate Veri Merkezi</div>
+        </div>
+    </div>
+
     <!-- 10 Sayfalık Giriş Hikayesi Ekranı -->
     <div id="story-modal" class="overlay hidden" style="z-index: 50; background: rgba(4, 4, 16, 0.94);">
         <div class="story-card">
@@ -1061,7 +1216,7 @@
         </div>
     </div>
 
-    <!-- Ayarlar Modalı -->
+    <!-- Ayarlar Modalı (Hikaye ve Oyun Hakkında düğmeleri burada yer alıyor) -->
     <div id="settings-modal" class="modal-overlay hidden" style="z-index: 45;">
         <div class="modal-header">
             <div class="modal-title">⚙️ SİSTEM AYARLARI</div>
@@ -1094,7 +1249,38 @@
                     <div class="setting-label">📖 Giriş Hikayesi</div>
                     <div class="setting-desc">10 sayfalık siberpunk hikayeyi tekrar oynat</div>
                 </div>
-                <button id="set-replay-story" class="toggle-btn" style="border-color:#facc15; color:#facc15;">İZLE</button>
+                <button id="open-story-btn" class="toggle-btn" style="border-color:#facc15; color:#facc15;">İZLE</button>
+            </div>
+            <div class="setting-row">
+                <div>
+                    <div class="setting-label">ℹ️ Oyun Hakkında</div>
+                    <div class="setting-desc">Versiyon, özellikler ve yapımcı bilgisi</div>
+                </div>
+                <button id="set-open-about" class="toggle-btn" style="border-color:#38bdf8; color:#38bdf8;">BİLGİ</button>
+            </div>
+            <!-- Yeni Eklenen Rozetler Butonu -->
+            <div class="setting-row" style="border-color: rgba(250, 204, 21, 0.5);">
+                <div>
+                    <div class="setting-label" style="color:#facc15;">🎖️ Rozetler & Koleksiyon</div>
+                    <div class="setting-desc">50 özel siber rozet ve nişanı görüntüle & satın al</div>
+                </div>
+                <button id="set-open-badges" class="toggle-btn" style="border-color:#facc15; color:#facc15;">İNCELE</button>
+            </div>
+            <div class="setting-row" style="border-color: rgba(34, 197, 94, 0.5);">
+                <div>
+                    <div class="setting-label" style="color:#22c55e;">📧 İletişim</div>
+                    <div class="setting-desc">
+                        <a href="https://mail.google.com/mail/?view=cm&fs=1&to=saidcan4721@gmail.com&su=Cyber%20Flappy%20Ultimate%20%C4%B0leti%C5%9Fim" target="_blank" rel="noopener noreferrer" style="color:#38bdf8; text-decoration:underline; font-weight:700;">saidcan4721@gmail.com</a>
+                    </div>
+                </div>
+                <a href="https://mail.google.com/mail/?view=cm&fs=1&to=saidcan4721@gmail.com&su=Cyber%20Flappy%20Ultimate%20%C4%B0leti%C5%9Fim" target="_blank" rel="noopener noreferrer" class="toggle-btn" style="border-color:#22c55e; color:#22c55e; text-decoration:none; text-align:center;">GMAİL AÇ</a>
+            </div>
+            <div class="setting-row" style="border-color: rgba(255, 0, 80, 0.55);">
+                <div>
+                    <div class="setting-label" style="color:#ff0050;">📺 YouTube Kanalı</div>
+                    <div class="setting-desc">youtube.com/@msaid47</div>
+                </div>
+                <a href="https://www.youtube.com/@msaid47" target="_blank" rel="noopener noreferrer" class="toggle-btn" style="border-color:#ff0050; color:#ff0050; background:rgba(255,0,80,0.15); text-decoration:none; text-align:center;">KANALI ZİYARET ET</a>
             </div>
             <div class="setting-row" style="border-color: rgba(239, 68, 68, 0.5);">
                 <div>
@@ -1105,11 +1291,47 @@
             </div>
         </div>
     </div>
+
+    <!-- Oyun Hakkında (About) Modalı -->
+    <div id="about-modal" class="modal-overlay hidden" style="z-index: 55;">
+        <div class="modal-header">
+            <div class="modal-title" style="color:#38bdf8;">ℹ️ OYUN HAKKINDA & REHBER</div>
+            <button id="close-about-modal" class="modal-close">✕</button>
+        </div>
+        <div class="settings-list" style="padding: 10px; font-size: 0.88rem; color: #cbd5e1; line-height: 1.5;">
+            <div style="background: rgba(12, 14, 38, 0.95); border: 1.5px solid #00f3ff; border-radius: 12px; padding: 14px; margin-bottom: 10px;">
+                <h3 style="font-family:'Orbitron'; color:#00f3ff; font-size: 0.95rem; margin-bottom: 6px;">🚀 CYBER FLAPPY ULTIMATE v3.5</h3>
+                <p>Neo-Ankara siberpunk evreninde geçen, en gelişmiş Flappy arcade deneyimidir. Omega İmparatoru'na karşı gökyüzünü özgürlüğüne kavuştur!</p>
+            </div>
+            <div style="background: rgba(12, 14, 38, 0.95); border: 1.5px solid #ff00ff; border-radius: 12px; padding: 14px; margin-bottom: 10px;">
+                <h3 style="font-family:'Orbitron'; color:#ff00ff; font-size: 0.95rem; margin-bottom: 6px;">🎮 Temel Özellikler & Kontroller</h3>
+                <ul style="padding-left: 18px; display: flex; flex-direction: column; gap: 4px;">
+                    <li><b>Zıplama:</b> Sol Tık, Dokunma veya <code style="color:#00f3ff;">Boşluk / Ok Yukarı</code></li>
+                    <li><b>Süper Lazer:</b> %500 dolduğunda <code style="color:#ff007f;">L</code>, <code style="color:#ff007f;">F</code>, <code style="color:#ff007f;">Enter</code> tuşları veya sağ alttaki Lazer butonu ile ateşlenir (Normal oyunda boruyu parçalar, Boss savaşında 45 hasar verir).</li>
+                    <li><b>Duraklatma:</b> <code style="color:#facc15;">P</code> veya <code style="color:#facc15;">Esc</code> tuşu.</li>
+                    <li><b>Para & ? Kutusu:</b> Boruların arasında %40 ihtimalle 5 değerinde Neon Kredi, %3 ihtimalle sürpriz ? Kutusu çıkar.</li>
+                    <li><b>Can & Canlandırma:</b> 5 Can sistemi ve 45 Cyber Wash modülüyle acil durumlarda tam can yenileme!</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Yeni Eklenen Rozetler Modalı -->
+    <div id="badges-modal" class="modal-overlay hidden" style="z-index: 55;">
+        <div class="modal-header">
+            <div class="modal-title" style="color:#facc15;">🎖️ SİBER ROZETLER & NİŞANLAR (<span id="owned-badges-count">1</span>/50)</div>
+            <button id="close-badges-modal" class="modal-close">✕</button>
+        </div>
+        <div class="modal-controls" style="margin-bottom: 10px;">
+            <input type="text" id="badge-search" class="search-input" placeholder="Rozet ara...">
+        </div>
+        <div id="badges-grid" class="cards-grid"></div>
+    </div>
 </div>
 
 <script>
 /**
- * Cyber Flappy Ultimate - 110 Kuş, Kalıcı Borular & Duraklatma Menüsü
+ * Cyber Flappy Ultimate - 110 Kuş, 45 Wash, Günlük Çark, Görevler, 100 Bölge & Boss + 50 Rozet Mağazası
  */
 
 const container = document.getElementById('game-container');
@@ -1133,14 +1355,110 @@ const laserChargeFill = document.getElementById('laser-charge-fill');
 const laserChargeContainer = document.getElementById('laser-charge-bar-container');
 const laserChargeText = document.getElementById('laser-charge-text');
 
+// Eksik Fonksiyon Tanımları
+function spawnZoneBoss() {
+    if (boss !== null) return;
+    currentState = GAME_STATE.BOSS;
+    const activeZone = ZONES_DATA[selectedZoneId - 1] || ZONES_DATA[0];
+    boss = {
+        x: canvas.width - 120,
+        y: canvas.height * 0.45,
+        radius: 46,
+        hp: activeZone.bossMaxHp || 200,
+        maxHp: activeZone.bossMaxHp || 200,
+        phase: 0,
+        attackTimer: 1.0
+    };
+    bossProjectiles = [];
+    sound.playWarp();
+    spawnParticles(boss.x, boss.y, '#ff007f', 40);
+    showToast(`👾 BOSS BELİRDİ: ${activeZone.bossName}!`, '#ff007f');
+}
+
+function spawnParticles(x, y, color, count = 15) {
+    if (!gameSettings.particles) return;
+    for (let i = 0; i < count; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 60 + Math.random() * 180;
+        particles.push({
+            x: x,
+            y: y,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed,
+            size: 2 + Math.random() * 3,
+            color: color,
+            life: 0.4 + Math.random() * 0.4,
+            maxLife: 0.8
+        });
+    }
+}
+
+function flapBird() {
+    const activeBird = BIRDS_DATA[selectedBirdId] || BIRDS_DATA[0];
+    const wash = WASH_DATA[selectedWashId] || WASH_DATA[0];
+    const jumpMult = wash.effect.jumpBoost || 1.0;
+    
+    bird.vy = -380 * jumpMult;
+    sound.playJump();
+    spawnParticles(bird.x, bird.y, activeBird.color, 10);
+
+    // Her zıplayışta lazer şarjını tam %10 artır (Max %500)
+    let laserBoostFactor = 1.0;
+    if (activeBird.ability.laserBoost || skillTreeLevels.laserBoost > 0) {
+        laserBoostFactor = 1.25 + (skillTreeLevels.laserBoost * 0.1);
+    }
+    laserCharge = Math.min(500, laserCharge + (10 * laserBoostFactor));
+}
+
 const finalScoreEl = document.getElementById('final-score');
 const finalDistanceEl = document.getElementById('final-distance');
 const finalCreditsEl = document.getElementById('final-credits');
 const medalDisplay = document.getElementById('medal-display');
 
-// --- Yardımcı Fonksiyonlar ---
 function formatNumber(num) {
     return Math.floor(num).toLocaleString('tr-TR');
+}
+
+// Eksik fireBirdBullet Fonksiyonu Tanımı
+function fireBirdBullet() {
+    const activeBird = BIRDS_DATA[selectedBirdId] || BIRDS_DATA[0];
+    const wpn = activeBird.weapon;
+
+    if (wpn.spread && wpn.spread > 1) {
+        for (let i = 0; i < wpn.spread; i++) {
+            const angleOffset = (i - (wpn.spread - 1) / 2) * 0.12;
+            birdBullets.push({
+                x: bird.x + 18,
+                y: bird.y,
+                vx: Math.cos(angleOffset) * wpn.speed,
+                vy: Math.sin(angleOffset) * wpn.speed,
+                dmg: wpn.dmg,
+                color: wpn.color,
+                size: wpn.size,
+                type: wpn.id,
+                homing: wpn.homing || false,
+                wave: wpn.wave || false,
+                spin: wpn.spin || false,
+                age: 0
+            });
+        }
+    } else {
+        birdBullets.push({
+            x: bird.x + 18,
+            y: bird.y,
+            vx: wpn.speed,
+            vy: 0,
+            dmg: wpn.dmg,
+            color: wpn.color,
+            size: wpn.size,
+            type: wpn.id,
+            homing: wpn.homing || false,
+            wave: wpn.wave || false,
+            spin: wpn.spin || false,
+            age: 0
+        });
+    }
+    sound.playLaser();
 }
 
 let toastTimeout = null;
@@ -1155,7 +1473,6 @@ function showToast(msg, color = '#facc15') {
     }, 3000);
 }
 
-// --- Web Audio API Synth Ses Sistemi ---
 class SoundController {
     constructor() {
         this.ctx = null;
@@ -1175,6 +1492,13 @@ class SoundController {
     toggleMute() {
         this.muted = !this.muted;
         soundBtn.textContent = this.muted ? '🔇' : '🔊';
+        
+        const pill = document.getElementById('sound-status-pill');
+        pill.textContent = this.muted ? '🔇 SES Kapatıldı' : '🔊 SES Açıldı';
+        pill.style.borderColor = this.muted ? '#ef4444' : '#00f3ff';
+        pill.style.color = this.muted ? '#ef4444' : '#00f3ff';
+        pill.style.opacity = '1';
+        setTimeout(() => { pill.style.opacity = '0'; }, 1500);
     }
 
     playTone(freq, endFreq, duration, type = 'sawtooth', vol = 0.14) {
@@ -1211,7 +1535,6 @@ class SoundController {
 
 const sound = new SoundController();
 
-// --- 110 Benzersiz Siber Kuş Verisi ---
 const BIRD_PREFIXES = ['Alfa', 'Kuantum', 'Plazma', 'Neon', 'Siber', 'Gölge', 'Kozmik', 'Lazer', 'Vortex', 'Krom', 'Hiper', 'Omega'];
 const BIRD_NAMES = ['Serçe', 'Şahin', 'Kartal', 'Anka', 'Kuzgun', 'Atmaca', 'Baykuş', 'Doğan', 'Kırlangıç'];
 const BIRD_ABILITIES = [
@@ -1223,7 +1546,6 @@ const BIRD_ABILITIES = [
     { id: 'laser', label: 'Hızlı Lazer Şarjı', laserBoost: true }
 ];
 
-// Her kuşa özgü tasarım ve mermi/lazer tipleri
 const BIRD_DESIGNS = ['sleek', 'horned', 'crowned', 'mecha', 'phoenix', 'halo', 'stealth', 'cyberpunk', 'dragon'];
 const BIRD_WEAPONS = [
     { id: 'bolt', name: 'Plazma Oku', rate: 0.32, speed: 640, dmg: 6, color: '#00f3ff', size: 6, spread: 1, laserColor: '#00f3ff' },
@@ -1296,7 +1618,6 @@ BIRDS_DATA.push(
     }
 );
 
-// --- 45 Cyber Wash Modülü Verisi ---
 const WASH_TYPES = [
     { type: 'shield', label: 'Başlangıçta +1 Kalkan', shield: 1 },
     { type: 'score', label: 'Tüm Skorlara +1 Bonus', scoreBonus: 1 },
@@ -1319,7 +1640,6 @@ for (let i = 0; i < 45; i++) {
     });
 }
 
-// --- 100 Özel İsimli Bölge & Dinamik Çevre Temaları ---
 const ZONE_PREFIXES = ['Neo-Ankara', 'Kuantum', 'Siber-İstanbul', 'Plazma', 'Yıldız', 'Karanlık', 'Kristal', 'Hiper', 'Omega', 'Sonsuzluk'];
 const ZONE_SUFFIXES = ['Çatısı', 'Çekirdeği', 'Limanı', 'Vadisi', 'Kulesi', 'Kanyonu', 'Ağı', 'Matrisi', 'Tapınağı', 'Horizonu'];
 const WEATHER_TYPES = ['matrix', 'rain', 'snow', 'sparks', 'stars'];
@@ -1343,7 +1663,6 @@ for (let i = 0; i < 100; i++) {
     });
 }
 
-// --- Varsayılan Günlük Görevler ---
 const DEFAULT_MISSIONS = [
     { id: 1, title: 'Karatay Uçuşu', desc: 'Toplam 5.000m mesafe kat et', type: 'distance', target: 5000, progress: 0, reward: 500, claimed: false },
     { id: 2, title: 'Kredi Avcısı', desc: '100 adet Neon Kredi topla', type: 'credit', target: 100, progress: 0, reward: 800, claimed: false },
@@ -1351,8 +1670,32 @@ const DEFAULT_MISSIONS = [
     { id: 4, title: 'Boss Katili', desc: 'Herhangi bir bölge bossunu yen', type: 'boss', target: 1, progress: 0, reward: 2500, claimed: false }
 ];
 
-// --- Kayıtlı Veriler (LocalStorage) ---
+// Yeni Özellik 1: Başarımlar Verisi
+let achievementsData = JSON.parse(localStorage.getItem('cf_achievements') || JSON.stringify([
+    { id: 'ach_1', title: 'İlk Adım', desc: 'İlk kez oyuna başla', target: 1, progress: 1, claimed: true, reward: 200 },
+    { id: 'ach_2', title: 'Hız Tutkunu', desc: 'Toplam 25.000m mesafe kat et', target: 25000, progress: 0, claimed: false, reward: 2500 },
+    { id: 'ach_3', title: 'Kombo Canavarı', desc: '50x Kombo seviyesine ulaş', target: 50, progress: 0, claimed: false, reward: 5000 },
+    { id: 'ach_4', title: 'İmparator Katili', desc: '10. Bölge Bossunu Alt Et', target: 10, progress: 0, claimed: false, reward: 10000 }
+]));
+
+// Yeni Özellik 4: Kalıcı Yetenek Ağacı Seviyeleri
+let skillTreeLevels = JSON.parse(localStorage.getItem('cf_skilltree') || JSON.stringify({
+    laserBoost: 0, // Max 5 (Her seviye şarjı hızlandırır)
+    extraShield: 0, // Max 3 (Başlangıçta fazladan kalkan)
+    magnetRange: 0  // Max 3 (Mıknatıs çekim alanı bonusu)
+}));
+
+// Yeni Özellik 7: Oyuncu Profil İstatistikleri
+let playerStats = JSON.parse(localStorage.getItem('cf_player_stats') || JSON.stringify({
+    totalDistance: 0,
+    totalPipes: 0,
+    totalLasers: 0,
+    totalCreditsEarned: 0,
+    totalBossKilled: 0
+}));
+
 let credits = parseInt(localStorage.getItem('cf_credits') || '0', 10);
+let highScore = parseInt(localStorage.getItem('cf_highscore') || '0', 10);
 let ownedBirds = JSON.parse(localStorage.getItem('cf_owned_birds') || '[0]');
 let ownedWash = JSON.parse(localStorage.getItem('cf_owned_wash') || '[0]');
 let selectedBirdId = parseInt(localStorage.getItem('cf_sel_bird') || '0', 10);
@@ -1362,15 +1705,47 @@ let selectedZoneId = parseInt(localStorage.getItem('cf_sel_zone') || '1', 10);
 let missions = JSON.parse(localStorage.getItem('cf_missions') || JSON.stringify(DEFAULT_MISSIONS));
 let lastSpinDate = localStorage.getItem('cf_last_spin') || '';
 
+// 50 Adet Satın Alınabilir Siber Rozet Verisi
+const BADGES_DATA = [];
+const BADGE_PREFIXES = ['Alfa', 'Kuantum', 'Plazma', 'Neon', 'Siber', 'Gölge', 'Kozmik', 'Lazer', 'Vortex', 'Krom'];
+const BADGE_ICONS = ['🌟', '⚡', '👾', '🔥', '🛡️', '👑', '💎', '🚀', '🔮', '⚔️', '🦅', '🫧', '🌀', '🎯', '🏆'];
+const BADGE_PERKS = [
+    { type: 'credit', label: '+%10 Kredi Bonusu', mult: 1.1 },
+    { type: 'shield', label: '+1 Başlangıç Kalkanı', shield: 1 },
+    { type: 'laser', label: 'Hızlı Lazer Dolumu', boost: 1.2 },
+    { type: 'score', label: '+%15 Skor Çarpanı', mult: 1.15 },
+    { type: 'magnet', label: 'Genişletilmiş Mıknatıs', range: 30 }
+];
+
+for (let i = 0; i < 50; i++) {
+    const prefix = BADGE_PREFIXES[i % BADGE_PREFIXES.length];
+    const icon = BADGE_ICONS[i % BADGE_ICONS.length];
+    const perk = BADGE_PERKS[i % BADGE_PERKS.length];
+    BADGES_DATA.push({
+        id: i,
+        name: `${icon} ${prefix} Nişanı #${i + 1}`,
+        desc: `Özel Yetenek: ${perk.label}`,
+        perk: perk,
+        price: i === 0 ? 0 : 500 + i * 350,
+        color: i === 0 ? '#facc15' : `hsl(${(i * 35) % 360}, 90%, 60%)`
+    });
+}
+let ownedBadges = JSON.parse(localStorage.getItem('cf_owned_badges') || '[0]');
+
 function saveGameData() {
     localStorage.setItem('cf_credits', credits.toString());
+    localStorage.setItem('cf_highscore', highScore.toString());
     localStorage.setItem('cf_owned_birds', JSON.stringify(ownedBirds));
     localStorage.setItem('cf_owned_wash', JSON.stringify(ownedWash));
+    localStorage.setItem('cf_owned_badges', JSON.stringify(ownedBadges));
     localStorage.setItem('cf_sel_bird', selectedBirdId.toString());
     localStorage.setItem('cf_sel_wash', selectedWashId.toString());
     localStorage.setItem('cf_unlocked_zone', unlockedZone.toString());
     localStorage.setItem('cf_sel_zone', selectedZoneId.toString());
     localStorage.setItem('cf_missions', JSON.stringify(missions));
+    localStorage.setItem('cf_achievements', JSON.stringify(achievementsData));
+    localStorage.setItem('cf_skilltree', JSON.stringify(skillTreeLevels));
+    localStorage.setItem('cf_player_stats', JSON.stringify(playerStats));
     localStorage.setItem('cf_last_spin', lastSpinDate);
 }
 
@@ -1382,10 +1757,23 @@ function updateMissionProgress(type, amount = 1) {
             changed = true;
         }
     });
+
+    // Başarımları da güncelle
+    achievementsData.forEach(ach => {
+        if (ach.id === 'ach_2' && type === 'distance' && !ach.claimed) {
+            ach.progress = Math.min(ach.target, ach.progress + amount);
+        }
+        if (ach.id === 'ach_3' && type === 'score' && comboCount >= ach.target && !ach.claimed) {
+            ach.progress = ach.target;
+        }
+        if (ach.id === 'ach_4' && type === 'boss' && !ach.claimed) {
+            ach.progress = Math.min(ach.target, ach.progress + amount);
+        }
+    });
+
     if (changed) saveGameData();
 }
 
-// --- Oyun Durumları & Değişkenler ---
 const GAME_STATE = { START: 'START', PLAYING: 'PLAYING', GAMEOVER: 'GAMEOVER', BOSS: 'BOSS', PAUSED: 'PAUSED' };
 let currentState = GAME_STATE.START;
 let stateBeforePause = GAME_STATE.PLAYING;
@@ -1401,13 +1789,12 @@ let washReviveUsed = false;
 let shieldCount = 0;
 let invulnerableTimer = 0;
 let warpTimer = 0;
-let laserCharge = 100;
+let laserCharge = 0; // Oyun başladığında %0 olur
 let comboCount = 0;
 let screenShake = 0;
 
 let currentZone = ZONES_DATA[selectedZoneId - 1] || ZONES_DATA[0];
 
-// Fizik & Nesneler
 const bird = { x: 90, y: 300, vy: 0, radius: 16, rotation: 0, wingPhase: 0, trail: [] };
 const petDrone = { x: 55, y: 270, shootTimer: 0 };
 
@@ -1419,14 +1806,13 @@ let birdShootTimer = 0;
 let particles = [];
 let weatherParticles = [];
 let bgBuildings = [];
+let cloudDrift = [];
 let pipeSpawnTimer = 0;
 let gridOffset = 0;
 
-// Boss Nesnesi
 let boss = null;
 let bossProjectiles = [];
 
-// --- Canvas Boyutlandırma ---
 function resizeCanvas() {
     canvas.width = container.clientWidth;
     canvas.height = container.clientHeight;
@@ -1442,6 +1828,17 @@ function initEnvironment() {
             h: 90 + Math.random() * 170
         });
     }
+
+    cloudDrift = [];
+    for (let i = 0; i < 6; i++) {
+        cloudDrift.push({
+            x: Math.random() * canvas.width,
+            y: 40 + Math.random() * (canvas.height * 0.4),
+            w: 70 + Math.random() * 90,
+            speed: 15 + Math.random() * 25
+        });
+    }
+
     weatherParticles = [];
     for (let i = 0; i < 45; i++) {
         weatherParticles.push({
@@ -1457,7 +1854,6 @@ function initEnvironment() {
 window.addEventListener('resize', resizeCanvas);
 resizeCanvas();
 
-// --- Arayüz Güncelleme ---
 function updateLoadoutUI() {
     const b = BIRDS_DATA[selectedBirdId] || BIRDS_DATA[0];
     const w = WASH_DATA[selectedWashId] || WASH_DATA[0];
@@ -1495,7 +1891,6 @@ function updateActiveHudBar() {
     activeHudBar.innerHTML = html;
 }
 
-// --- Oyun Başlatma, Duraklatma ve Ana Sayfaya Dönme ---
 function startGame() {
     sound.init();
     const b = BIRDS_DATA[selectedBirdId] || BIRDS_DATA[0];
@@ -1509,10 +1904,18 @@ function startGame() {
     zoneDistance = 0;
     lives = 5;
     washReviveUsed = false;
-    shieldCount = (b.ability.shield || 0) + (w.effect.shield || 0);
+    
+    // Rozetlerden gelen aktif perk bonuslarını hesapla
+    let badgeShieldBonus = 0;
+    ownedBadges.forEach(badgeId => {
+        const badge = BADGES_DATA[badgeId];
+        if (badge && badge.perk.shield) badgeShieldBonus += badge.perk.shield;
+    });
+
+    shieldCount = (b.ability.shield || 0) + (w.effect.shield || 0) + (skillTreeLevels.extraShield || 0) + badgeShieldBonus;
     invulnerableTimer = 1.0;
     warpTimer = 0;
-    laserCharge = 100;
+    laserCharge = 0;
     comboCount = 0;
 
     bird.x = Math.min(100, canvas.width * 0.24);
@@ -1578,6 +1981,7 @@ function returnToHome() {
     scoreDisplay.classList.add('hidden');
     pauseBtn.classList.add('hidden');
     laserBtn.classList.add('hidden');
+    laserChargeContainer.classList.add('hidden');
     activeHudBar.classList.add('hidden');
     pauseScreen.classList.add('hidden');
     gameOverScreen.classList.add('hidden');
@@ -1587,106 +1991,79 @@ function returnToHome() {
     showToast('🏠 Ana sayfaya dönüldü, kredilerin kaydedildi!', '#00f3ff');
 }
 
-function flapBird() {
-    if (currentState !== GAME_STATE.PLAYING && currentState !== GAME_STATE.BOSS) return;
-    const w = WASH_DATA[selectedWashId] || WASH_DATA[0];
-    const jumpMult = w.effect.jumpBoost || 1.0;
-    bird.vy = -370 * jumpMult;
-    bird.wingPhase = 1.0;
-    
-    // Her zıplamada lazer %5 dolar
-    laserCharge = Math.min(100, laserCharge + 5);
-
-    // Mermiler SADECE Boss savaşında otomatik ateşlenir
-    if (currentState === GAME_STATE.BOSS) {
-        fireBirdBullet();
-    }
-
-    sound.playJump();
-    spawnParticles(bird.x - 10, bird.y + 6, '#00f3ff', 6);
-}
-
-function fireBirdBullet() {
-    const b = BIRDS_DATA[selectedBirdId] || BIRDS_DATA[0];
-    const wp = b.weapon;
-    const angles = wp.spread === 3 ? [-0.18, 0, 0.18] : (wp.spread === 2 ? [-0.07, 0.07] : [0]);
-
-    angles.forEach(ang => {
-        birdBullets.push({
-            x: bird.x + 22,
-            y: bird.y + (ang * 30),
-            vx: Math.cos(ang) * wp.speed,
-            vy: Math.sin(ang) * wp.speed,
-            dmg: wp.dmg,
-            color: b.color,
-            accent: b.accent,
-            size: wp.size,
-            type: wp.id,
-            wave: wp.wave || false,
-            homing: wp.homing || false,
-            spin: wp.spin || false,
-            age: 0
-        });
-    });
-}
-
 function fireSuperLaser() {
     if (currentState !== GAME_STATE.PLAYING && currentState !== GAME_STATE.BOSS) return;
-    if (currentState !== GAME_STATE.BOSS) {
-        showToast('⚡ Süper Lazer SADECE Boss Savaşında Kullanılabilir!', '#ff00ff');
-        return;
-    }
     if (laserCharge < 100) {
-        showToast(`⚡ Lazer Şarj Oluyor: %${Math.floor(laserCharge)}`, '#ff00ff');
+        showToast(`⚡ Lazer Henüz Hazır Değil: %${Math.floor(laserCharge)} / %100`, '#ff00ff');
         return;
     }
-    laserCharge = 0;
+    laserCharge = Math.max(0, laserCharge - 100); // Her kullanımda 100% harcar
     sound.playLaser();
     if (gameSettings.shake) screenShake = 8;
     
+    // Profil İstatistiği Güncellemesi (Özellik 7)
+    playerStats.totalLasers++;
+
     const activeBird = BIRDS_DATA[selectedBirdId] || BIRDS_DATA[0];
     const customLaserColor = activeBird.weapon.laserColor || '#00f3ff';
 
     playerLasers.push({ x: bird.x + 20, y: bird.y, w: canvas.width, h: 16, life: 0.3, color: customLaserColor });
     updateMissionProgress('laser', 1);
 
-    if (boss) {
+    if (boss && boss !== null) {
         damageBoss(45);
+    } else {
+        for (let i = 0; i < pipes.length; i++) {
+            const p = pipes[i];
+            if (!p.destroyed && p.x + p.w > bird.x) {
+                p.destroyed = true;
+                playerStats.totalPipes++; // Boru istatistiği
+                spawnParticles(p.x + p.w / 2, bird.y, customLaserColor, 24);
+                addScore(2);
+                showToast('⚡ SÜPER LAZER BORUYU PARÇALADI!', customLaserColor);
+                break;
+            }
+        }
     }
 }
 
-function addScore(basePoints = 1) {
-    const b = BIRDS_DATA[selectedBirdId] || BIRDS_DATA[0];
-    const w = WASH_DATA[selectedWashId] || WASH_DATA[0];
-    const mult = b.ability.mult || 1;
-    const bonus = w.effect.scoreBonus || 0;
-    comboCount++;
-    const comboMult = comboCount >= 10 ? 2 : 1;
-    const totalAdd = Math.max(1, Math.round((basePoints + bonus) * mult * comboMult));
-    score += totalAdd;
+function addScore(points) {
+    const activeBird = BIRDS_DATA[selectedBirdId] || BIRDS_DATA[0];
+    let mult = activeBird.ability.mult || 1.0;
+    
+    ownedBadges.forEach(badgeId => {
+        const badge = BADGES_DATA[badgeId];
+        if (badge && badge.perk.mult && badge.perk.type === 'score') mult *= badge.perk.mult;
+    });
+
+    const add = Math.round(points * mult);
+    score += add;
     scoreDisplay.textContent = score;
     scoreDisplay.classList.add('score-pop');
-    setTimeout(() => scoreDisplay.classList.remove('score-pop'), 110);
-    updateMissionProgress('score', totalAdd);
-}
+    setTimeout(() => scoreDisplay.classList.remove('score-pop'), 120);
 
-function spawnParticles(x, y, color, count = 12) {
-    for (let i = 0; i < count; i++) {
-        const angle = Math.random() * Math.PI * 2;
-        const speed = 50 + Math.random() * 190;
-        particles.push({
-            x, y,
-            vx: Math.cos(angle) * speed,
-            vy: Math.sin(angle) * speed,
-            life: 0.4 + Math.random() * 0.35,
-            maxLife: 0.75,
-            color,
-            size: 2 + Math.random() * 3.5
-        });
+    comboCount++;
+    if (comboCount % 10 === 0) {
+        showToast(`🔥 ${comboCount}x KOMBO! +50 NEON KREDİ KAZANDIN!`, '#f97316');
+        sessionCredits += 50;
+        playerStats.totalCreditsEarned += 50;
+        sound.playRevive();
+
+        // Yeni Özellik 5: Kombo Sayaç Patlama Efekti (Flaşlar)
+        screenShake = 6;
+        spawnParticles(canvas.width / 2, 120, '#f97316', 30);
+
+        const floatEl = document.createElement('div');
+        floatEl.className = 'combo-float-text';
+        floatEl.textContent = `+${comboCount} KOMBO! (+50 🟡)`;
+        floatEl.style.left = `${Math.random() * 60 + 20}%`;
+        floatEl.style.top = `${40 + Math.random() * 20}%`;
+        container.appendChild(floatEl);
+        setTimeout(() => floatEl.remove(), 1000);
     }
+    updateMissionProgress('score', add);
 }
 
-// --- Hasar ve Wash 5 Can Diriltme Sistemi ---
 function handlePlayerHit(fromGround = false) {
     if (invulnerableTimer > 0 || warpTimer > 0) return;
 
@@ -1701,6 +2078,13 @@ function handlePlayerHit(fromGround = false) {
         if (gameSettings.shake) screenShake = 10;
         sound.playShieldHit();
         spawnParticles(bird.x, bird.y, '#38bdf8', 22);
+        
+        // Yeni Özellik 6: Kalkan Kırılma Ekran Darbe Halkası
+        const ring = document.createElement('div');
+        ring.style.cssText = `position:absolute; inset:0; border:4px solid #38bdf8; pointer-events:none; z-index:25; animation:fadeOutRing 0.4s ease-out forwards;`;
+        container.appendChild(ring);
+        setTimeout(() => ring.remove(), 400);
+
         showToast('🛡️ Kalkan Darbeyi Engelledi!', '#38bdf8');
         updateActiveHudBar();
         return;
@@ -1742,6 +2126,23 @@ function triggerGameOver() {
     sound.playCrash();
 
     credits += sessionCredits;
+    playerStats.totalCreditsEarned += sessionCredits;
+
+    // Yeni Özellik 10: Son Skor Karşılaştırma Hesaplama
+    const diff = score - highScore;
+    const compareBadge = document.getElementById('score-compare-badge');
+    if (score > highScore) {
+        highScore = score;
+        compareBadge.textContent = `👑 YENİ REKOR! (+${score} SKOR)`;
+        compareBadge.style.color = '#facc15';
+    } else if (diff >= 0) {
+        compareBadge.textContent = `⭐ EN İYİ SKORUNLA AYNI!`;
+        compareBadge.style.color = '#38bdf8';
+    } else {
+        compareBadge.textContent = `📊 REKORA ${Math.abs(diff)} SKOR KALDI`;
+        compareBadge.style.color = '#ff007f';
+    }
+
     saveGameData();
 
     scoreDisplay.classList.add('hidden');
@@ -1758,27 +2159,8 @@ function triggerGameOver() {
     updateLoadoutUI();
 }
 
-// --- Bölge Sonu Boss Savaş Sistemi ---
-function spawnZoneBoss() {
-    currentState = GAME_STATE.BOSS;
-    pipes = [];
-    boss = {
-        x: canvas.width - 85,
-        y: canvas.height * 0.42,
-        targetY: canvas.height * 0.42,
-        radius: 46,
-        hp: currentZone.bossMaxHp,
-        maxHp: currentZone.bossMaxHp,
-        attackTimer: 1.4,
-        phase: 0
-    };
-    bossProjectiles = [];
-    showToast(`⚠️ BÖLGE ${currentZone.id} BOSSU: ${currentZone.bossName}!`, '#ff007f');
-    updateActiveHudBar();
-}
-
 function damageBoss(dmg) {
-    if (!boss) return;
+    if (!boss || boss === null) return;
     boss.hp -= dmg;
     spawnParticles(boss.x, boss.y, '#ff007f', 12);
     updateActiveHudBar();
@@ -1788,14 +2170,17 @@ function damageBoss(dmg) {
         spawnParticles(boss.x, boss.y, '#facc15', 55);
         sound.playRevive();
         updateMissionProgress('boss', 1);
+        playerStats.totalBossKilled++; // Boss istatistiği
 
         if (defeatedZoneId === 100) {
             credits += 1000000000;
+            playerStats.totalCreditsEarned += 1000000000;
             saveGameData();
             showToast('👑 100. BÖLGE ANA BOSS YENİLDİ! +1.000.000.000 KREDİ!', '#facc15');
         } else {
             const bonusCred = defeatedZoneId * 250;
             sessionCredits += bonusCred;
+            playerStats.totalCreditsEarned += bonusCred;
             if (defeatedZoneId + 1 > unlockedZone) {
                 unlockedZone = Math.min(100, defeatedZoneId + 1);
             }
@@ -1813,42 +2198,59 @@ function damageBoss(dmg) {
     }
 }
 
-// --- Sürpriz ? Kutusu Ödülleri (%3 İhtimalle Çıkan) ---
+// Yeni Özellik 1: Gizemli Kutulardan Çıkan Ödüllerin Zengin Özeti
 function openMysteryBox() {
     updateMissionProgress('mystery', 1);
     const roll = Math.random();
     if (roll < 0.25) {
         shieldCount += 2;
-        showToast('🎁 ? KUTUSU: +2 SİBER KALKAN!', '#38bdf8');
+        showToast('🎁 ŞANSLI KUTU: 🛡️ +2 SİBER KALKAN KAZANDIN!', '#38bdf8');
     } else if (roll < 0.50) {
         lives = Math.min(5, lives + 2);
-        showToast('🎁 ? KUTUSU: +2 CAN YENİLENDİ!', '#ef4444');
+        showToast('🎁 ŞANSLI KUTU: ❤️ +2 CAN YENİLENDİ!', '#ef4444');
     } else if (roll < 0.72) {
         sessionCredits += 350;
-        showToast('🎁 ? KUTUSU: +350 NEON KREDİ!', '#eab308');
+        playerStats.totalCreditsEarned += 350;
+        showToast('🎁 ŞANSLI KUTU: 🟡 +350 NEON KREDİ EKLENDİ!', '#eab308');
     } else if (roll < 0.90) {
         warpTimer = 4.5;
-        showToast('🎁 ? KUTUSU: HİPER WARP HIZI!', '#a855f7');
+        showToast('🎁 ŞANSLI KUTU: 🌀 HİPER WARP HIZI AKTİF!', '#a855f7');
     } else {
         const locked = BIRDS_DATA.filter(b => !ownedBirds.includes(b.id));
         if (locked.length > 0) {
             const won = locked[Math.floor(Math.random() * locked.length)];
             ownedBirds.push(won.id);
             saveGameData();
-            showToast(`🎁 ? KUTUSU EFSANESİ: ${won.name} KAZANDIN!`, '#facc15');
+            showToast(`🎁 ŞANSLI KUTU EFSANESİ: 🦅 "${won.name}" KUŞU AÇILDI!`, '#facc15');
         } else {
             sessionCredits += 1000;
-            showToast('🎁 ? KUTUSU: +1.000 KREDİ!', '#facc15');
+            playerStats.totalCreditsEarned += 1000;
+            showToast('🎁 ŞANSLI KUTU: 🟡 +1.000 KREDİ!', '#facc15');
         }
     }
     updateActiveHudBar();
 }
 
-// --- Güncelleme Döngüsü ---
 function update(dt) {
     if (screenShake > 0) screenShake = Math.max(0, screenShake - dt * 35);
     if (invulnerableTimer > 0) invulnerableTimer = Math.max(0, invulnerableTimer - dt);
-    if (warpTimer > 0) warpTimer = Math.max(0, warpTimer - dt);
+    
+    // Yeni Özellik 9: Solucan Deliği Geri Sayım Çemberi
+    const warpRing = document.getElementById('warp-timer-indicator');
+    if (warpTimer > 0) {
+        warpTimer = Math.max(0, warpTimer - dt);
+        warpRing.classList.remove('hidden');
+    } else {
+        warpRing.classList.add('hidden');
+    }
+
+    cloudDrift.forEach(cd => {
+        cd.x -= cd.speed * dt;
+        if (cd.x + cd.w < 0) {
+            cd.x = canvas.width + 50;
+            cd.y = 40 + Math.random() * (canvas.height * 0.4);
+        }
+    });
 
     weatherParticles.forEach(wp => {
         wp.y += wp.speed * dt;
@@ -1873,17 +2275,18 @@ function update(dt) {
         if (playerLasers[i].life <= 0) playerLasers.splice(i, 1);
     }
 
-    laserChargeFill.style.width = `${laserCharge}%`;
+    const laserPct = Math.min(100, (laserCharge / 500) * 100);
+    laserChargeFill.style.width = `${laserPct}%`;
     if (laserCharge >= 100) {
-        laserChargeText.textContent = 'LAZER HAZIR! (L / F / ENTER)';
+        const stacks = Math.floor(laserCharge / 100);
+        laserChargeText.textContent = `LAZER HAZIR: %${Math.floor(laserCharge)} / %500 (${stacks}x)`;
         laserChargeContainer.style.borderColor = '#ff007f';
     } else {
-        laserChargeText.textContent = `LAZER: %${Math.floor(laserCharge)}`;
+        laserChargeText.textContent = `LAZER: %${Math.floor(laserCharge)} / %500`;
         laserChargeContainer.style.borderColor = '#00f3ff';
     }
 
     if (currentState !== GAME_STATE.PLAYING && currentState !== GAME_STATE.BOSS) {
-        bird.wingPhase += dt * 5;
         return;
     }
 
@@ -1899,7 +2302,6 @@ function update(dt) {
     bird.trail.push({ x: bird.x, y: bird.y });
     if (bird.trail.length > 14) bird.trail.shift();
 
-    // Kuşun mermi atışı SADECE Boss savaşında aktif
     if (currentState === GAME_STATE.BOSS) {
         birdShootTimer -= dt;
         if (birdShootTimer <= 0) {
@@ -1911,7 +2313,7 @@ function update(dt) {
     for (let i = birdBullets.length - 1; i >= 0; i--) {
         const bb = birdBullets[i];
         bb.age += dt;
-        if (bb.homing && boss) {
+        if (bb.homing && boss && typeof boss.x !== 'undefined' && typeof boss.y !== 'undefined' && boss !== null) {
             const ang = Math.atan2(boss.y - bb.y, boss.x - bb.x);
             bb.vx += Math.cos(ang) * 950 * dt;
             bb.vy += Math.sin(ang) * 950 * dt;
@@ -1922,7 +2324,7 @@ function update(dt) {
         bb.x += bb.vx * dt;
         bb.y += bb.vy * dt;
 
-        if (boss && Math.hypot(bb.x - boss.x, bb.y - boss.y) < boss.radius + bb.size) {
+        if (boss && boss !== null && Math.hypot(bb.x - boss.x, bb.y - boss.y) < boss.radius + bb.size) {
             damageBoss(bb.dmg);
             spawnParticles(bb.x, bb.y, bb.color, 6);
             birdBullets.splice(i, 1);
@@ -1932,7 +2334,7 @@ function update(dt) {
         let hitProj = false;
         for (let j = bossProjectiles.length - 1; j >= 0; j--) {
             const bp = bossProjectiles[j];
-            if (Math.hypot(bb.x - bp.x, bb.y - bp.y) < bp.radius + bp.size) {
+            if (bp && Math.hypot(bb.x - bp.x, bb.y - bp.y) < (bp.radius || 9) + bb.size) {
                 spawnParticles(bp.x, bp.y, '#ff007f', 8);
                 bossProjectiles.splice(j, 1);
                 hitProj = true;
@@ -1951,7 +2353,7 @@ function update(dt) {
 
     petDrone.x += (bird.x - 36 - petDrone.x) * 8 * dt;
     petDrone.y += (bird.y - 28 + Math.sin(performance.now() * 0.006) * 8 - petDrone.y) * 8 * dt;
-    if (boss) {
+    if (boss && boss !== null) {
         petDrone.shootTimer -= dt;
         if (petDrone.shootTimer <= 0) {
             petDrone.shootTimer = 0.7;
@@ -1977,6 +2379,7 @@ function update(dt) {
         const distStep = 140 * speedMult * dt;
         distance += distStep;
         zoneDistance += distStep;
+        playerStats.totalDistance += distStep; // Profil Mesafe İstatistiği
         updateMissionProgress('distance', distStep);
 
         if (zoneDistance >= ZONE_TARGET_DISTANCE) {
@@ -2004,17 +2407,17 @@ function update(dt) {
             });
 
             const itemRoll = Math.random();
-            if (itemRoll < 0.03) {
-                // %3 ihtimalle sürpriz kutu
+            if (itemRoll < 0.02) {
+                collectibles.push({ x: canvas.width + 57, y: gapY, type: 'powerup_laser', radius: 15 });
+            } else if (itemRoll < 0.04) {
+                collectibles.push({ x: canvas.width + 57, y: gapY, type: 'powerup_shield', radius: 15 });
+            } else if (itemRoll < 0.07) {
                 collectibles.push({ x: canvas.width + 57, y: gapY, type: 'mystery', radius: 16 });
-            } else if (itemRoll < 0.43) {
-                // %40 ihtimalle para (kredi)
+            } else if (itemRoll < 0.47) {
                 collectibles.push({ x: canvas.width + 57, y: gapY, type: 'credit', radius: 13 });
-            } else if (itemRoll < 0.52) {
-                // %9 ihtimalle kuantum solucan deliği
+            } else if (itemRoll < 0.56) {
                 collectibles.push({ x: canvas.width + 57, y: gapY, type: 'portal', radius: 18 });
-            } else if (itemRoll < 0.68 && lives < 5) {
-                // Can eksikse %16 ihtimalle kalp
+            } else if (itemRoll < 0.72 && lives < 5) {
                 collectibles.push({ x: canvas.width + 57, y: gapY, type: 'heart', radius: 14 });
             }
         }
@@ -2035,7 +2438,6 @@ function update(dt) {
             const inX = bird.x + hitRadius > p.x && bird.x - hitRadius < p.x + p.w;
             const inGap = bird.y - hitRadius > p.gapY - p.gapSize / 2 && bird.y + hitRadius < p.gapY + p.gapSize / 2;
             if (inX && !inGap) {
-                // Boru kaybolmuyor, sadece çarpışma tetikleniyor
                 spawnParticles(p.x + p.w / 2, bird.y, currentZone.pipeColor, 16);
                 handlePlayerHit(false);
             }
@@ -2044,7 +2446,7 @@ function update(dt) {
         if (p.x + p.w < -60) pipes.splice(i, 1);
     }
 
-    const magnetRange = (activeBird.ability.magnet || 45) + 35;
+    const magnetRange = (activeBird.ability.magnet || 45) + 35 + (skillTreeLevels.magnetRange * 25);
     for (let i = collectibles.length - 1; i >= 0; i--) {
         const c = collectibles[i];
         c.x -= forwardSpeed * dt;
@@ -2060,9 +2462,9 @@ function update(dt) {
 
         if (dist < bird.radius + c.radius + 6) {
             if (c.type === 'credit') {
-                // Her para 5 değerinde (+ Wash kredi bonusu ve bölge çarpanı)
                 const bonus = 5 + (activeWash.effect.creditBonus || 0) + Math.floor((currentZone.id - 1) * 0.5);
                 sessionCredits += bonus;
+                playerStats.totalCreditsEarned += bonus;
                 sound.playCoin();
                 spawnParticles(c.x, c.y, '#eab308', 8);
                 updateMissionProgress('credit', bonus);
@@ -2072,6 +2474,16 @@ function update(dt) {
                 spawnParticles(c.x, c.y, '#ef4444', 12);
                 showToast('❤️ +1 Can Yenilendi!', '#ef4444');
                 updateMissionProgress('heart', 1);
+            } else if (c.type === 'powerup_laser') {
+                laserCharge = 500;
+                sound.playLaser();
+                spawnParticles(c.x, c.y, '#ff007f', 20);
+                showToast('⚡ GÜÇLENDİRİCİ: SÜPER LAZER %500 TAM DOLDU!', '#ff007f');
+            } else if (c.type === 'powerup_shield') {
+                shieldCount++;
+                sound.playShieldHit();
+                spawnParticles(c.x, c.y, '#38bdf8', 20);
+                showToast('🛡️ GÜÇLENDİRİCİ: +1 EKSTRA KALKAN!', '#38bdf8');
             } else if (c.type === 'mystery') {
                 sound.playRevive();
                 spawnParticles(c.x, c.y, '#facc15', 22);
@@ -2090,7 +2502,7 @@ function update(dt) {
         if (c.x < -50) collectibles.splice(i, 1);
     }
 
-    if (boss) {
+    if (boss && boss !== null) {
         boss.phase += dt * 2.5;
         boss.y = canvas.height * 0.4 + Math.sin(boss.phase) * (canvas.height * 0.24);
         boss.attackTimer -= dt;
@@ -2132,7 +2544,6 @@ function update(dt) {
     updateActiveHudBar();
 }
 
-// --- Çizim Döngüsü ---
 function draw() {
     ctx.save();
     if (screenShake > 0) {
@@ -2155,6 +2566,13 @@ function draw() {
     for (let sy = sunY + 10; sy < sunY + 80; sy += 14) {
         ctx.fillRect(canvas.width * 0.5 - 85, sy, 170, 4);
     }
+
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.04)';
+    cloudDrift.forEach(cd => {
+        ctx.beginPath();
+        ctx.roundRect(cd.x, cd.y, cd.w, 18, 9);
+        ctx.fill();
+    });
 
     ctx.fillStyle = 'rgba(8, 10, 26, 0.82)';
     const groundY = canvas.height - 64;
@@ -2203,6 +2621,18 @@ function draw() {
         ctx.strokeRect(p.x - 4, botY, p.w + 8, 18);
     });
 
+    // Yeni Özellik 3: Hassas Lazer Nişan Kılavuz Çizgisi (%100 ve üzeri olunca görünür)
+    if (laserCharge >= 100 && currentState === GAME_STATE.PLAYING) {
+        ctx.strokeStyle = 'rgba(255, 0, 127, 0.75)';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([6, 6]);
+        ctx.beginPath();
+        ctx.moveTo(bird.x + 20, bird.y);
+        ctx.lineTo(canvas.width, bird.y);
+        ctx.stroke();
+        ctx.setLineDash([]);
+    }
+
     collectibles.forEach(c => {
         ctx.save();
         ctx.translate(c.x, c.y);
@@ -2221,6 +2651,21 @@ function draw() {
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             ctx.fillText('❤️', 0, 0);
+        } else if (c.type === 'powerup_laser') {
+            laserCharge = 100;
+            sound.playLaser();
+            spawnParticles(c.x, c.y, '#ff007f', 20);
+            showToast('⚡ GÜÇLENDİRİCİ: SÜPER LAZER TAM DOLDU!', '#ff007f');
+        } else if (c.type === 'powerup_shield') {
+            ctx.fillStyle = '#38bdf8';
+            ctx.beginPath();
+            ctx.arc(0, 0, c.radius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 13px Orbitron';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('🛡️', 0, 1);
         } else if (c.type === 'mystery') {
             ctx.fillStyle = '#a855f7';
             ctx.strokeStyle = '#facc15';
@@ -2262,7 +2707,7 @@ function draw() {
         ctx.stroke();
     }
 
-    if (boss) {
+    if (boss && boss !== null) {
         ctx.save();
         ctx.translate(boss.x, boss.y);
 
@@ -2351,11 +2796,22 @@ function draw() {
         ctx.restore();
     });
 
-    // Kuş çizimi (Görünürlük garantilendi)
+    // Yeni Özellik 4: Kuş Renk Uyumlu Parıltılı Rüzgar İzi (Trail)
+    const activeBird = BIRDS_DATA[selectedBirdId] || BIRDS_DATA[0];
+    if (bird.trail.length > 1) {
+        ctx.strokeStyle = activeBird.accent;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        bird.trail.forEach((pt, idx) => {
+            if (idx === 0) ctx.moveTo(pt.x, pt.y);
+            else ctx.lineTo(pt.x, pt.y);
+        });
+        ctx.stroke();
+    }
+
     ctx.save();
     ctx.translate(bird.x, bird.y);
     ctx.rotate(bird.rotation);
-    const activeBird = BIRDS_DATA[selectedBirdId] || BIRDS_DATA[0];
     const scale = activeBird.ability.scale || 1.0;
     ctx.scale(scale, scale);
 
@@ -2443,9 +2899,22 @@ function draw() {
 }
 
 let lastTimestamp = performance.now();
+let fpsFrames = 0;
+let fpsTimer = 0;
+
 function gameLoop(now) {
     const dt = Math.min(0.05, (now - lastTimestamp) / 1000);
     lastTimestamp = now;
+
+    fpsFrames++;
+    fpsTimer += dt;
+    if (fpsTimer >= 0.5) {
+        const currentFps = Math.round(fpsFrames / fpsTimer);
+        document.getElementById('fps-counter').textContent = `FPS: ${currentFps}`;
+        fpsFrames = 0;
+        fpsTimer = 0;
+    }
+
     if (currentState !== GAME_STATE.PAUSED) {
         update(dt);
         draw();
@@ -2453,7 +2922,6 @@ function gameLoop(now) {
     requestAnimationFrame(gameLoop);
 }
 
-// --- Mağazalar ve Modal Kontrolleri ---
 let birdTabMode = 'ALL';
 let washTabMode = 'ALL';
 
@@ -2485,19 +2953,19 @@ function renderBirdsMarket() {
         card.innerHTML = `
             ${isOwned ? `<div class="status-ribbon">${selectedBirdId === b.id ? 'SEÇİLİ' : 'SAHİP'}</div>` : ''}
             <span class="rarity-tag" style="background:${b.color}22; color:${b.color}; border:1px solid ${b.color};">${b.rarity}</span>
-            <div class="bird-avatar-circle" style="background: radial-gradient(circle at 35% 35%, #161838, #060612); border-color: ${b.color}; box-shadow: 0 0 12px ${b.color}66;">
-                <svg viewBox="-32 -25 64 50" width="40" height="34" style="overflow:visible;">
-                    ${extraSvg}
+            <div class="bird-avatar-circle" style="border-color:${b.color}; background: radial-gradient(circle, ${b.color}33 0%, #050510 80%);">
+                <svg width="36" height="36" viewBox="-24 -24 48 48">
                     ${bodySvg}
-                    <ellipse cx="-4" cy="2" rx="10" ry="6" fill="${b.accent}" transform="rotate(-18 -4 2)"/>
-                    <polygon points="16,-4 26,1 16,6" fill="${b.design === 'cyberpunk' ? b.accent : '#facc15'}"/>
-                    <rect x="5" y="-7" width="9" height="5" fill="#050510"/>
-                    <rect x="8" y="-6" width="5" height="3" fill="${b.visorColor || '#00f3ff'}"/>
+                    <ellipse cx="-4" cy="0" rx="8" ry="5" fill="${b.accent}"/>
+                    <polygon points="12,-3 20,1 12,5" fill="#facc15"/>
+                    <rect x="5" y="-6" width="6" height="4" fill="#050510"/>
+                    <rect x="7" y="-5" width="3" height="2" fill="${b.visorColor}"/>
+                    ${extraSvg}
                 </svg>
             </div>
             <div class="item-name">${b.name}</div>
-            <div class="item-ability">${b.ability.label}</div>
-            <div style="font-size:0.66rem; color:${b.color}; font-weight:800; margin-top:2px;">🔫 ${b.weapon.name}</div>
+            <div class="item-ability">🔫 ${b.weapon.name}</div>
+            <div class="item-ability" style="font-size:0.65rem; color:#94a3b8; margin-top:1px;">${b.ability.label}</div>
             <div class="price-tag">${isOwned ? 'AÇIK' : `🟡 ${formatNumber(b.price)}`}</div>
         `;
 
@@ -2507,7 +2975,7 @@ function renderBirdsMarket() {
                 saveGameData();
                 updateLoadoutUI();
                 renderBirdsMarket();
-                showToast(`🦅 ${b.name} seçildi!`, '#00f3ff');
+                showToast(`🦅 ${b.name} kuşu seçildi!`, b.color);
             } else if (credits >= b.price) {
                 credits -= b.price;
                 ownedBirds.push(b.id);
@@ -2516,7 +2984,48 @@ function renderBirdsMarket() {
                 updateLoadoutUI();
                 renderBirdsMarket();
                 sound.playRevive();
-                showToast(`🎉 ${b.name} satın alındı!`, '#22c55e');
+                showToast(`🎉 ${b.name} satın alındı!`, b.color);
+            } else {
+                showToast('❌ Yetersiz Neon Kredi!', '#ef4444');
+            }
+        });
+
+        grid.appendChild(card);
+    });
+}
+
+function renderBadgesMarket() {
+    const grid = document.getElementById('badges-grid');
+    const search = document.getElementById('badge-search').value.toLowerCase();
+    document.getElementById('owned-badges-count').textContent = ownedBadges.length;
+
+    grid.innerHTML = '';
+    BADGES_DATA.forEach(b => {
+        const isOwned = ownedBadges.includes(b.id);
+        if (search && !b.name.toLowerCase().includes(search)) return;
+
+        const card = document.createElement('div');
+        card.className = `item-card ${isOwned ? 'selected' : ''}`;
+        card.style.borderColor = isOwned ? b.color : 'rgba(255,255,255,0.2)';
+        card.innerHTML = `
+            ${isOwned ? `<div class="status-ribbon" style="background:${b.color}; color:#050510;">AKTİF PERK</div>` : ''}
+            <div style="font-size: 2rem; margin: 4px 0;">${b.name.split(' ')[0]}</div>
+            <div class="item-name" style="color:${b.color};">${b.name.substring(2)}</div>
+            <div class="item-ability" style="font-size:0.68rem; color:#38bdf8;">${b.desc}</div>
+            <div class="price-tag">${isOwned ? 'AÇIK' : `🟡 ${formatNumber(b.price)}`}</div>
+        `;
+
+        card.addEventListener('click', () => {
+            if (isOwned) {
+                showToast(`🎖️ ${b.name} perkleri uçuşlarda aktif!`, b.color);
+            } else if (credits >= b.price) {
+                credits -= b.price;
+                ownedBadges.push(b.id);
+                saveGameData();
+                updateLoadoutUI();
+                renderBadgesMarket();
+                sound.playRevive();
+                showToast(`🎉 ${b.name} satın alındı ve perk aktifleşti!`, b.color);
             } else {
                 showToast('❌ Yetersiz Neon Kredi!', '#ef4444');
             }
@@ -2618,14 +3127,37 @@ function renderMissionsList() {
                 <h4>${m.title} (${Math.floor(m.progress)}/${m.target})</h4>
                 <p>${m.desc} — Ödül: 🟡 ${formatNumber(m.reward)}</p>
             </div>
-            <button class="btn-claim" ${(!isDone || m.claimed) ? 'disabled' : ''}>
-                ${m.claimed ? 'ALINDI' : (isDone ? 'ÖDÜLÜ AL' : 'DEVAM EDİYOR')}
-            </button>
+            <div style="display:flex; gap:6px;">
+                <!-- Yeni Özellik 8: Günlük Görev Yenileme Butonu -->
+                <button class="btn-claim" style="border-color:#f59e0b; color:#f59e0b; background:rgba(245,158,11,0.15);" title="Görevi Yenile (100 Kredi)">🔄</button>
+                <button class="btn-claim" ${(!isDone || m.claimed) ? 'disabled' : ''}>
+                    ${m.claimed ? 'ALINDI' : (isDone ? 'ÖDÜLÜ AL' : 'DEVAM EDİYOR')}
+                </button>
+            </div>
         `;
+        
+        // Yenileme tuşu olayı
+        item.querySelectorAll('button')[0].addEventListener('click', () => {
+            if (credits >= 100) {
+                credits -= 100;
+                m.progress = 0;
+                m.target = Math.floor(m.target * 1.2);
+                m.reward = Math.floor(m.reward * 1.3);
+                saveGameData();
+                updateLoadoutUI();
+                renderMissionsList();
+                sound.playRevive();
+                showToast('🔄 Günlük görev yenilendi!', '#f59e0b');
+            } else {
+                showToast('❌ Görevi yenilemek için 100 Kredi lazım!', '#ef4444');
+            }
+        });
+
         if (isDone && !m.claimed) {
-            item.querySelector('button').addEventListener('click', () => {
+            item.querySelectorAll('button')[1].addEventListener('click', () => {
                 m.claimed = true;
                 credits += m.reward;
+                playerStats.totalCreditsEarned += m.reward;
                 saveGameData();
                 updateLoadoutUI();
                 renderMissionsList();
@@ -2637,7 +3169,92 @@ function renderMissionsList() {
     });
 }
 
-// --- Günlük Çark ---
+function renderAchievementsList() {
+    const list = document.getElementById('achievements-list');
+    list.innerHTML = '';
+    achievementsData.forEach(ach => {
+        const isDone = ach.progress >= ach.target;
+        const item = document.createElement('div');
+        item.className = 'mission-item';
+        item.style.borderColor = ach.claimed ? '#38bdf8' : (isDone ? '#facc15' : 'rgba(0,243,255,0.4)');
+        item.innerHTML = `
+            <div class="mission-info">
+                <h4 style="color:${ach.claimed ? '#38bdf8' : '#ffffff'};">🏆 ${ach.title} (${Math.floor(ach.progress)}/${ach.target})</h4>
+                <p>${ach.desc} — Ödül: 🟡 ${formatNumber(ach.reward)}</p>
+            </div>
+            <button class="btn-claim" ${(!isDone || ach.claimed) ? 'disabled' : ''}>
+                ${ach.claimed ? 'KUPASI ALINDI' : (isDone ? 'KUPAYI AL' : 'KİLİTLİ')}
+            </button>
+        `;
+        if (isDone && !ach.claimed) {
+            item.querySelector('button').addEventListener('click', () => {
+                ach.claimed = true;
+                credits += ach.reward;
+                saveGameData();
+                updateLoadoutUI();
+                renderAchievementsList();
+                sound.playRevive();
+                showToast(`🏆 Kupa Ödülü: +${formatNumber(ach.reward)} Kredi!`, '#38bdf8');
+            });
+        }
+        list.appendChild(item);
+    });
+}
+
+// Yeni Özellik 4: Yetenek Ağacı Arayüz Render Fonksiyonu
+function renderSkillTreeList() {
+    const list = document.getElementById('skilltree-list');
+    list.innerHTML = '';
+    
+    const skills = [
+        { key: 'laserBoost', name: '⚡ Lazer Şarj Hızlandırıcısı', desc: 'Her zıplamada ekstra %2 şarj kazandırır', max: 5, cost: 1500 },
+        { key: 'extraShield', name: '🛡️ Güçlendirilmiş Kalkan', desc: 'Her oyuna +1 ekstra kalkan ile başla', max: 3, cost: 3000 },
+        { key: 'magnetRange', name: '🧲 Kuantum Çekim Mıknatısı', desc: 'Kredi ve kalp çekim alanını genişlet', max: 3, cost: 2500 }
+    ];
+
+    skills.forEach(s => {
+        const lvl = skillTreeLevels[s.key];
+        const isMax = lvl >= s.max;
+        const nextCost = s.cost * (lvl + 1);
+        const item = document.createElement('div');
+        item.className = 'mission-item';
+        item.innerHTML = `
+            <div class="mission-info">
+                <h4>${s.name} (Seviye ${lvl}/${s.max})</h4>
+                <p>${s.desc}</p>
+            </div>
+            <button class="btn-claim" ${isMax ? 'disabled' : ''} style="border-color:#10b981; color:#10b981;">
+                ${isMax ? 'MAKS SEVİYE' : `YÜKSEL: 🟡 ${formatNumber(nextCost)}`}
+            </button>
+        `;
+        if (!isMax) {
+            item.querySelector('button').addEventListener('click', () => {
+                if (credits >= nextCost) {
+                    credits -= nextCost;
+                    skillTreeLevels[s.key]++;
+                    saveGameData();
+                    updateLoadoutUI();
+                    renderSkillTreeList();
+                    sound.playRevive();
+                    showToast(`⚡ Yetenek Yükseltildi: ${s.name}`, '#10b981');
+                } else {
+                    showToast('❌ Yetersiz Neon Kredi!', '#ef4444');
+                }
+            });
+        }
+        list.appendChild(item);
+    });
+}
+
+// Yeni Özellik 7: İstatistik Profil Render Fonksiyonu
+function renderProfileModal() {
+    document.getElementById('stat-tot-dist').textContent = `${formatNumber(Math.floor(playerStats.totalDistance))}m`;
+    document.getElementById('stat-tot-pipes').textContent = formatNumber(playerStats.totalPipes);
+    document.getElementById('stat-tot-lasers').textContent = formatNumber(playerStats.totalLasers);
+    document.getElementById('stat-tot-credits').textContent = formatNumber(playerStats.totalCreditsEarned);
+    document.getElementById('stat-tot-boss').textContent = formatNumber(playerStats.totalBossKilled);
+}
+
 const WHEEL_SEGMENTS = [
     { label: '500 Kredi', type: 'credit', val: 500, color: '#0ea5e9' },
     { label: 'YENİ KUŞ!', type: 'bird', val: 0, color: '#ec4899' },
@@ -2715,6 +3332,7 @@ function spinDailyWheel() {
 
             if (prize.type === 'credit') {
                 credits += prize.val;
+                playerStats.totalCreditsEarned += prize.val;
                 resultEl.textContent = `🎉 TEBRİKLER! +${formatNumber(prize.val)} NEON KREDİ KAZANDIN!`;
             } else {
                 const locked = BIRDS_DATA.filter(b => !ownedBirds.includes(b.id));
@@ -2724,6 +3342,7 @@ function spinDailyWheel() {
                     resultEl.textContent = `🦅 MUHTEŞEM! "${wonBird.name}" KUŞUNU KAZANDIN!`;
                 } else {
                     credits += 25000;
+                    playerStats.totalCreditsEarned += 25000;
                     resultEl.textContent = `🎉 TÜM KUŞLAR AÇIK! YERİNE +25.000 KREDİ VERİLDİ!`;
                 }
             }
@@ -2736,12 +3355,14 @@ function spinDailyWheel() {
     requestAnimationFrame(animateSpin);
 }
 
-// --- Etkinlikler ---
 const birdsModal = document.getElementById('birds-modal');
 const washModal = document.getElementById('wash-modal');
 const zonesModal = document.getElementById('zones-modal');
 const missionsModal = document.getElementById('missions-modal');
 const wheelModal = document.getElementById('wheel-modal');
+const achievementsModal = document.getElementById('achievements-modal');
+const skilltreeModal = document.getElementById('skilltree-modal');
+const profileModal = document.getElementById('profile-modal');
 
 document.getElementById('open-birds-btn').addEventListener('click', () => { renderBirdsMarket(); birdsModal.classList.remove('hidden'); });
 document.getElementById('go-birds-btn').addEventListener('click', () => { renderBirdsMarket(); birdsModal.classList.remove('hidden'); });
@@ -2788,6 +3409,15 @@ document.getElementById('close-zones-modal').addEventListener('click', () => zon
 document.getElementById('open-missions-btn').addEventListener('click', () => { renderMissionsList(); missionsModal.classList.remove('hidden'); });
 document.getElementById('close-missions-modal').addEventListener('click', () => missionsModal.classList.add('hidden'));
 
+document.getElementById('open-achievements-btn').addEventListener('click', () => { renderAchievementsList(); achievementsModal.classList.remove('hidden'); });
+document.getElementById('close-achievements-modal').addEventListener('click', () => achievementsModal.classList.add('hidden'));
+
+document.getElementById('open-skilltree-btn').addEventListener('click', () => { renderSkillTreeList(); skilltreeModal.classList.remove('hidden'); });
+document.getElementById('close-skilltree-modal').addEventListener('click', () => skilltreeModal.classList.add('hidden'));
+
+document.getElementById('open-profile-btn').addEventListener('click', () => { renderProfileModal(); profileModal.classList.remove('hidden'); });
+document.getElementById('close-profile-modal').addEventListener('click', () => profileModal.classList.add('hidden'));
+
 document.getElementById('open-wheel-btn').addEventListener('click', () => {
     updateLoadoutUI();
     drawWheel();
@@ -2804,6 +3434,18 @@ canvas.addEventListener('pointerdown', (e) => {
 });
 
 window.addEventListener('keydown', (e) => {
+    if (e.code === 'KeyM') {
+        sound.toggleMute();
+        updateSettingsUI();
+        return;
+    }
+    if (e.code === 'KeyR') {
+        if (currentState === GAME_STATE.GAMEOVER || currentState === GAME_STATE.START || currentState === GAME_STATE.PLAYING || currentState === GAME_STATE.BOSS) {
+            e.preventDefault();
+            startGame();
+            return;
+        }
+    }
     if (e.code === 'KeyP' || e.code === 'Escape') {
         if (currentState === GAME_STATE.PLAYING || currentState === GAME_STATE.BOSS) {
             e.preventDefault();
@@ -2832,6 +3474,7 @@ window.addEventListener('keydown', (e) => {
 
 playBtn.addEventListener('click', startGame);
 restartBtn.addEventListener('click', startGame);
+document.getElementById('quick-restart-btn').addEventListener('click', startGame);
 pauseBtn.addEventListener('click', (e) => { e.stopPropagation(); pauseGame(); });
 resumeBtn.addEventListener('click', resumeGame);
 homeBtn.addEventListener('click', returnToHome);
@@ -2841,7 +3484,6 @@ soundBtn.addEventListener('click', () => {
 });
 laserBtn.addEventListener('click', (e) => { e.stopPropagation(); fireSuperLaser(); });
 
-// --- 10 Sayfalık Giriş Hikayesi Sistemi ---
 const STORY_PAGES = [
     {
         svg: `<svg viewBox="0 0 320 140" xmlns="http://www.w3.org/2000/svg">
@@ -2899,7 +3541,7 @@ const STORY_PAGES = [
             <circle cx="229" cy="70" r="18" fill="none" stroke="#facc15" stroke-width="2.5" stroke-dasharray="5 3"/>
         </svg>`,
         title: '4/10 — KİNETİK LAZER ÇEKİRDEĞİ',
-        text: 'Kanat çırptıkça kanatlardaki plazma bobinleri enerji depolar. Her zıplamada Süper Lazer %5 şarj olur; %100 olduğunda önündeki engelleri yok eder!'
+        text: 'Kanat çırptıkça plazma bobinleri enerji depolar. Şarj %500 seviyesine kadar (5 kat üst üste) birikebilir; L, F veya Enter tuşlarıyla peş peşe ateşlenebilir!'
     },
     {
         svg: `<svg viewBox="0 0 320 140" xmlns="http://www.w3.org/2000/svg">
@@ -3031,9 +3673,11 @@ document.getElementById('story-next-btn').addEventListener('click', () => {
 });
 
 document.getElementById('story-skip-btn').addEventListener('click', closeStory);
-document.getElementById('open-story-btn').addEventListener('click', () => openStory(0));
+document.getElementById('open-story-btn').addEventListener('click', () => {
+    settingsModal.classList.add('hidden');
+    openStory(0);
+});
 
-// --- Ayarlar Sistemi ---
 const gameSettings = JSON.parse(localStorage.getItem('cf_settings') || '{"shake":true,"particles":true}');
 const settingsModal = document.getElementById('settings-modal');
 let resetConfirmStep = false;
@@ -3085,10 +3729,22 @@ document.getElementById('set-particles-toggle').addEventListener('click', () => 
     updateSettingsUI();
 });
 
-document.getElementById('set-replay-story').addEventListener('click', () => {
+const aboutModal = document.getElementById('about-modal');
+document.getElementById('set-open-about').addEventListener('click', () => {
     settingsModal.classList.add('hidden');
-    openStory(0);
+    aboutModal.classList.remove('hidden');
 });
+document.getElementById('close-about-modal').addEventListener('click', () => aboutModal.classList.add('hidden'));
+
+// Yeni Eklenen Rozetler Modalı Kontrolleri
+const badgesModal = document.getElementById('badges-modal');
+document.getElementById('set-open-badges').addEventListener('click', () => {
+    settingsModal.classList.add('hidden');
+    renderBadgesMarket();
+    badgesModal.classList.remove('hidden');
+});
+document.getElementById('close-badges-modal').addEventListener('click', () => badgesModal.classList.add('hidden'));
+document.getElementById('badge-search').addEventListener('input', renderBadgesMarket);
 
 document.getElementById('set-reset-data').addEventListener('click', () => {
     if (!resetConfirmStep) {
@@ -3100,6 +3756,7 @@ document.getElementById('set-reset-data').addEventListener('click', () => {
         credits = 0;
         ownedBirds = [0];
         ownedWash = [0];
+        ownedBadges = [0];
         selectedBirdId = 0;
         selectedWashId = 0;
         unlockedZone = 1;
@@ -3113,7 +3770,6 @@ document.getElementById('set-reset-data').addEventListener('click', () => {
     }
 });
 
-// İlk açılışta 10 sayfalık giriş hikayesini göster
 if (!localStorage.getItem('cf_story_seen')) {
     openStory(0);
 }
