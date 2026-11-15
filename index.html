@@ -702,6 +702,134 @@
             text-shadow: 0 0 4px #000000;
             pointer-events: none;
         }
+
+        /* 10 Sayfalık Giriş Hikayesi Modalı */
+        .story-card {
+            background: linear-gradient(155deg, rgba(16, 12, 44, 0.96) 0%, rgba(7, 7, 22, 0.98) 100%);
+            border: 2px solid #00f3ff;
+            border-radius: 18px;
+            padding: 20px;
+            width: 100%;
+            max-width: 390px;
+            box-shadow: 0 0 30px rgba(0, 243, 255, 0.45);
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            text-align: center;
+        }
+
+        .story-progress-dots {
+            display: flex;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .story-dot {
+            width: 18px;
+            height: 5px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.2);
+            transition: all 0.2s;
+        }
+
+        .story-dot.active {
+            background: #00f3ff;
+            box-shadow: 0 0 8px #00f3ff;
+            width: 26px;
+        }
+
+        .story-visual {
+            width: 100%;
+            height: 150px;
+            background: rgba(6, 8, 24, 0.92);
+            border: 1.5px solid rgba(0, 243, 255, 0.45);
+            border-radius: 14px;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: inset 0 0 24px rgba(0, 243, 255, 0.18);
+        }
+
+        .story-visual svg {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .story-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.05rem;
+            font-weight: 900;
+            color: #facc15;
+            letter-spacing: 1px;
+        }
+
+        .story-text {
+            font-size: 0.95rem;
+            line-height: 1.45;
+            color: #e2e8f0;
+            min-height: 84px;
+        }
+
+        .story-nav {
+            display: flex;
+            gap: 8px;
+            justify-content: space-between;
+            margin-top: 4px;
+        }
+
+        /* Ayarlar Listesi */
+        .settings-list {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding-bottom: 12px;
+        }
+
+        .setting-row {
+            background: rgba(12, 14, 38, 0.92);
+            border: 1.5px solid rgba(0, 243, 255, 0.4);
+            border-radius: 12px;
+            padding: 12px 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .setting-label {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.82rem;
+            font-weight: 800;
+            color: #ffffff;
+        }
+
+        .setting-desc {
+            font-size: 0.78rem;
+            color: #94a3b8;
+        }
+
+        .toggle-btn {
+            background: rgba(0, 243, 255, 0.18);
+            border: 1.5px solid #00f3ff;
+            color: #00f3ff;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.72rem;
+            font-weight: 900;
+            padding: 6px 14px;
+            border-radius: 999px;
+            cursor: pointer;
+            min-width: 76px;
+        }
+
+        .toggle-btn.off {
+            background: rgba(100, 116, 139, 0.2);
+            border-color: #64748b;
+            color: #94a3b8;
+        }
     </style>
 </head>
 <body>
@@ -714,6 +842,7 @@
         <div id="score-display" class="hidden">0</div>
         <div class="hud-actions">
             <button id="pause-btn" class="hud-btn hidden" title="Oyunu Durdur (P / Esc)">⏸️</button>
+            <button id="settings-btn" class="hud-btn" title="Ayarlar">⚙️</button>
             <button id="sound-btn" class="hud-btn" title="Sesi Aç / Kapat">🔊</button>
         </div>
     </div>
@@ -800,13 +929,18 @@
             </div>
         </div>
 
-        <button id="play-btn" class="btn-primary">BAŞLA</button>
+        <div style="display:flex; gap:10px; align-items:center;">
+            <button id="open-story-btn" class="menu-btn" style="padding:12px 14px; border-color:#facc15; color:#facc15;" title="Giriş Hikayesini İzle">📖 HİKAYE</button>
+            <button id="play-btn" class="btn-primary">BAŞLA</button>
+            <button id="menu-settings-btn" class="menu-btn" style="padding:12px 14px; border-color:#00f3ff; color:#00f3ff;" title="Oyun Ayarları">⚙️ AYARLAR</button>
+        </div>
     </div>
 
     <!-- Oyun Bitti Ekranı -->
     <div id="game-over-screen" class="overlay hidden">
         <div class="score-card">
-            <div class="card-title">SİSTEM ÇÖKTÜ</div>
+            <div class="card-title">OYUN BİTTİ</div>
+            <div id="medal-display" style="font-size:0.82rem; color:#facc15; margin-bottom:10px; font-weight:700;">Bölge 1</div>
             <div class="stats-row">
                 <div class="stat-box">
                     <span class="stat-label">SKOR</span>
@@ -814,34 +948,31 @@
                 </div>
                 <div class="stat-box">
                     <span class="stat-label">MESAFE</span>
-                    <span id="final-distance" class="stat-value" style="font-size:1.35rem; color:#facc15;">0m</span>
+                    <span id="final-distance" class="stat-value" style="font-size:1.3rem; color:#facc15;">0m</span>
                 </div>
                 <div class="stat-box">
                     <span class="stat-label">KREDİ</span>
-                    <span id="final-credits" class="stat-value" style="color:#eab308;">0</span>
+                    <span id="final-credits" class="stat-value" style="color:#eab308;">+0</span>
                 </div>
             </div>
-            <div id="medal-display" style="font-family:'Orbitron'; font-weight:700; color:#e2e8f0; font-size:0.88rem;"></div>
+            <div class="loadout-row" style="margin-bottom: 14px;">
+                <button id="go-birds-btn" class="menu-btn">🦅 KUŞLAR</button>
+                <button id="go-wash-btn" class="menu-btn wash-style">🫧 WASH</button>
+                <button id="go-zones-btn" class="menu-btn zone-style">🗺️ BÖLGE</button>
+            </div>
+            <button id="restart-btn" class="btn-primary" style="width:100%;">TEKRAR OYNA</button>
         </div>
-
-        <div class="loadout-row" style="margin-bottom: 14px;">
-            <button id="go-birds-btn" class="menu-btn">🦅 110 Kuş</button>
-            <button id="go-wash-btn" class="menu-btn wash-style">🫧 45 Wash</button>
-            <button id="go-zones-btn" class="menu-btn zone-style">🗺️ Bölgeler</button>
-        </div>
-
-        <button id="restart-btn" class="btn-primary" style="border-color:#ff007f; background:rgba(255,0,127,0.15);">TEKRAR OYNA</button>
     </div>
 
-    <!-- 110 Kuş Hangarı & Mağazası -->
+    <!-- 110 Kuş Hangarı Modalı -->
     <div id="birds-modal" class="modal-overlay hidden">
         <div class="modal-header">
-            <div class="modal-title">🦅 SİBER KUŞ MARKETİ (110 KUŞ)</div>
+            <div class="modal-title">🦅 SİBER KUŞ HANGARI (<span id="owned-birds-count">1</span>/110)</div>
             <button id="close-birds-modal" class="modal-close">✕</button>
         </div>
         <div class="tab-bar">
-            <button id="tab-birds-all" class="tab-btn active">TÜM KUŞLAR (110)</button>
-            <button id="tab-birds-owned" class="tab-btn">SATIN ALINANLAR (<span id="owned-birds-count">1</span>)</button>
+            <button id="tab-birds-all" class="tab-btn active">TÜMÜ (110)</button>
+            <button id="tab-birds-owned" class="tab-btn">SATIN ALINANLAR</button>
         </div>
         <div class="modal-controls">
             <input type="text" id="bird-search" class="search-input" placeholder="Kuş ara...">
@@ -857,15 +988,15 @@
         <div id="birds-grid" class="cards-grid"></div>
     </div>
 
-    <!-- 45 Wash Mağazası -->
+    <!-- 45 Cyber Wash Modalı -->
     <div id="wash-modal" class="modal-overlay hidden">
         <div class="modal-header">
-            <div class="modal-title" style="color:#ff00ff;">🫧 CYBER WASH MARKETİ (45 MODÜL)</div>
+            <div class="modal-title" style="color:#ff00ff;">🫧 CYBER WASH (<span id="owned-wash-count">1</span>/45)</div>
             <button id="close-wash-modal" class="modal-close">✕</button>
         </div>
         <div class="tab-bar">
-            <button id="tab-wash-all" class="tab-btn active-wash">TÜM WASH (45)</button>
-            <button id="tab-wash-owned" class="tab-btn">SATIN ALINANLAR (<span id="owned-wash-count">1</span>)</button>
+            <button id="tab-wash-all" class="tab-btn active-wash">TÜMÜ (45)</button>
+            <button id="tab-wash-owned" class="tab-btn">SATIN ALINANLAR</button>
         </div>
         <div class="modal-controls">
             <input type="text" id="wash-search" class="search-input" placeholder="Wash ara...">
@@ -873,42 +1004,105 @@
                 <option value="ALL">Tüm Türler</option>
                 <option value="shield">Kalkan</option>
                 <option value="score">Skor</option>
+                <option value="pipe">Boru Aralığı</option>
                 <option value="physics">Fizik</option>
-                <option value="pipe">Boru</option>
             </select>
         </div>
         <div id="wash-grid" class="cards-grid"></div>
     </div>
 
-    <!-- 100 Bölge Seçim Haritası -->
+    <!-- 100 Bölge Modalı -->
     <div id="zones-modal" class="modal-overlay hidden">
         <div class="modal-header">
-            <div class="modal-title" style="color:#facc15;">🗺️ 100 İSİMLİ SİBER BÖLGE</div>
+            <div class="modal-title" style="color:#facc15;">🗺️ 100 SİBER BÖLGE</div>
             <button id="close-zones-modal" class="modal-close">✕</button>
         </div>
         <div id="zones-list" class="zones-list"></div>
     </div>
 
-    <!-- 10 Günlük Görevler Modalı -->
+    <!-- Görevler Modalı -->
     <div id="missions-modal" class="modal-overlay hidden">
         <div class="modal-header">
-            <div class="modal-title" style="color:#22c55e;">📋 10 GÜNLÜK SİBER GÖREV</div>
+            <div class="modal-title" style="color:#22c55e;">📋 GÜNLÜK GÖREVLER</div>
             <button id="close-missions-modal" class="modal-close">✕</button>
         </div>
         <div id="missions-list" class="missions-list"></div>
     </div>
 
-    <!-- Günlük Çark (Spin Wheel - Tek Seferlik) Modalı -->
+    <!-- Günlük Çark Modalı -->
     <div id="wheel-modal" class="modal-overlay hidden">
         <div class="modal-header">
-            <div class="modal-title" style="color:#ec4899;">🎡 GÜNLÜK ŞANS ÇARKI (1 HAK)</div>
+            <div class="modal-title" style="color:#ec4899;">🎡 GÜNLÜK ŞANS ÇARKI</div>
             <button id="close-wheel-modal" class="modal-close">✕</button>
         </div>
         <div class="wheel-container">
             <div class="wheel-pointer"></div>
-            <canvas id="wheel-canvas" width="300" height="300"></canvas>
-            <button id="spin-btn" class="btn-primary" style="border-color:#ec4899; background:rgba(236,72,153,0.2);">ÇARKINI ÇEVİR! ⚡</button>
-            <div id="spin-result" style="font-family:'Orbitron'; font-weight:800; color:#facc15; font-size:0.95rem; text-align:center; min-height:42px; padding:0 12px;"></div>
+            <canvas id="wheel-canvas" width="260" height="260"></canvas>
+            <div id="spin-result" style="font-family:'Orbitron'; font-size:0.85rem; color:#facc15; text-align:center; min-height:24px;"></div>
+            <button id="spin-btn" class="btn-primary" style="border-color:#ec4899; text-shadow:0 0 10px #ec4899;">ÇARKINI ÇEVİR! ⚡</button>
+        </div>
+    </div>
+
+    <!-- 10 Sayfalık Giriş Hikayesi Ekranı -->
+    <div id="story-modal" class="overlay hidden" style="z-index: 50; background: rgba(4, 4, 16, 0.94);">
+        <div class="story-card">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span id="story-page-indicator" style="font-family:'Orbitron'; font-size:0.75rem; color:#00f3ff; font-weight:800;">BÖLÜM 1 / 10</span>
+                <button id="story-skip-btn" style="background:transparent; border:1px solid #ff007f; color:#ff007f; font-family:'Orbitron'; font-size:0.68rem; font-weight:800; padding:4px 10px; border-radius:999px; cursor:pointer;">ATLA ⏭️</button>
+            </div>
+            <div id="story-dots" class="story-progress-dots"></div>
+            <div id="story-visual" class="story-visual">🌆</div>
+            <div id="story-title" class="story-title">YIL 2149: NEON ÇÖKÜŞÜ</div>
+            <div id="story-text" class="story-text"></div>
+            <div class="story-nav">
+                <button id="story-prev-btn" class="menu-btn" style="padding:10px; font-size:0.78rem;">◀️ GERİ</button>
+                <button id="story-next-btn" class="btn-primary" style="flex:2; font-size:0.95rem; padding:10px 18px;">İLERİ ▶️</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ayarlar Modalı -->
+    <div id="settings-modal" class="modal-overlay hidden" style="z-index: 45;">
+        <div class="modal-header">
+            <div class="modal-title">⚙️ SİSTEM AYARLARI</div>
+            <button id="close-settings-modal" class="modal-close">✕</button>
+        </div>
+        <div class="settings-list">
+            <div class="setting-row">
+                <div>
+                    <div class="setting-label">🔊 Ses Efektleri</div>
+                    <div class="setting-desc">Kanat, lazer, kredi ve çarpışma sesleri</div>
+                </div>
+                <button id="set-sound-toggle" class="toggle-btn">AÇIK</button>
+            </div>
+            <div class="setting-row">
+                <div>
+                    <div class="setting-label">📳 Ekran Sarsıntısı</div>
+                    <div class="setting-desc">Çarpışma ve süper lazer titreşim efekti</div>
+                </div>
+                <button id="set-shake-toggle" class="toggle-btn">AÇIK</button>
+            </div>
+            <div class="setting-row">
+                <div>
+                    <div class="setting-label">✨ Parçacık & Hava Efektleri</div>
+                    <div class="setting-desc">Arka plan yağmur, kar ve kıvılcım efektleri</div>
+                </div>
+                <button id="set-particles-toggle" class="toggle-btn">AÇIK</button>
+            </div>
+            <div class="setting-row">
+                <div>
+                    <div class="setting-label">📖 Giriş Hikayesi</div>
+                    <div class="setting-desc">10 sayfalık siberpunk hikayeyi tekrar oynat</div>
+                </div>
+                <button id="set-replay-story" class="toggle-btn" style="border-color:#facc15; color:#facc15;">İZLE</button>
+            </div>
+            <div class="setting-row" style="border-color: rgba(239, 68, 68, 0.5);">
+                <div>
+                    <div class="setting-label" style="color:#ef4444;">🗑️ İlerlemeyi Sıfırla</div>
+                    <div class="setting-desc" id="reset-confirm-desc">Tüm kredi, kuş ve bölge kayıtlarını siler</div>
+                </div>
+                <button id="set-reset-data" class="toggle-btn" style="border-color:#ef4444; color:#ef4444; background:rgba(239,68,68,0.15);">SIFIRLA</button>
+            </div>
         </div>
     </div>
 </div>
@@ -1029,32 +1223,52 @@ const BIRD_ABILITIES = [
     { id: 'laser', label: 'Hızlı Lazer Şarjı', laserBoost: true }
 ];
 
+// Her kuşa özgü tasarım ve mermi/lazer tipleri
+const BIRD_DESIGNS = ['sleek', 'horned', 'crowned', 'mecha', 'phoenix', 'halo', 'stealth', 'cyberpunk', 'dragon'];
+const BIRD_WEAPONS = [
+    { id: 'bolt', name: 'Plazma Oku', rate: 0.32, speed: 640, dmg: 6, color: '#00f3ff', size: 6, spread: 1, laserColor: '#00f3ff' },
+    { id: 'triple', name: 'Üçlü Saçma', rate: 0.46, speed: 580, dmg: 5, color: '#ff00ff', size: 5, spread: 3, laserColor: '#ff00ff' },
+    { id: 'orb', name: 'Yıldız Küresi', rate: 0.52, speed: 480, dmg: 14, color: '#facc15', size: 11, spread: 1, laserColor: '#facc15' },
+    { id: 'rapid', name: 'Hızlı İğne', rate: 0.16, speed: 760, dmg: 4, color: '#22c55e', size: 4, spread: 1, laserColor: '#22c55e' },
+    { id: 'wave', name: 'Sonik Dalga', rate: 0.40, speed: 540, dmg: 9, color: '#a855f7', size: 8, spread: 1, wave: true, laserColor: '#a855f7' },
+    { id: 'homing', name: 'Güdümlü Füze', rate: 0.50, speed: 500, dmg: 12, color: '#f97316', size: 7, spread: 1, homing: true, laserColor: '#f97316' },
+    { id: 'twin', name: 'İkiz Lazer', rate: 0.26, speed: 680, dmg: 6, color: '#38bdf8', size: 5, spread: 2, laserColor: '#38bdf8' },
+    { id: 'nova', name: 'Nova Yıldızı', rate: 0.58, speed: 450, dmg: 18, color: '#ff007f', size: 12, spread: 1, spin: true, laserColor: '#ff007f' }
+];
+
 const BIRDS_DATA = [];
 for (let i = 0; i < 108; i++) {
     const prefix = BIRD_PREFIXES[i % BIRD_PREFIXES.length];
     const base = BIRD_NAMES[Math.floor(i / BIRD_PREFIXES.length) % BIRD_NAMES.length];
     const ability = BIRD_ABILITIES[i % BIRD_ABILITIES.length];
+    const hue = (i * 29) % 360;
+    const accentHue = (hue + 145) % 360;
+    const design = BIRD_DESIGNS[i % BIRD_DESIGNS.length];
+    const weapon = BIRD_WEAPONS[i % BIRD_WEAPONS.length];
+
     let rarity = 'Sıradan';
-    let color = '#00f3ff';
+    let color = `hsl(${hue}, 92%, 55%)`;
     let price = i === 0 ? 0 : 150 + i * 75;
 
-    if (i >= 95) { rarity = 'Mitik'; color = '#facc15'; price = 25000 + (i - 95) * 5000; }
-    else if (i >= 75) { rarity = 'Efsanevi'; color = '#ff007f'; price = 8000 + (i - 75) * 600; }
-    else if (i >= 50) { rarity = 'Epik'; color = '#a855f7'; price = 3000 + (i - 50) * 200; }
-    else if (i >= 25) { rarity = 'Nadir'; color = '#22c55e'; price = 900 + (i - 25) * 80; }
+    if (i >= 95) { rarity = 'Mitik'; color = `hsl(${hue}, 100%, 60%)`; price = 25000 + (i - 95) * 5000; }
+    else if (i >= 75) { rarity = 'Efsanevi'; color = `hsl(${hue}, 95%, 58%)`; price = 8000 + (i - 75) * 600; }
+    else if (i >= 50) { rarity = 'Epik'; color = `hsl(${hue}, 90%, 58%)`; price = 3000 + (i - 50) * 200; }
+    else if (i >= 25) { rarity = 'Nadir'; color = `hsl(${hue}, 88%, 54%)`; price = 900 + (i - 25) * 80; }
 
     BIRDS_DATA.push({
         id: i,
         name: `${prefix} ${base} #${i + 1}`,
         rarity,
         color,
-        accent: i % 2 === 0 ? '#ff00ff' : '#facc15',
+        accent: `hsl(${accentHue}, 95%, 60%)`,
+        visorColor: `hsl(${(hue + 210) % 360}, 100%, 65%)`,
+        design,
+        weapon: { ...weapon, color: color },
         price,
         ability
     });
 }
 
-// 2 Yeni Mitik Kuş (Toplam 110 Kuş)
 BIRDS_DATA.push(
     {
         id: 108,
@@ -1062,6 +1276,9 @@ BIRDS_DATA.push(
         rarity: 'Mitik',
         color: '#10b981',
         accent: '#facc15',
+        visorColor: '#ffffff',
+        design: 'phoenix',
+        weapon: { id: 'phoenix_flame', name: 'Anka Alev Topu', rate: 0.22, speed: 700, dmg: 16, color: '#10b981', size: 10, spread: 3, laserColor: '#facc15' },
         price: 95000,
         ability: { id: 'double_score', label: '+100% Çift Skor Gücü', mult: 2.0 }
     },
@@ -1071,6 +1288,9 @@ BIRDS_DATA.push(
         rarity: 'Mitik',
         color: '#ec4899',
         accent: '#00f3ff',
+        visorColor: '#facc15',
+        design: 'dragon',
+        weapon: { id: 'galaxy_beam', name: 'Galaksi Süper Mermisi', rate: 0.18, speed: 780, dmg: 22, color: '#ec4899', size: 12, spread: 3, homing: true, laserColor: '#00f3ff' },
         price: 120000,
         ability: { id: 'mega_shield', label: '+2 Başlangıç Kalkanı', shield: 2 }
     }
@@ -1118,27 +1338,21 @@ for (let i = 0; i < 100; i++) {
         pipeColor: `hsl(${(hue + 200) % 360}, 90%, 55%)`,
         gridColor: `hsla(${(hue + 180) % 360}, 95%, 55%, 0.45)`,
         weather: WEATHER_TYPES[i % WEATHER_TYPES.length],
-        bossName: i === 99 ? '👑 OMEGA EVREN İMPARATORU' : `Siber Muhafız v${i + 1}.0`,
-        bossMaxHp: i === 99 ? 500 : 40 + i * 8
+        bossName: i === 99 ? '👑 OMEGA EVREN İMPARATORu' : `Siber Muhafız v${i + 1}.0`,
+        bossMaxHp: 200
     });
 }
 
-// --- 10 Günlük Görev ---
+// --- Varsayılan Günlük Görevler ---
 const DEFAULT_MISSIONS = [
-    { id: 0, title: 'İlk Uçuş', desc: '10 Skor yap', target: 10, progress: 0, reward: 250, claimed: false, type: 'score' },
-    { id: 1, title: 'Kredi Avcısı', desc: '15 Kredi topla', target: 15, progress: 0, reward: 400, claimed: false, type: 'credit' },
-    { id: 2, title: 'Mesafe Katili', desc: '1.000m uç', target: 1000, progress: 0, reward: 500, claimed: false, type: 'distance' },
-    { id: 3, title: 'Sürpriz Meraklısı', desc: '1 Adet ? Kutusu aç', target: 1, progress: 0, reward: 600, claimed: false, type: 'mystery' },
-    { id: 4, title: 'Boru Ustası', desc: '35 Skor yap', target: 35, progress: 0, reward: 850, claimed: false, type: 'score' },
-    { id: 5, title: 'Lazer Nişancısı', desc: '3 Kez Süper Lazer ateşle', target: 3, progress: 0, reward: 750, claimed: false, type: 'laser' },
-    { id: 6, title: 'Can Kurtaran', desc: '3 Kalp paketi topla', target: 3, progress: 0, reward: 700, claimed: false, type: 'heart' },
-    { id: 7, title: 'Maraton Uçuşu', desc: '5.000m mesafe katet', target: 5000, progress: 0, reward: 1500, claimed: false, type: 'distance' },
-    { id: 8, title: 'Boss Avcısı', desc: '1 Bölge Bossu yen', target: 1, progress: 0, reward: 3000, claimed: false, type: 'boss' },
-    { id: 9, title: 'Siber Milyoner Adayı', desc: '100 Kredi topla', target: 100, progress: 0, reward: 2500, claimed: false, type: 'credit' }
+    { id: 1, title: 'Karatay Uçuşu', desc: 'Toplam 5.000m mesafe kat et', type: 'distance', target: 5000, progress: 0, reward: 500, claimed: false },
+    { id: 2, title: 'Kredi Avcısı', desc: '100 adet Neon Kredi topla', type: 'credit', target: 100, progress: 0, reward: 800, claimed: false },
+    { id: 3, title: 'Süper Lazer Ustası', desc: 'Süper Lazer ile 5 kez ateş et', type: 'laser', target: 5, progress: 0, reward: 1000, claimed: false },
+    { id: 4, title: 'Boss Katili', desc: 'Herhangi bir bölge bossunu yen', type: 'boss', target: 1, progress: 0, reward: 2500, claimed: false }
 ];
 
 // --- Kayıtlı Veriler (LocalStorage) ---
-let credits = parseInt(localStorage.getItem('cf_credits') || '500', 10);
+let credits = parseInt(localStorage.getItem('cf_credits') || '0', 10);
 let ownedBirds = JSON.parse(localStorage.getItem('cf_owned_birds') || '[0]');
 let ownedWash = JSON.parse(localStorage.getItem('cf_owned_wash') || '[0]');
 let selectedBirdId = parseInt(localStorage.getItem('cf_sel_bird') || '0', 10);
@@ -1200,6 +1414,8 @@ const petDrone = { x: 55, y: 270, shootTimer: 0 };
 let pipes = [];
 let collectibles = [];
 let playerLasers = [];
+let birdBullets = [];
+let birdShootTimer = 0;
 let particles = [];
 let weatherParticles = [];
 let bgBuildings = [];
@@ -1251,7 +1467,7 @@ function updateLoadoutUI() {
     document.getElementById('selected-bird-label').textContent = b.name;
     document.getElementById('selected-wash-label').textContent = w.name;
     document.getElementById('selected-zone-label').textContent = `Bölge ${currentZone.id}: ${currentZone.name}`;
-    document.getElementById('combo-bird-desc').textContent = b.ability.label;
+    document.getElementById('combo-bird-desc').textContent = `${b.ability.label} • 🔫 ${b.weapon.name}`;
     document.getElementById('combo-wash-desc').textContent = w.effect.label;
 
     const today = new Date().toDateString();
@@ -1310,6 +1526,8 @@ function startGame() {
     pipes = [];
     collectibles = [];
     playerLasers = [];
+    birdBullets = [];
+    birdShootTimer = 0;
     particles = [];
     boss = null;
     bossProjectiles = [];
@@ -1379,32 +1597,61 @@ function flapBird() {
     // Her zıplamada lazer %5 dolar
     laserCharge = Math.min(100, laserCharge + 5);
 
+    // Mermiler SADECE Boss savaşında otomatik ateşlenir
+    if (currentState === GAME_STATE.BOSS) {
+        fireBirdBullet();
+    }
+
     sound.playJump();
     spawnParticles(bird.x - 10, bird.y + 6, '#00f3ff', 6);
 }
 
+function fireBirdBullet() {
+    const b = BIRDS_DATA[selectedBirdId] || BIRDS_DATA[0];
+    const wp = b.weapon;
+    const angles = wp.spread === 3 ? [-0.18, 0, 0.18] : (wp.spread === 2 ? [-0.07, 0.07] : [0]);
+
+    angles.forEach(ang => {
+        birdBullets.push({
+            x: bird.x + 22,
+            y: bird.y + (ang * 30),
+            vx: Math.cos(ang) * wp.speed,
+            vy: Math.sin(ang) * wp.speed,
+            dmg: wp.dmg,
+            color: b.color,
+            accent: b.accent,
+            size: wp.size,
+            type: wp.id,
+            wave: wp.wave || false,
+            homing: wp.homing || false,
+            spin: wp.spin || false,
+            age: 0
+        });
+    });
+}
+
 function fireSuperLaser() {
     if (currentState !== GAME_STATE.PLAYING && currentState !== GAME_STATE.BOSS) return;
+    if (currentState !== GAME_STATE.BOSS) {
+        showToast('⚡ Süper Lazer SADECE Boss Savaşında Kullanılabilir!', '#ff00ff');
+        return;
+    }
     if (laserCharge < 100) {
         showToast(`⚡ Lazer Şarj Oluyor: %${Math.floor(laserCharge)}`, '#ff00ff');
         return;
     }
     laserCharge = 0;
     sound.playLaser();
-    screenShake = 8;
-    playerLasers.push({ x: bird.x + 20, y: bird.y, w: canvas.width, h: 14, life: 0.28, color: '#00f3ff' });
+    if (gameSettings.shake) screenShake = 8;
+    
+    const activeBird = BIRDS_DATA[selectedBirdId] || BIRDS_DATA[0];
+    const customLaserColor = activeBird.weapon.laserColor || '#00f3ff';
+
+    playerLasers.push({ x: bird.x + 20, y: bird.y, w: canvas.width, h: 16, life: 0.3, color: customLaserColor });
     updateMissionProgress('laser', 1);
 
-    pipes.forEach(p => {
-        if (!p.destroyed && p.x > bird.x) {
-            p.destroyed = true;
-            spawnParticles(p.x + 25, p.gapY, '#ff007f', 18);
-            addScore(1);
-        }
-    });
-
     if (boss) {
-        damageBoss(25);
+        damageBoss(45);
     }
 }
 
@@ -1451,7 +1698,7 @@ function handlePlayerHit(fromGround = false) {
     if (shieldCount > 0) {
         shieldCount--;
         invulnerableTimer = 1.4;
-        screenShake = 10;
+        if (gameSettings.shake) screenShake = 10;
         sound.playShieldHit();
         spawnParticles(bird.x, bird.y, '#38bdf8', 22);
         showToast('🛡️ Kalkan Darbeyi Engelledi!', '#38bdf8');
@@ -1461,7 +1708,7 @@ function handlePlayerHit(fromGround = false) {
 
     lives--;
     comboCount = 0;
-    screenShake = 14;
+    if (gameSettings.shake) screenShake = 14;
 
     if (lives > 0) {
         invulnerableTimer = 1.6;
@@ -1610,6 +1857,9 @@ function update(dt) {
         if (wp.x < 0) wp.x = canvas.width;
     });
 
+    if (!gameSettings.particles) {
+        particles = [];
+    }
     for (let i = particles.length - 1; i >= 0; i--) {
         const p = particles[i];
         p.x += p.vx * dt;
@@ -1649,13 +1899,63 @@ function update(dt) {
     bird.trail.push({ x: bird.x, y: bird.y });
     if (bird.trail.length > 14) bird.trail.shift();
 
+    // Kuşun mermi atışı SADECE Boss savaşında aktif
+    if (currentState === GAME_STATE.BOSS) {
+        birdShootTimer -= dt;
+        if (birdShootTimer <= 0) {
+            birdShootTimer = activeBird.weapon.rate;
+            fireBirdBullet();
+        }
+    }
+
+    for (let i = birdBullets.length - 1; i >= 0; i--) {
+        const bb = birdBullets[i];
+        bb.age += dt;
+        if (bb.homing && boss) {
+            const ang = Math.atan2(boss.y - bb.y, boss.x - bb.x);
+            bb.vx += Math.cos(ang) * 950 * dt;
+            bb.vy += Math.sin(ang) * 950 * dt;
+        }
+        if (bb.wave) {
+            bb.y += Math.sin(bb.age * 18) * 150 * dt;
+        }
+        bb.x += bb.vx * dt;
+        bb.y += bb.vy * dt;
+
+        if (boss && Math.hypot(bb.x - boss.x, bb.y - boss.y) < boss.radius + bb.size) {
+            damageBoss(bb.dmg);
+            spawnParticles(bb.x, bb.y, bb.color, 6);
+            birdBullets.splice(i, 1);
+            continue;
+        }
+
+        let hitProj = false;
+        for (let j = bossProjectiles.length - 1; j >= 0; j--) {
+            const bp = bossProjectiles[j];
+            if (Math.hypot(bb.x - bp.x, bb.y - bp.y) < bp.radius + bp.size) {
+                spawnParticles(bp.x, bp.y, '#ff007f', 8);
+                bossProjectiles.splice(j, 1);
+                hitProj = true;
+                break;
+            }
+        }
+        if (hitProj) {
+            birdBullets.splice(i, 1);
+            continue;
+        }
+
+        if (bb.x > canvas.width + 40 || bb.y < -40 || bb.y > canvas.height + 40) {
+            birdBullets.splice(i, 1);
+        }
+    }
+
     petDrone.x += (bird.x - 36 - petDrone.x) * 8 * dt;
     petDrone.y += (bird.y - 28 + Math.sin(performance.now() * 0.006) * 8 - petDrone.y) * 8 * dt;
     if (boss) {
         petDrone.shootTimer -= dt;
         if (petDrone.shootTimer <= 0) {
             petDrone.shootTimer = 0.7;
-            damageBoss(3);
+            damageBoss(4);
             playerLasers.push({ x: petDrone.x + 10, y: petDrone.y, w: boss.x - petDrone.x, h: 4, life: 0.12, color: '#22c55e' });
         }
     }
@@ -1705,13 +2005,17 @@ function update(dt) {
 
             const itemRoll = Math.random();
             if (itemRoll < 0.03) {
+                // %3 ihtimalle sürpriz kutu
                 collectibles.push({ x: canvas.width + 57, y: gapY, type: 'mystery', radius: 16 });
-            } else if (itemRoll < 0.12) {
-                collectibles.push({ x: canvas.width + 57, y: gapY, type: 'portal', radius: 18 });
-            } else if (itemRoll < 0.30 && lives < 5) {
-                collectibles.push({ x: canvas.width + 57, y: gapY, type: 'heart', radius: 14 });
-            } else {
+            } else if (itemRoll < 0.43) {
+                // %40 ihtimalle para (kredi)
                 collectibles.push({ x: canvas.width + 57, y: gapY, type: 'credit', radius: 13 });
+            } else if (itemRoll < 0.52) {
+                // %9 ihtimalle kuantum solucan deliği
+                collectibles.push({ x: canvas.width + 57, y: gapY, type: 'portal', radius: 18 });
+            } else if (itemRoll < 0.68 && lives < 5) {
+                // Can eksikse %16 ihtimalle kalp
+                collectibles.push({ x: canvas.width + 57, y: gapY, type: 'heart', radius: 14 });
             }
         }
     }
@@ -1756,11 +2060,12 @@ function update(dt) {
 
         if (dist < bird.radius + c.radius + 6) {
             if (c.type === 'credit') {
-                const bonus = (activeWash.effect.creditBonus || 0) + Math.ceil(currentZone.id * 0.5);
+                // Her para 5 değerinde (+ Wash kredi bonusu ve bölge çarpanı)
+                const bonus = 5 + (activeWash.effect.creditBonus || 0) + Math.floor((currentZone.id - 1) * 0.5);
                 sessionCredits += bonus;
                 sound.playCoin();
                 spawnParticles(c.x, c.y, '#eab308', 8);
-                updateMissionProgress('credit', 1);
+                updateMissionProgress('credit', bonus);
             } else if (c.type === 'heart') {
                 lives = Math.min(5, lives + 1);
                 sound.playHeart();
@@ -1861,6 +2166,7 @@ function draw() {
     });
 
     weatherParticles.forEach(wp => {
+        if (!gameSettings.particles) return;
         ctx.fillStyle = currentZone.sunColor;
         ctx.globalAlpha = 0.45;
         if (currentZone.weather === 'matrix') {
@@ -1997,41 +2303,101 @@ function draw() {
         ctx.fillRect(l.x, l.y - l.h / 4, l.w, l.h / 2);
     });
 
-    ctx.save();
-    ctx.translate(petDrone.x, petDrone.y);
-    ctx.fillStyle = '#22c55e';
-    ctx.beginPath();
-    ctx.arc(0, 0, 8, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
-    ctx.restore();
+    birdBullets.forEach(bb => {
+        ctx.save();
+        ctx.translate(bb.x, bb.y);
+        if (bb.spin) ctx.rotate(bb.age * 14);
+        ctx.fillStyle = bb.color;
+        ctx.shadowColor = bb.color;
+        ctx.shadowBlur = 10;
 
-    const activeBird = BIRDS_DATA[selectedBirdId] || BIRDS_DATA[0];
-    bird.trail.forEach((t, idx) => {
-        ctx.fillStyle = activeBird.color;
-        ctx.globalAlpha = (idx / bird.trail.length) * 0.35;
-        ctx.beginPath();
-        ctx.arc(t.x, t.y, bird.radius * 0.6, 0, Math.PI * 2);
-        ctx.fill();
+        if (bb.type === 'orb' || bb.type === 'phoenix_flame') {
+            ctx.beginPath();
+            ctx.arc(0, 0, bb.size, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(0, 0, bb.size * 0.45, 0, Math.PI * 2);
+            ctx.fill();
+        } else if (bb.type === 'nova' || bb.type === 'galaxy_beam') {
+            ctx.beginPath();
+            for (let s = 0; s < 8; s++) {
+                const r = s % 2 === 0 ? bb.size : bb.size * 0.45;
+                const a = (s * Math.PI) / 4;
+                if (s === 0) ctx.moveTo(Math.cos(a) * r, Math.sin(a) * r);
+                else ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r);
+            }
+            ctx.closePath();
+            ctx.fill();
+        } else if (bb.type === 'wave') {
+            ctx.strokeStyle = bb.color;
+            ctx.lineWidth = 3.5;
+            ctx.beginPath();
+            ctx.arc(-4, 0, bb.size + 2, -Math.PI * 0.4, Math.PI * 0.4);
+            ctx.stroke();
+        } else if (bb.type === 'homing') {
+            ctx.beginPath();
+            ctx.moveTo(bb.size + 4, 0);
+            ctx.lineTo(-bb.size, -bb.size * 0.65);
+            ctx.lineTo(-bb.size * 0.5, 0);
+            ctx.lineTo(-bb.size, bb.size * 0.65);
+            ctx.closePath();
+            ctx.fill();
+        } else {
+            ctx.fillRect(-bb.size * 1.4, -bb.size * 0.45, bb.size * 2.8, bb.size * 0.9);
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(-bb.size, -bb.size * 0.2, bb.size * 2, bb.size * 0.4);
+        }
+        ctx.restore();
     });
-    ctx.globalAlpha = 1;
 
+    // Kuş çizimi (Görünürlük garantilendi)
     ctx.save();
     ctx.translate(bird.x, bird.y);
     ctx.rotate(bird.rotation);
-
-    if (invulnerableTimer > 0 && Math.floor(performance.now() / 80) % 2 === 0) {
-        ctx.globalAlpha = 0.45;
-    }
-
+    const activeBird = BIRDS_DATA[selectedBirdId] || BIRDS_DATA[0];
     const scale = activeBird.ability.scale || 1.0;
     ctx.scale(scale, scale);
 
+    if (activeBird.design === 'halo') {
+        ctx.strokeStyle = activeBird.accent;
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.ellipse(-2, -20, 12, 4, 0, 0, Math.PI * 2);
+        ctx.stroke();
+    } else if (activeBird.design === 'crowned') {
+        ctx.fillStyle = '#facc15';
+        ctx.beginPath();
+        ctx.moveTo(-6, -13); ctx.lineTo(-4, -22); ctx.lineTo(0, -16);
+        ctx.lineTo(4, -23); ctx.lineTo(8, -13);
+        ctx.closePath();
+        ctx.fill();
+    } else if (activeBird.design === 'horned' || activeBird.design === 'dragon') {
+        ctx.fillStyle = activeBird.accent;
+        ctx.beginPath();
+        ctx.moveTo(-4, -12); ctx.lineTo(-14, -23); ctx.lineTo(2, -13);
+        ctx.closePath();
+        ctx.fill();
+    } else if (activeBird.design === 'phoenix') {
+        ctx.fillStyle = activeBird.accent;
+        ctx.beginPath();
+        ctx.moveTo(-16, -4); ctx.lineTo(-30, -12); ctx.lineTo(-24, 0); ctx.lineTo(-32, 10); ctx.lineTo(-16, 5);
+        ctx.closePath();
+        ctx.fill();
+    }
+
     ctx.fillStyle = activeBird.color;
     ctx.beginPath();
-    ctx.ellipse(0, 0, 19, 14, 0, 0, Math.PI * 2);
+    if (activeBird.design === 'mecha' || activeBird.design === 'stealth') {
+        ctx.moveTo(18, 0);
+        ctx.lineTo(4, -14);
+        ctx.lineTo(-18, -10);
+        ctx.lineTo(-14, 10);
+        ctx.lineTo(4, 14);
+        ctx.closePath();
+    } else {
+        ctx.ellipse(0, 0, 19, 14, 0, 0, Math.PI * 2);
+    }
     ctx.fill();
     ctx.strokeStyle = '#ffffff';
     ctx.lineWidth = 2;
@@ -2043,7 +2409,7 @@ function draw() {
     ctx.ellipse(-4, wingY, 10, 6, -0.3, 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.fillStyle = '#facc15';
+    ctx.fillStyle = activeBird.design === 'cyberpunk' ? activeBird.accent : '#facc15';
     ctx.beginPath();
     ctx.moveTo(16, -4);
     ctx.lineTo(26, 1);
@@ -2053,7 +2419,7 @@ function draw() {
 
     ctx.fillStyle = '#050510';
     ctx.fillRect(5, -7, 9, 5);
-    ctx.fillStyle = '#00f3ff';
+    ctx.fillStyle = activeBird.visorColor || '#00f3ff';
     ctx.fillRect(8, -6, 5, 3);
 
     if (shieldCount > 0 || warpTimer > 0) {
@@ -2106,14 +2472,32 @@ function renderBirdsMarket() {
 
         const card = document.createElement('div');
         card.className = `item-card ${selectedBirdId === b.id ? 'selected' : ''}`;
+        let extraSvg = '';
+        if (b.design === 'halo') extraSvg = `<ellipse cx="-2" cy="-20" rx="12" ry="4" fill="none" stroke="${b.accent}" stroke-width="2.5"/>`;
+        else if (b.design === 'crowned') extraSvg = `<polygon points="-6,-13 -4,-22 0,-16 4,-23 8,-13" fill="#facc15"/>`;
+        else if (b.design === 'horned' || b.design === 'dragon') extraSvg = `<polygon points="-4,-12 -14,-23 2,-13" fill="${b.accent}"/>`;
+        else if (b.design === 'phoenix') extraSvg = `<polygon points="-16,-4 -30,-12 -24,0 -32,10 -16,5" fill="${b.accent}"/>`;
+
+        const bodySvg = (b.design === 'mecha' || b.design === 'stealth')
+            ? `<polygon points="18,0 4,-14 -18,-10 -14,10 4,14" fill="${b.color}" stroke="#ffffff" stroke-width="2"/>`
+            : `<ellipse cx="0" cy="0" rx="19" ry="14" fill="${b.color}" stroke="#ffffff" stroke-width="2"/>`;
+
         card.innerHTML = `
             ${isOwned ? `<div class="status-ribbon">${selectedBirdId === b.id ? 'SEÇİLİ' : 'SAHİP'}</div>` : ''}
             <span class="rarity-tag" style="background:${b.color}22; color:${b.color}; border:1px solid ${b.color};">${b.rarity}</span>
-            <div class="bird-avatar-circle" style="background: radial-gradient(circle at 35% 35%, ${b.color}, #070714); border-color: ${b.accent};">
-                <div style="width: 14px; height: 10px; background: ${b.accent}; border-radius: 50%; transform: rotate(-15deg);"></div>
+            <div class="bird-avatar-circle" style="background: radial-gradient(circle at 35% 35%, #161838, #060612); border-color: ${b.color}; box-shadow: 0 0 12px ${b.color}66;">
+                <svg viewBox="-32 -25 64 50" width="40" height="34" style="overflow:visible;">
+                    ${extraSvg}
+                    ${bodySvg}
+                    <ellipse cx="-4" cy="2" rx="10" ry="6" fill="${b.accent}" transform="rotate(-18 -4 2)"/>
+                    <polygon points="16,-4 26,1 16,6" fill="${b.design === 'cyberpunk' ? b.accent : '#facc15'}"/>
+                    <rect x="5" y="-7" width="9" height="5" fill="#050510"/>
+                    <rect x="8" y="-6" width="5" height="3" fill="${b.visorColor || '#00f3ff'}"/>
+                </svg>
             </div>
             <div class="item-name">${b.name}</div>
             <div class="item-ability">${b.ability.label}</div>
+            <div style="font-size:0.66rem; color:${b.color}; font-weight:800; margin-top:2px;">🔫 ${b.weapon.name}</div>
             <div class="price-tag">${isOwned ? 'AÇIK' : `🟡 ${formatNumber(b.price)}`}</div>
         `;
 
@@ -2451,8 +2835,288 @@ restartBtn.addEventListener('click', startGame);
 pauseBtn.addEventListener('click', (e) => { e.stopPropagation(); pauseGame(); });
 resumeBtn.addEventListener('click', resumeGame);
 homeBtn.addEventListener('click', returnToHome);
-soundBtn.addEventListener('click', () => sound.toggleMute());
+soundBtn.addEventListener('click', () => {
+    sound.toggleMute();
+    updateSettingsUI();
+});
 laserBtn.addEventListener('click', (e) => { e.stopPropagation(); fireSuperLaser(); });
+
+// --- 10 Sayfalık Giriş Hikayesi Sistemi ---
+const STORY_PAGES = [
+    {
+        svg: `<svg viewBox="0 0 320 140" xmlns="http://www.w3.org/2000/svg">
+            <defs><linearGradient id="g1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#090418"/><stop offset="100%" stop-color="#280a48"/></linearGradient></defs>
+            <rect width="320" height="140" fill="url(#g1)"/>
+            <circle cx="160" cy="85" r="42" fill="#ff007f" opacity="0.85"/>
+            <rect x="20" y="55" width="32" height="85" fill="#0d112b" stroke="#00f3ff" stroke-width="1.5"/>
+            <rect x="62" y="35" width="38" height="105" fill="#0d112b" stroke="#ff00ff" stroke-width="1.5"/>
+            <rect x="115" y="65" width="30" height="75" fill="#0d112b" stroke="#00f3ff" stroke-width="1.5"/>
+            <rect x="175" y="40" width="42" height="100" fill="#0d112b" stroke="#00f3ff" stroke-width="1.5"/>
+            <rect x="230" y="50" width="34" height="90" fill="#0d112b" stroke="#ff00ff" stroke-width="1.5"/>
+            <rect x="274" y="70" width="28" height="70" fill="#0d112b" stroke="#00f3ff" stroke-width="1.5"/>
+            <line x1="0" y1="138" x2="320" y2="138" stroke="#00f3ff" stroke-width="3"/>
+        </svg>`,
+        title: '1/10 — YIL 2149: NEON ÇÖKÜŞÜ',
+        text: 'Dünyanın son megakenti Neo-Ankara, yapay zeka Omega Evren İmparatoru tarafından ele geçirildi. Gökyüzü artık yüksek voltajlı lazer borularıyla mühürlü!'
+    },
+    {
+        svg: `<svg viewBox="0 0 320 140" xmlns="http://www.w3.org/2000/svg">
+            <rect width="320" height="140" fill="#06091e"/>
+            <circle cx="160" cy="70" r="54" fill="none" stroke="#00f3ff" stroke-width="1.5" stroke-dasharray="6 4"/>
+            <circle cx="160" cy="70" r="40" fill="none" stroke="#ff00ff" stroke-width="1"/>
+            <ellipse cx="160" cy="72" rx="34" ry="22" fill="#00f3ff" stroke="#ffffff" stroke-width="2.5"/>
+            <ellipse cx="148" cy="64" rx="18" ry="10" fill="#ff00ff" transform="rotate(-20 148 64)"/>
+            <polygon points="190,66 212,73 190,80" fill="#facc15"/>
+            <rect x="168" y="61" width="14" height="7" rx="2" fill="#050510"/>
+            <rect x="172" y="63" width="8" height="3" fill="#00f3ff"/>
+        </svg>`,
+        title: '2/10 — SİBER KANAT PROJESİ',
+        text: 'Direniş mühendisleri, yerçekimine meydan okuyabilen 110 farklı kuantum mekanik kuş tasarladı. İlk prototip Alfa Siber Serçe uçuşa hazır.'
+    },
+    {
+        svg: `<svg viewBox="0 0 320 140" xmlns="http://www.w3.org/2000/svg">
+            <rect width="320" height="140" fill="#0d0622"/>
+            <circle cx="160" cy="70" r="48" fill="rgba(255,0,255,0.16)" stroke="#ff00ff" stroke-width="3"/>
+            <circle cx="160" cy="70" r="36" fill="none" stroke="#00f3ff" stroke-width="1.5" stroke-dasharray="4 4"/>
+            <text x="160" y="66" fill="#ffffff" font-family="Orbitron" font-size="13" font-weight="900" text-anchor="middle">CYBER WASH</text>
+            <text x="160" y="84" fill="#22c55e" font-family="Orbitron" font-size="12" font-weight="900" text-anchor="middle">+5 CAN YENİLEME</text>
+            <circle cx="105" cy="40" r="7" fill="none" stroke="#00f3ff" stroke-width="2"/>
+            <circle cx="215" cy="95" r="9" fill="none" stroke="#ff00ff" stroke-width="2"/>
+            <circle cx="210" cy="36" r="5" fill="none" stroke="#facc15" stroke-width="2"/>
+        </svg>`,
+        title: '3/10 — CYBER WASH TEKNOLOJİSİ',
+        text: 'Her Siber Kuş, acil durumlarda 5 canı birden yenileyebilen 45 farklı Cyber Wash enerji modülüyle güçlendirildi.'
+    },
+    {
+        svg: `<svg viewBox="0 0 320 140" xmlns="http://www.w3.org/2000/svg">
+            <rect width="320" height="140" fill="#06081c"/>
+            <rect x="95" y="62" width="225" height="16" fill="#00f3ff" opacity="0.85"/>
+            <rect x="95" y="66" width="225" height="8" fill="#ffffff"/>
+            <ellipse cx="75" cy="70" rx="22" ry="15" fill="#00f3ff" stroke="#ffffff" stroke-width="2"/>
+            <polygon points="94,65 108,70 94,75" fill="#facc15"/>
+            <rect x="215" y="0" width="28" height="45" fill="#121432" stroke="#ff007f" stroke-width="2"/>
+            <rect x="215" y="95" width="28" height="45" fill="#121432" stroke="#ff007f" stroke-width="2"/>
+            <circle cx="229" cy="70" r="18" fill="none" stroke="#facc15" stroke-width="2.5" stroke-dasharray="5 3"/>
+        </svg>`,
+        title: '4/10 — KİNETİK LAZER ÇEKİRDEĞİ',
+        text: 'Kanat çırptıkça kanatlardaki plazma bobinleri enerji depolar. Her zıplamada Süper Lazer %5 şarj olur; %100 olduğunda önündeki engelleri yok eder!'
+    },
+    {
+        svg: `<svg viewBox="0 0 320 140" xmlns="http://www.w3.org/2000/svg">
+            <rect width="320" height="140" fill="#08081e"/>
+            <rect x="135" y="0" width="50" height="32" fill="#0d102c" stroke="#00f3ff" stroke-width="2"/>
+            <rect x="135" y="108" width="50" height="32" fill="#0d102c" stroke="#00f3ff" stroke-width="2"/>
+            <circle cx="160" cy="70" r="24" fill="#eab308" stroke="#ffffff" stroke-width="3"/>
+            <text x="160" y="77" fill="#050510" font-family="Orbitron" font-size="22" font-weight="900" text-anchor="middle">₵</text>
+            <text x="225" y="75" fill="#facc15" font-family="Orbitron" font-size="14" font-weight="900">+5 KREDİ</text>
+        </svg>`,
+        title: '5/10 — NEON KREDİ EKONOMİSİ',
+        text: 'Boru geçitlerinin arasına gizlenmiş 5 değerindeki Neon Kredileri toplayarak hangardan yeni Mitik kuşlar ve Wash modülleri açabilirsin.'
+    },
+    {
+        svg: `<svg viewBox="0 0 320 140" xmlns="http://www.w3.org/2000/svg">
+            <rect width="320" height="140" fill="#0c0724"/>
+            <polygon points="160,15 175,55 215,70 175,85 160,125 145,85 105,70 145,55" fill="rgba(250,204,21,0.18)"/>
+            <rect x="134" y="44" width="52" height="52" rx="8" fill="#a855f7" stroke="#facc15" stroke-width="3.5"/>
+            <text x="160" y="80" fill="#facc15" font-family="Orbitron" font-size="30" font-weight="900" text-anchor="middle">?</text>
+        </svg>`,
+        title: '6/10 — GİZEMLİ KUANTUM KUTULARI',
+        text: 'Gökyüzünde nadir beliren (?) sürpriz kutuları; ekstra kalkan, can yenileme, hiper warp hızı ve hatta kilitli kuşlar kazandırır.'
+    },
+    {
+        svg: `<svg viewBox="0 0 320 140" xmlns="http://www.w3.org/2000/svg">
+            <rect width="320" height="140" fill="#06071c"/>
+            <circle cx="215" cy="70" r="38" fill="rgba(168,85,247,0.3)" stroke="#e879f9" stroke-width="3"/>
+            <circle cx="215" cy="70" r="24" fill="none" stroke="#00f3ff" stroke-width="2" stroke-dasharray="6 4"/>
+            <circle cx="215" cy="70" r="10" fill="#ffffff"/>
+            <circle cx="85" cy="48" r="11" fill="#22c55e" stroke="#ffffff" stroke-width="2"/>
+            <line x1="96" y1="48" x2="175" y2="66" stroke="#22c55e" stroke-width="2" stroke-dasharray="4 3"/>
+            <ellipse cx="115" cy="84" rx="20" ry="13" fill="#00f3ff" stroke="#ffffff" stroke-width="2"/>
+        </svg>`,
+        title: '7/10 — SOLUCAN DELİĞİ & DRONE',
+        text: 'Sadık Siber Drone sana eşlik ederken, mor kuantum solucan delikleri seni ışık hızında güvenli bir warp tüneline sokar.'
+    },
+    {
+        svg: `<svg viewBox="0 0 320 140" xmlns="http://www.w3.org/2000/svg">
+            <rect width="320" height="140" fill="#070a20"/>
+            <path d="M 30 105 Q 95 25, 160 70 T 290 35" fill="none" stroke="#00f3ff" stroke-width="3" stroke-dasharray="7 5"/>
+            <circle cx="30" cy="105" r="8" fill="#22c55e"/>
+            <circle cx="160" cy="70" r="9" fill="#facc15"/>
+            <circle cx="290" cy="35" r="11" fill="#ff007f" stroke="#ffffff" stroke-width="2"/>
+            <text x="30" y="126" fill="#22c55e" font-family="Orbitron" font-size="9" text-anchor="middle">BÖLGE 1</text>
+            <text x="160" y="92" fill="#facc15" font-family="Orbitron" font-size="9" text-anchor="middle">BÖLGE 50</text>
+            <text x="282" y="20" fill="#ff007f" font-family="Orbitron" font-size="9" text-anchor="middle">BÖLGE 100</text>
+        </svg>`,
+        title: '8/10 — 100 TEHLİKELİ BÖLGE',
+        text: 'Neo-Ankara Çatısı’ndan Sonsuzluk Horizonu’na uzanan 100 farklı iklim ve hava koşuluna sahip siber bölge seni bekliyor.'
+    },
+    {
+        svg: `<svg viewBox="0 0 320 140" xmlns="http://www.w3.org/2000/svg">
+            <rect width="320" height="140" fill="#14051d"/>
+            <rect x="122" y="32" width="76" height="76" fill="none" stroke="#ff007f" stroke-width="3.5" transform="rotate(15 160 70)"/>
+            <rect x="130" y="40" width="60" height="60" fill="none" stroke="#00f3ff" stroke-width="2.5" transform="rotate(-15 160 70)"/>
+            <circle cx="160" cy="70" r="24" fill="#1e0936" stroke="#ff007f" stroke-width="2"/>
+            <circle cx="160" cy="70" r="9" fill="#facc15"/>
+            <text x="160" y="130" fill="#ff007f" font-family="Orbitron" font-size="10" font-weight="900" text-anchor="middle">OMEGA BOSS: 1.000.000.000 KREDİ</text>
+        </svg>`,
+        title: '9/10 — BÖLGE MUHAFIZLARI & BOSS',
+        text: 'Her bölgenin sonunda devasa bir Siber Muhafız yolunu keser. 100. Bölgedeki Omega İmparatoru yenen 1 Milyar Kredi ödülün sahibi olur!'
+    },
+    {
+        svg: `<svg viewBox="0 0 320 140" xmlns="http://www.w3.org/2000/svg">
+            <defs><linearGradient id="g10" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#05162a"/><stop offset="100%" stop-color="#1e0836"/></linearGradient></defs>
+            <rect width="320" height="140" fill="url(#g10)"/>
+            <line x1="20" y1="115" x2="140" y2="68" stroke="#00f3ff" stroke-width="3" opacity="0.7"/>
+            <line x1="35" y1="125" x2="145" y2="78" stroke="#ff00ff" stroke-width="2.5" opacity="0.7"/>
+            <g transform="translate(175,62) rotate(-22)">
+                <ellipse cx="0" cy="0" rx="28" ry="18" fill="#00f3ff" stroke="#ffffff" stroke-width="2.5"/>
+                <ellipse cx="-8" cy="-10" rx="15" ry="8" fill="#facc15"/>
+                <polygon points="25,-6 42,0 25,6" fill="#ff007f"/>
+            </g>
+            <text x="160" y="130" fill="#00f3ff" font-family="Orbitron" font-size="11" font-weight="900" text-anchor="middle">UÇUŞA HAZIR!</text>
+        </svg>`,
+        title: '10/10 — GÖKYÜZÜNÜ GERİ AL!',
+        text: 'Kanatlarını ısıt, kalkanını kontrol et ve siber gökyüzünün özgürlüğü için ilk uçuşuna başla!'
+    }
+];
+
+let currentStoryPage = 0;
+const storyModal = document.getElementById('story-modal');
+
+function renderStoryPage() {
+    const page = STORY_PAGES[currentStoryPage];
+    document.getElementById('story-page-indicator').textContent = `BÖLÜM ${currentStoryPage + 1} / ${STORY_PAGES.length}`;
+    document.getElementById('story-visual').innerHTML = page.svg;
+    document.getElementById('story-title').textContent = page.title;
+    document.getElementById('story-text').textContent = page.text;
+
+    const dotsEl = document.getElementById('story-dots');
+    dotsEl.innerHTML = '';
+    STORY_PAGES.forEach((_, idx) => {
+        const dot = document.createElement('div');
+        dot.className = `story-dot ${idx === currentStoryPage ? 'active' : ''}`;
+        dotsEl.appendChild(dot);
+    });
+
+    document.getElementById('story-prev-btn').disabled = currentStoryPage === 0;
+    document.getElementById('story-prev-btn').style.opacity = currentStoryPage === 0 ? '0.4' : '1';
+    document.getElementById('story-next-btn').textContent = currentStoryPage === STORY_PAGES.length - 1 ? 'OYUNA GEÇ! 🚀' : 'İLERİ ▶️';
+}
+
+function openStory(startPage = 0) {
+    currentStoryPage = startPage;
+    renderStoryPage();
+    storyModal.classList.remove('hidden');
+}
+
+function closeStory() {
+    localStorage.setItem('cf_story_seen', 'true');
+    storyModal.classList.add('hidden');
+}
+
+document.getElementById('story-prev-btn').addEventListener('click', () => {
+    if (currentStoryPage > 0) {
+        currentStoryPage--;
+        renderStoryPage();
+    }
+});
+
+document.getElementById('story-next-btn').addEventListener('click', () => {
+    if (currentStoryPage < STORY_PAGES.length - 1) {
+        currentStoryPage++;
+        renderStoryPage();
+    } else {
+        closeStory();
+    }
+});
+
+document.getElementById('story-skip-btn').addEventListener('click', closeStory);
+document.getElementById('open-story-btn').addEventListener('click', () => openStory(0));
+
+// --- Ayarlar Sistemi ---
+const gameSettings = JSON.parse(localStorage.getItem('cf_settings') || '{"shake":true,"particles":true}');
+const settingsModal = document.getElementById('settings-modal');
+let resetConfirmStep = false;
+
+function saveSettings() {
+    localStorage.setItem('cf_settings', JSON.stringify(gameSettings));
+}
+
+function updateSettingsUI() {
+    const soundToggle = document.getElementById('set-sound-toggle');
+    soundToggle.textContent = sound.muted ? 'KAPALI' : 'AÇIK';
+    soundToggle.classList.toggle('off', sound.muted);
+
+    const shakeToggle = document.getElementById('set-shake-toggle');
+    shakeToggle.textContent = gameSettings.shake ? 'AÇIK' : 'KAPALI';
+    shakeToggle.classList.toggle('off', !gameSettings.shake);
+
+    const partToggle = document.getElementById('set-particles-toggle');
+    partToggle.textContent = gameSettings.particles ? 'AÇIK' : 'KAPALI';
+    partToggle.classList.toggle('off', !gameSettings.particles);
+}
+
+function openSettings() {
+    resetConfirmStep = false;
+    document.getElementById('set-reset-data').textContent = 'SIFIRLA';
+    document.getElementById('reset-confirm-desc').textContent = 'Tüm kredi, kuş ve bölge kayıtlarını siler';
+    updateSettingsUI();
+    settingsModal.classList.remove('hidden');
+}
+
+document.getElementById('settings-btn').addEventListener('click', (e) => { e.stopPropagation(); openSettings(); });
+document.getElementById('menu-settings-btn').addEventListener('click', openSettings);
+document.getElementById('close-settings-modal').addEventListener('click', () => settingsModal.classList.add('hidden'));
+
+document.getElementById('set-sound-toggle').addEventListener('click', () => {
+    sound.toggleMute();
+    updateSettingsUI();
+});
+
+document.getElementById('set-shake-toggle').addEventListener('click', () => {
+    gameSettings.shake = !gameSettings.shake;
+    saveSettings();
+    updateSettingsUI();
+});
+
+document.getElementById('set-particles-toggle').addEventListener('click', () => {
+    gameSettings.particles = !gameSettings.particles;
+    saveSettings();
+    updateSettingsUI();
+});
+
+document.getElementById('set-replay-story').addEventListener('click', () => {
+    settingsModal.classList.add('hidden');
+    openStory(0);
+});
+
+document.getElementById('set-reset-data').addEventListener('click', () => {
+    if (!resetConfirmStep) {
+        resetConfirmStep = true;
+        document.getElementById('set-reset-data').textContent = 'EMİN MİSİN?';
+        document.getElementById('reset-confirm-desc').textContent = 'Onaylamak için tekrar dokun!';
+    } else {
+        localStorage.clear();
+        credits = 0;
+        ownedBirds = [0];
+        ownedWash = [0];
+        selectedBirdId = 0;
+        selectedWashId = 0;
+        unlockedZone = 1;
+        selectedZoneId = 1;
+        missions = JSON.parse(JSON.stringify(DEFAULT_MISSIONS));
+        lastSpinDate = '';
+        saveGameData();
+        updateLoadoutUI();
+        settingsModal.classList.add('hidden');
+        showToast('🗑️ Tüm kayıtlar sıfırlandı!', '#ef4444');
+    }
+});
+
+// İlk açılışta 10 sayfalık giriş hikayesini göster
+if (!localStorage.getItem('cf_story_seen')) {
+    openStory(0);
+}
 
 updateLoadoutUI();
 requestAnimationFrame(gameLoop);
